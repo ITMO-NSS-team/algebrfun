@@ -1,0 +1,12 @@
+count_param: 3
+getting size datas (16, 3000)
+16 mur 15.0
+i'm here
+len answer 2
+16
+count_param: 7
+getting size datas (4096, 3000)
+4096 mur 3839.0
+i'm here
+len answer 6
+4096

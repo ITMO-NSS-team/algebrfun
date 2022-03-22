@@ -1,0 +1,2 @@
+/home/akhvatov/mtn/Estar/buildingBlocks/baseline/BasicEvolutionaryEntities.py:208: RuntimeWarning: overflow encountered in exp
+  t_parametrs = np.exp(t_parametrs)
