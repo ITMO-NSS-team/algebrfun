@@ -9,6 +9,7 @@ import buildingBlocks.Globals.GlobalEntities as Bg
 
 import numpy as np
 from scipy.optimize import minimize
+from itertools import product
 
 
 class InitIndivid(GeneticOperatorIndivid):
@@ -47,17 +48,37 @@ class InitIndivid(GeneticOperatorIndivid):
         non_mandatory_tokens = list(filter(lambda token: token.mandatory == 0, self.params['tokens']))
         if mandatory_tokens:
             individ.add_substructure([token.clean_copy() for token in mandatory_tokens])
-            count_mandatory_tokens = len(mandatory_tokens)     
+            count_mandatory_tokens = len(mandatory_tokens)
+        
+        # non_mandatory_tokens_params = np.array([np.array(token.variable_params)[:, args[0], :] for token in non_mandatory_tokens])
+        non_mandatory_tokens_params = [np.array(token.variable_params)[:, args[0]] for token in non_mandatory_tokens]
+        # non_mandatory_tokens_params = np.array(non_mandatory_tokens_params)
+        print(non_mandatory_tokens_params)
+
+        A = np.array([np.linspace(-10, 10, len(non_mandatory_tokens)) for _ in range(len(non_mandatory_tokens[0].variable_params))])
+        A = A.reshape(-1)
+        # print("A", A)
+
+        # debug ----------------------------------------------------------
+
+        # print(np.average((np.sum([non_mandatory_tokens[i].evaluate(np.hstack((A[k][i], non_mandatory_tokens[i].variable_params[k][args[0]])), self.params['grid']) for k, i in product(np.arange(len(non_mandatory_tokens[0].variable_params)), np.arange(len(non_mandatory_tokens)))], axis=0) - Bg.constants['target']) ** 2))
+        # for k, i in product(np.arange(len(non_mandatory_tokens[0].variable_params)),np.arange(len(non_mandatory_tokens))):
+        #     print(non_mandatory_tokens[i].variable_params[k][args[0]])
+        ##----------------------------------------------------------------
         # print(np.sum([non_mandatory_tokens[i].evaluate(np.hstack((A[i], non_mandatory_tokens[i].variable_params[args[0]])), self.params['grid']) for i in range(len(non_mandatory_tokens))]))
         # print([non_mandatory_tokens[i].evaluate(np.hstack((A[i], non_mandatory_tokens[i].variable_params[args[0]])), self.params['grid']) for i in range(len(non_mandatory_tokens))])
-        # func_podbor = lambda A: np.average((np.sum([non_mandatory_tokens[i].evaluate(np.hstack((A[i], non_mandatory_tokens[i].variable_params[self.params['ids'][args[0]][i]])), self.params['grid']) for i in range(len(non_mandatory_tokens))], axis=0) - Bg.constants['target']) ** 2)
-        func_podbor = lambda A: np.average((np.sum([non_mandatory_tokens[i].evaluate(np.hstack((A[i], non_mandatory_tokens[i].variable_params[args[0]])), self.params['grid']) for i in range(len(non_mandatory_tokens))], axis=0) - Bg.constants['target']) ** 2)
-        res_amplitude = minimize(func_podbor, np.linspace(-10, 10, len(non_mandatory_tokens))).x
+        # func_podbor = lambda A: np.average((np.sum([non_mandatory_tokens[i].evaluate(np.hstack((A[k * len(non_mandatory_tokens[0].variable_params) + i], non_mandatory_tokens[i].variable_params[k][args[0]])), self.params['grid']) for k, i in product(np.arange(len(non_mandatory_tokens[0].variable_params)), np.arange(len(non_mandatory_tokens)))], axis=0) - Bg.constants['target']) ** 2)
+
+        shp = (len(non_mandatory_tokens), len(non_mandatory_tokens[0].variable_params), 1)
+        func_podbor = lambda A: np.average((np.sum([non_mandatory_tokens[token_i].evaluate(np.hstack((A.reshape(shp)[token_i], non_mandatory_tokens_params[token_i])), self.params['grid']) for token_i in np.arange(shp[0])], axis=0) - Bg.constants['target']) ** 2)
+        res_amplitude = minimize(func_podbor, A).x
+        res_amplitude = res_amplitude.reshape(shp)
+        # print("res shape", res_amplitude.shape)
         sub = []
         for i in range(len(non_mandatory_tokens)):
             cur_token = non_mandatory_tokens[i].clean_copy()
             # cur_token.params = np.hstack((res_amplitude[i], non_mandatory_tokens[i].variable_params[self.params['ids'][args[0]][i]]))
-            cur_token.params = np.hstack((res_amplitude[i], non_mandatory_tokens[i].variable_params[args[0]]))
+            cur_token.params = np.hstack((res_amplitude[i], non_mandatory_tokens_params[i]))
             sub.append(cur_token)
         individ.add_substructure(sub)
 

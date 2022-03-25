@@ -67,14 +67,14 @@ class Power(TerminalToken):
                          params=params, name_=name_, optimize_id=optimize_id)
         self.type = "NonPeriodic"
 
-    def evaluate(self, params, t):
+    def each_evaluate(self, params, t):
         params = self.func_params(params, t)
         return params[0] * (t ** params[1])
     
-    def n_evaluate(self, params, t):
+    def evaluate(self, params, t):
         result = np.nan
         for i in range(t.shape[0]):
-            cur_temp = self.evaluate(params[i], t[i])
+            cur_temp = self.each_evaluate(params[i], t[i])
             if np.isnan(result):
                 result = cur_temp
             else:
@@ -109,7 +109,7 @@ class Sin(TerminalToken):
                          params=params, name_=name_, optimize_id=optimize_id)
         self.type = "Periodic"
 
-    def evaluate(self, params, t):
+    def each_evaluate(self, params, t):
         # todo maybe problems
         params = np.abs(params)
         params = self.func_params(params, t)
@@ -118,16 +118,15 @@ class Sin(TerminalToken):
         # return params[0] * np.sin(1 * np.pi * (2 * params[1] * t + abs(math.modf(params[2])[0])))
         return params[0] * np.sin(2 * np.pi * (params[1] * t + params[2]))
 
-    def n_evaluate(self, params, t):
-        params = np.abs(params)
+    def evaluate(self, params, t):
         result = np.nan
         for i in range(t.shape[0]):
-            piter = np.abs(params[i])
-            piter = self.func_params(piter, t[i])
+            print(params[i])
+            cur_temp = self.each_evaluate(params[i], t[i])
             if np.isnan(result):
-                result = piter[0] * np.sin(2 * np.pi * (piter[1] * t[i] + piter[2]))
-                continue    
-            result *= piter[0] * np.sin(2 * np.pi * (piter[1] * t[i] + piter[2]))
+                result = cur_temp
+            else:    
+                result *= cur_temp
         return result
 
 
@@ -179,7 +178,7 @@ class ImpSingle(TerminalToken):
         self.non_zero_val = None
 
     # @staticmethod
-    def evaluate(self, params, t):
+    def each_evaluate(self, params, t):
         params[[0, 4, 5]] = np.abs(params[[0, 4, 5]])
 
         A, T1, T2, T3, p1, p2 = params
@@ -195,10 +194,10 @@ class ImpSingle(TerminalToken):
         m[np.abs(m) < 0.02] = 0
         return A * m
 
-    def n_evaluate(self, params, t):
+    def evaluate(self, params, t):
         result = np.nan
         for i in range(t.shape[0]):
-            cur_val = se;f.evaluate(params[i], t[i])
+            cur_val = self.each_evaluate(params[i], t[i])
             if np.isnan(result):
                 result = cur_val
             else:
@@ -228,7 +227,7 @@ class ImpSingle2(TerminalToken):
         self.non_zero_val = None
 
     @staticmethod
-    def evaluate(params, t):
+    def each_evaluate(params, t):
         params[[0, 4, 5]] = np.abs(params[[0, 4, 5]])
         A, T1, T, ratio, p1, p2 = params
 
@@ -246,6 +245,17 @@ class ImpSingle2(TerminalToken):
         m[np.abs(m) < 0.02] = 0
         return A * m
 
+    
+    def evaluate(self, params, t):
+        result = np.nan
+        for i in range(t.shape[0]):
+            cur_val = self.each_evaluate(params[i], t[i])
+            if np.isnan(result):
+                result = cur_val
+            else:
+                result *= cur_val
+
+        return result
 
 class Imp(TerminalToken):
     def __init__(self, number_params=7, params_description=None, params=None, name_='Imp', optimize_id=None):
@@ -263,7 +273,7 @@ class Imp(TerminalToken):
                          params=params, name_=name_, optimize_id=optimize_id)
         self.type = "Periodic"
 
-    def evaluate(self, params, t):
+    def each_evaluate(self, params, t):
         params = np.abs(params)
         if (params[0:2] == 0).any():
             return np.zeros(t.shape)
@@ -301,10 +311,10 @@ class Imp(TerminalToken):
         m[np.abs(m) < 0.02] = 0
         return A*m
 
-    def n_evaluate(self, params, t):
+    def evaluate(self, params, t):
         result = np.nan
         for i in range(t.shape[0]):
-            cur_val = se;f.evaluate(params[i], t[i])
+            cur_val = self.each_evaluate(params[i], t[i])
             if np.isnan(result):
                 result = cur_val
             else:
@@ -416,16 +426,16 @@ class Product(ComplexToken):
         self.structure.append(substructure)
         return
 
-    def evaluate(self, params, grid):
+    def each_evaluate(self, params, grid):
         # self._fix_val = reduce(lambda val, x: val*x,
         #                        list(map(lambda x: x._fix_val, self.subtokens)))
         return params[0] * reduce(lambda val, x: val * x,
                                   list(map(lambda x: x.value(grid), self.structure)))
     
-    def n_evaluate(self, params, t):
+    def evaluate(self, params, t):
         result = np.nan
         for i in range(t.shape[0]):
-            cur_val = se;f.evaluate(params[i], t[i])
+            cur_val = self.each_evaluate(params[i], t[i])
             if np.isnan(result):
                 result = cur_val
             else:

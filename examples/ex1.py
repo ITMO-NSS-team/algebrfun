@@ -82,7 +82,7 @@ build_settings = {
 
 ## Get target and grid on which target will be approximated
 
-grid = data['grid']
+grid = np.array([data['grid']])
 target = data['target']
 target -= target.mean()
 

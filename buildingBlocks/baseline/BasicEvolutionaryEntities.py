@@ -188,6 +188,7 @@ class TerminalToken(Bs.Token):
             return 0
 
         print('count_param:', self._number_params)
+        print('shape grid:', in_data.shape)
         combin_params = 1
         sz = 4
         for key_param in range(1, self._number_params):
@@ -263,9 +264,10 @@ class TerminalToken(Bs.Token):
             self.variable_params = answer[0]
         else:
             self.variable_params = answer
-        
-        test_np_array = np.array(self.variable_params) 
-        print(test_np_array.shape)
+                
+        # test_np_array = np.array(self.variable_params) 
+        # print("shape variable parametrs", test_np_array.shape)
+        # print(test_np_array.shape)
 
     def __select_parametrs__z(self, in_data, data, population_size):
         if self._number_params == 1:
@@ -471,9 +473,7 @@ class TerminalToken(Bs.Token):
                 func = self.params_description[idx]['func']
                 if func is not None:
                     params[idx] = func(params[idx], grid)
-                print("All okey")
             except KeyError:
-                print("I'm loss")
                 continue
         return params
 
