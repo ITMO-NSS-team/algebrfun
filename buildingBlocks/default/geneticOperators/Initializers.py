@@ -52,8 +52,9 @@ class InitIndivid(GeneticOperatorIndivid):
         
         # non_mandatory_tokens_params = np.array([np.array(token.variable_params)[:, args[0], :] for token in non_mandatory_tokens])
         non_mandatory_tokens_params = [np.array(token.variable_params)[:, args[0]] for token in non_mandatory_tokens]
+        # non_mandatory_tokens_params = [np.array(token.variable_params)[args[0]] for token in non_mandatory_tokens]
         # non_mandatory_tokens_params = np.array(non_mandatory_tokens_params)
-        print(non_mandatory_tokens_params)
+        # print(non_mandatory_tokens_params)
 
         A = np.array([np.linspace(-10, 10, len(non_mandatory_tokens)) for _ in range(len(non_mandatory_tokens[0].variable_params))])
         A = A.reshape(-1)
@@ -78,7 +79,9 @@ class InitIndivid(GeneticOperatorIndivid):
         for i in range(len(non_mandatory_tokens)):
             cur_token = non_mandatory_tokens[i].clean_copy()
             # cur_token.params = np.hstack((res_amplitude[i], non_mandatory_tokens[i].variable_params[self.params['ids'][args[0]][i]]))
-            cur_token.params = np.hstack((res_amplitude[i], non_mandatory_tokens_params[i]))
+            tesyt = np.hstack((res_amplitude.reshape(shp)[i], non_mandatory_tokens_params[i]))
+            # print("current parametrs", tesyt)
+            cur_token.params = tesyt
             sub.append(cur_token)
         individ.add_substructure(sub)
 

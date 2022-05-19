@@ -167,13 +167,17 @@ class ImpComplexMutationIndivid(GeneticOperatorIndivid):
         #         individ.del_substructure(token)
 
         grid = self.params['grid']
-        step = (grid[1:] - grid[:-1]).mean()
-        wmax = np.fft.fftfreq(10 * len(grid), step).max()
+        all_mx = []
+        for idx in range(grid.shape[0]):
+            step = (grid[idx][1:] - grid[idx][:-1]).mean() # !!!!!
+            all_mx.append(np.fft.fftfreq(10 * len(grid[idx]), step).max())
+        
+        wmax = np.max(all_mx)
 
         threshold = self.params['threshold']
         for idx, token in enumerate(individ.structure):
             if token in choiced_tokens:
-                if token.param('Frequency') > threshold*wmax:
+                if len(token.param('Frequency')[token.param('Frequency') > threshold*wmax]) == len(token.param('Frequency')):
                     continue
                 new_complex_token = complex_token.extra_clean_copy()
                 new_complex_token.pattern = token.copy()

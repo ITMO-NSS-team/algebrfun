@@ -10,6 +10,7 @@ from buildingBlocks.Globals.GlobalEntities import get_full_constant
 from buildingBlocks.baseline.BasicEvolutionaryEntities import TerminalToken, ComplexToken
 import numpy as np
 from functools import reduce
+from itertools import product
 
 from buildingBlocks.supplementary.Other import mape
 
@@ -47,7 +48,7 @@ class Constant(TerminalToken):
         return -params[0] * constants[self.name_]
 
     def name(self, with_params=False):
-        return '{}{}'.format(round(self.params[0], 3), self.name_)
+        return '{}{}'.format(round(self.params[0][0], 3), self.name_)
 
     def __eq__(self, other):
         if type(self).__name__ == type(other).__name__:
@@ -69,7 +70,7 @@ class Power(TerminalToken):
 
     def each_evaluate(self, params, t):
         params = self.func_params(params, t)
-        return params[0] * (t ** params[1])
+        return t ** params[1]
     
     def evaluate(self, params, t):
         result = np.nan
@@ -79,7 +80,7 @@ class Power(TerminalToken):
                 result = cur_temp
             else:
                 result += cur_temp
-        return result
+        return params[0][0] * result
 
     def name(self, with_params=False):
         # return self.name_ + str(self.params)
@@ -116,23 +117,27 @@ class Sin(TerminalToken):
         # if (params[0:2] == 0).any():
         #     return np.zeros(t.shape)
         # return params[0] * np.sin(1 * np.pi * (2 * params[1] * t + abs(math.modf(params[2])[0])))
-        return params[0] * np.sin(2 * np.pi * (params[1] * t + params[2]))
+        return np.sin(2 * np.pi * (params[1] * t + params[2]))
 
     def evaluate(self, params, t):
         result = np.nan
+        if len(params.shape) == 1:
+            params = list([params])
+        # print("prm", params)
         for i in range(t.shape[0]):
-            print(params[i])
+            # print("allany", params[i], t[i])
             cur_temp = self.each_evaluate(params[i], t[i])
-            if np.isnan(result):
+            # print("allanyres", cur_temp)
+            if np.all(np.isnan(result)):
                 result = cur_temp
             else:    
                 result *= cur_temp
-        return result
+        return params[0][0] * result
 
 
     def name(self, with_params=False):
         # return self.name_ + str(self.params)
-        a, w, fi = self.params
+        a, w, fi = self.params[0] # !!!!!
         return '{}Sin({}t + {}pi)'.format(round(a, 2), round(w, 2), round(fi, 2))
 
     def __eq__(self, other):
@@ -146,12 +151,13 @@ class Sin(TerminalToken):
             # if np.all(self.params == np.zeros(self.params.shape)) or \
             #         np.all(other.params == np.zeros(other.params.shape)):
             #     return False
-            if self_freq == other_freq == 0:
+            print("freqs", type(self_freq), type(other_freq), self_freq, other_freq)
+            if np.all(self_freq == other_freq) & np.all(other_freq == np.zeros(len(other_freq))):
                 return True
-            if self_phase == other_phase == 0:
-                return abs((self_freq - other_freq) / (self_freq + other_freq)) < 0.01
-            return (abs((self_freq - other_freq) / (self_freq + other_freq)) < 0.01 and
-                    abs((self_phase - other_phase) / (self_phase + other_phase)) < 0.25)
+            if np.all(self_phase == other_phase) & np.all(other_phase == np.zeros(len(other_phase))):
+                return np.all(abs((self_freq - other_freq) / (self_freq + other_freq)) < np.full(other_freq.shape, 0.01))
+            return (np.all(abs((self_freq - other_freq) / (self_freq + other_freq)) < np.full(other_freq.shape, 0.01)) &
+                    np.all(abs((self_phase - other_phase) / (self_phase + other_phase)) < np.full(other_freq.shape, 0.25)))
             # return abs((self_freq - other_freq) / (self_freq + other_freq)) < 0.05
             # return abs((self.param(name='Frequency') - other.param(name='Frequency')) /
             #            (self.param(name='Frequency') + other.param(name='Frequency'))) < 0.05
@@ -192,7 +198,7 @@ class ImpSingle(TerminalToken):
             m[cond2] = (np.abs(t[cond2] - (T1 + T2 + T3)) / T3) ** p2#np.abs(p2)
         # обрезаем во избежание экспоненциального затухания к нулю (плохо при оптимизации)
         m[np.abs(m) < 0.02] = 0
-        return A * m
+        return m
 
     def evaluate(self, params, t):
         result = np.nan
@@ -203,7 +209,7 @@ class ImpSingle(TerminalToken):
             else:
                 result *= cur_val
         
-        return result
+        return params[0][0] * result
 
 
 
@@ -243,11 +249,13 @@ class ImpSingle2(TerminalToken):
             m[cond2] = (np.abs(t[cond2] - (T1 + T2 + T3)) / T3) ** p2#np.abs(p2)
         #!!!
         m[np.abs(m) < 0.02] = 0
-        return A * m
+        return m
 
     
     def evaluate(self, params, t):
         result = np.nan
+        if len(t.shape) == 1:
+            t = np.array([t]) # !!!!!!
         for i in range(t.shape[0]):
             cur_val = self.each_evaluate(params[i], t[i])
             if np.isnan(result):
@@ -255,7 +263,7 @@ class ImpSingle2(TerminalToken):
             else:
                 result *= cur_val
 
-        return result
+        return params[0][0] * result
 
 class Imp(TerminalToken):
     def __init__(self, number_params=7, params_description=None, params=None, name_='Imp', optimize_id=None):
@@ -309,22 +317,24 @@ class Imp(TerminalToken):
             elif cond2:
                 m = np.abs((t1 - T) / T3) ** np.abs(p2)
         m[np.abs(m) < 0.02] = 0
-        return A*m
+        return m
 
     def evaluate(self, params, t):
         result = np.nan
+        if len(params.shape) == 1:
+            params = list([params])
         for i in range(t.shape[0]):
             cur_val = self.each_evaluate(params[i], t[i])
-            if np.isnan(result):
+            if np.all(np.isnan(result)):
                 result = cur_val
             else:
                 result *= cur_val
         
-        return result
+        return params[0][0] * result
 
     def name(self, with_params=False):
         # return self.name_ + str(self.params)
-        a, w, fi = self.params[[0, 1, -1]]
+        a, w, fi = self.params[0][[0, 1, -1]] # !!!!!
         return '{}Imp({}t + {}pi)'.format(round(a, 2), round(w, 2), round(fi, 2))
 
     # TODO придумать нормальный метод сравнения
@@ -429,7 +439,7 @@ class Product(ComplexToken):
     def each_evaluate(self, params, grid):
         # self._fix_val = reduce(lambda val, x: val*x,
         #                        list(map(lambda x: x._fix_val, self.subtokens)))
-        return params[0] * reduce(lambda val, x: val * x,
+        return reduce(lambda val, x: val * x,
                                   list(map(lambda x: x.value(grid), self.structure)))
     
     def evaluate(self, params, t):
@@ -441,7 +451,7 @@ class Product(ComplexToken):
             else:
                 result *= cur_val
         
-        return result
+        return params[0][0] * result
 
     def name(self, with_params=False):
         # if self.name_ is not None:
@@ -500,25 +510,33 @@ class ImpComplex(ComplexToken):
         return new_copy
 
     def name(self, with_params=False):
-        return '{}ImpComplex({}t)'.format(round(self.params[0], 3), round(self.pattern.params[1], 3))
+        return '{}ImpComplex({}t)'.format(round(self.params[0][0], 3), round(self.pattern.params[0][1], 3))
 
     def init_structure_from_pattern(self, grid):
         if len(self.structure) != 0:
             return
-        params = deepcopy(self.pattern.params)
-        A, w, n1, n2, p1, p2, fi = params
-        T = 1/w
-        T1 = T*n1
-        T2 = (T - T1)*n2
-        T3 = T - T2 - T1
-        grid_max = grid.max()
+        dif_params = deepcopy(self.pattern.params)
+        # print(self, params)
+        new_imps = [[] for _ in range(dif_params.shape[0])]
+        for idx, params in enumerate(dif_params):
+            A, w, n1, n2, p1, p2, fi = params
+            T = 1/w
+            T1 = T*n1
+            T2 = (T - T1)*n2
+            T3 = T - T2 - T1
+            grid_max = grid[idx].max()
 
-        pulse_start = -fi * T + T1
-        while pulse_start < grid_max:
-            new_params = np.array([A, pulse_start, T2+T3, n2, p1, p2])
-            new_imp = type(self.single_imp)(params=new_params)
+            pulse_start = -fi * T + T1
+            while pulse_start < grid_max: # что за условие почему именно такое
+                new_params = np.array([A, pulse_start, T2+T3, n2, p1, p2])
+                # new_imp = type(self.single_imp)(params=np.array([new_params]))
+                # self.add_substructure(new_imp)
+                new_imps[idx].append(new_params)
+                pulse_start += T
+        for combin in list(product(*new_imps)):
+            new_imp = type(self.single_imp)(params=np.array(combin))
             self.add_substructure(new_imp)
-            pulse_start += T
+
 
     def fix_structure(self, flag=True):
         for token in self.structure:

@@ -1,4 +1,5 @@
 import sys, os
+import random
 root_dir = '/'.join(os.getcwd().split('/')[:-1])
 sys.path.append(root_dir)
 
@@ -28,6 +29,7 @@ import moea_dd.forMoeadd.entities.Objectives as Objs
 import numpy as np
 import matplotlib.pyplot as plt
 from time import perf_counter
+from itertools import product
 
 
 ## Set tokens from which algorithm will be built model-expression
@@ -82,11 +84,22 @@ build_settings = {
 
 ## Get target and grid on which target will be approximated
 
+# random.seed(10)
 grid = np.array([data['grid']])
 target = data['target']
 target -= target.mean()
+x = np.linspace(0, 1, 20)
+y = x / 2
+xy = np.array(list(product(x, y)))
+target = np.array([np.sin(el[0] + el[1]) for el in xy])
 
-set_constants(target=target)
+grid = np.array([xy[:, 0], xy[:, 1]])
+print('chuchuh', grid.shape, target.shape)
+target -= target.mean()
+
+# shp = (grid.shape[1],)
+shp = (20,20)
+set_constants(target=target, shape_grid=shp)
 
 ## Confirm build_settings and set info about individual into evolutionary operators
 # max_tokens is reqularization parameter, without it model overfits
@@ -180,14 +193,14 @@ residuals -= residuals.mean()
 tmp_ind = deepcopy(ind)
 
 print("error", np.average((target - model) ** 2))
-plt.plot(grid[:300], target[:300], label="Input data")
-plt.plot(grid[:300], model[:300], label="Model")
+plt.plot(grid[0][:300], target[:300], label="Input data")
+plt.plot(grid[0][:300], model[:300], label="Model")
 plt.legend()
 plt.savefig('ptc0.png')
 # plt.show()
 
 
-
+'''
 # Generate synthetics based on the model
 # Use parameters threshold_value and threshold_gaps (see sklearn.cluster.AgglomerativeClustering) to control stochasticity 
 # of synthetics (only for weakly seasonal time series), control amplitude noise of synthetic by adding custom residuals 
@@ -300,3 +313,4 @@ fig_sp.tight_layout()
 
 plt.savefig('ptc2.png')
 # plt.show()
+'''

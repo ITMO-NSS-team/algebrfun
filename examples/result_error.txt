@@ -1,2 +1,38 @@
-/home/akhvatov/mtn/Estar/buildingBlocks/baseline/BasicEvolutionaryEntities.py:208: RuntimeWarning: overflow encountered in exp
-  t_parametrs = np.exp(t_parametrs)
+Traceback (most recent call last):
+  File "ex1.py", line 120, in <module>
+    population.evolutionary()
+  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/EvolutionEntities.py", line 117, in evolutionary
+    self._evolutionary_step()
+  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/EvolutionEntities.py", line 105, in _evolutionary_step
+    self.apply_operator('UnifierParallelizedPopulation')
+  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/baseline/BasicEvolutionaryEntities.py", line 660, in apply_operator
+    return operator.apply_to(self, *args, *kwargs)
+  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/baseline/BasicEvolutionaryEntities.py", line 717, in apply_to
+    return self.apply(population, *args, **kwargs)
+  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/geneticOperators/Unifiers.py", line 28, in apply
+    population.apply_operator('PeriodicTokensOptimizerPopulation')
+  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/baseline/BasicEvolutionaryEntities.py", line 660, in apply_operator
+    return operator.apply_to(self, *args, *kwargs)
+  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/baseline/BasicEvolutionaryEntities.py", line 717, in apply_to
+    return self.apply(population, *args, **kwargs)
+  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/geneticOperators/Optimizers.py", line 458, in apply
+    individ.apply_operator('ImpComplexDiscreteTokenParamsOptimizer')
+  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/baseline/BasicEvolutionaryEntities.py", line 622, in apply_operator
+    return operator.apply_to(self, *args, **kwargs)
+  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/baseline/BasicEvolutionaryEntities.py", line 692, in apply_to
+    ret = self.apply(individ, *args, **kwargs)
+  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/geneticOperators/supplementary/Other.py", line 31, in wrapper
+    ret = method(*args, **kwargs)
+  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/geneticOperators/ComplexOptimizers.py", line 346, in apply
+    self._optimize_token_params(individ, complex_token)
+  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/geneticOperators/ComplexOptimizers.py", line 562, in _optimize_token_params
+    self._optimize_complex_token_params(tmp_individ)
+  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/geneticOperators/ComplexOptimizers.py", line 540, in _optimize_complex_token_params
+    self._fitness_wrapper(res.x, individ, grid_optimize, token)
+  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/geneticOperators/ComplexOptimizers.py", line 388, in _fitness_wrapper
+    fixed_optimized_tokens_in_structure)))
+  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/geneticOperators/ComplexOptimizers.py", line 387, in <lambda>
+    val = reduce(lambda val, x: val + x, list(map(lambda x: x.value(grid),
+  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/baseline/BasicEvolutionaryEntities.py", line 438, in value
+    assert self.val.shape[0] == grid.shape[-1], "Value must be the same shape as grid "
+AssertionError: Value must be the same shape as grid 

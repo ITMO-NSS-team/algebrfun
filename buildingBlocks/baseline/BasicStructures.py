@@ -20,7 +20,7 @@ class Token:
             params_description = {}
         self.params_description = params_description
         if params is None:
-            self.params = np.zeros(self._number_params)
+            self.params = np.array([np.zeros(self._number_params)])
         else:
             self.params = np.array(params, dtype=float)
         if name_ is None:
@@ -117,9 +117,10 @@ class Token:
 
     def check_params(self):
         isinstance(self._params, np.ndarray)
-        assert len(
-            self._params) == self._number_params, "The number of parameters does not match the length of params array"\
+        print("assert shape of params", self._params.shape[-1], self._number_params)
+        assert self._params.shape[-1] == self._number_params, "The number of parameters does not match the length of params array"\
                                                   + "\nUse methods 'params.setter' or 'set_param' to change params"
+        # TODO проверка на количество переменных в уравнениии self._params.shape[0]
 
     def param(self, name=None, idx=None):
         try:
@@ -127,7 +128,7 @@ class Token:
         except KeyError:
             raise KeyError('There is no parameter with this name')
         try:
-            return self.params[idx]
+            return self.params[:, idx] # !!!!!
         except IndexError:
             raise IndexError('There is no parameter with this index')
 
@@ -137,7 +138,12 @@ class Token:
         except KeyError:
             raise KeyError('"{}" have no parameter with name "{}"'.format(self, name))
         try:
-            self._params[idx] = param
+            print("Gg", self, idx, self._params[0][idx], param)
+            try:
+                for i in range(len(param)):
+                    self._params[i][idx] = param[i] # разобраться, так как не все параметры расширяемы!!!!
+            except:
+                self._params[0][idx] = param
         except IndexError:
             raise IndexError('"{}" have no parameter with index "{}"'.format(self, idx))
         self.check_params()
