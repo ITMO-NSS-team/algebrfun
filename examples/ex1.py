@@ -16,7 +16,7 @@ from buildingBlocks.default.EvolutionEntities import PopulationOfEquations
 from buildingBlocks.Globals.supplementary.FrequencyProcessor import FrequencyProcessor4TimeSeries as fp
 import buildingBlocks.Globals.GlobalEntities as Bg
 import buildingBlocks.Builder.OperatorsBuilder as Ob
-from load_data import get_data
+# from load_data import get_data
 
 from moea_dd.src.moeadd import *
 from moea_dd.src.moeadd_supplementary import *
@@ -49,7 +49,7 @@ impComplex_token = ImpComplex(pattern=pattern, optimize_id=3)
 # of series with different structure. 
 # Good meta parameters (build_settings) of the algorithm are selected for each of them.
 
-data = get_data(0)
+# data = get_data(0)
 build_settings = {
     'mutation': {
         'simple': dict(intensive=1, increase_prob=1),
@@ -67,7 +67,7 @@ build_settings = {
 ### Time series without seasonality
 
 i = 2 #3
-data = get_data(i)
+# data = get_data(i)
 build_settings = {
     'mutation': {
         'simple': dict(intensive=1, increase_prob=1),
@@ -85,10 +85,10 @@ build_settings = {
 ## Get target and grid on which target will be approximated
 
 # random.seed(10)
-grid = np.array([data['grid']])
-target = data['target']
-target -= target.mean()
-x = np.linspace(0, 1, 20)
+# grid = np.array([data['grid']])
+# target = data['target']
+# target -= target.mean()
+x = np.linspace(0, 1, 50)
 y = x / 2
 xy = np.array(list(product(x, y)))
 target = np.array([np.sin(el[0] + el[1]) for el in xy])
@@ -98,7 +98,7 @@ print('chuchuh', grid.shape, target.shape)
 target -= target.mean()
 
 # shp = (grid.shape[1],)
-shp = (20,20)
+shp = (50,50)
 set_constants(target=target, shape_grid=shp)
 
 ## Confirm build_settings and set info about individual into evolutionary operators

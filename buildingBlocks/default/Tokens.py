@@ -258,10 +258,12 @@ class ImpSingle2(TerminalToken):
             t = np.array([t]) # !!!!!!
         for i in range(t.shape[0]):
             cur_val = self.each_evaluate(params[i], t[i])
-            if np.isnan(result):
+            try:
+                np.isnan(result)
                 result = cur_val
-            else:
+            except:
                 result *= cur_val
+                
 
         return params[0][0] * result
 

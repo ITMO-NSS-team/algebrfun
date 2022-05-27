@@ -3,6 +3,7 @@
 """
 from copy import deepcopy
 from typing import Optional, Union
+from buildingBlocks.Globals.GlobalEntities import get_full_constant
 
 import numpy as np
 

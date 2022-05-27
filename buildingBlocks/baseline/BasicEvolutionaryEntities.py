@@ -13,6 +13,7 @@ import numpy as np
 # import warnings
 # warnings.filterwarnings("error")
 
+from buildingBlocks.Globals.GlobalEntities import get_full_constant
 import buildingBlocks.baseline.BasicStructures as Bs
 from buildingBlocks.baseline.ParallelTools import map_wrapper, create_pool
 import buildingBlocks.Globals.GlobalEntities as Bg
@@ -336,11 +337,12 @@ class TerminalToken(Bs.Token):
         return new_copy
 
     def clean_copy(self):
+        constants = get_full_constant()
         tmp_val = self.val
         self.val = None
         new_copy = deepcopy(self)
         self.val = tmp_val
-        new_copy.params = np.zeros((1, new_copy._number_params)) # !!!!!
+        new_copy.params = np.zeros((len(constants['shape_grid']), new_copy._number_params))
         new_copy.fixator['self'] = False
         return new_copy
 
@@ -427,7 +429,7 @@ class TerminalToken(Bs.Token):
         -------
         Value of the token.
         """
-        if not self.fixator['val'] or self.val is None or self.val.shape != grid.shape:
+        if not self.fixator['val'] or self.val is None or self.val.shape[0] != grid.shape[-1]:
             self.val = self.evaluate(self.params, grid)
             self.fixator['val'] = self.fixator['cache']
 

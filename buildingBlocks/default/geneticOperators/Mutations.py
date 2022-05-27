@@ -151,7 +151,7 @@ class ImpComplexMutationIndivid(GeneticOperatorIndivid):
     @apply_decorator
     def apply(self, individ, *args, **kwargs) -> None:
         complex_token = self.params['complex_token']
-
+        print("debug complex mutation individ", complex_token)
         choiced_tokens = list(filter(lambda token: type(token) == type(complex_token.pattern) and
                                      token.fixator['self'],
                                      individ.structure))
@@ -169,15 +169,16 @@ class ImpComplexMutationIndivid(GeneticOperatorIndivid):
         grid = self.params['grid']
         all_mx = []
         for idx in range(grid.shape[0]):
-            step = (grid[idx][1:] - grid[idx][:-1]).mean() # !!!!!
-            all_mx.append(np.fft.fftfreq(10 * len(grid[idx]), step).max())
+            step = np.mean(grid[idx][1:] - grid[idx][:-1])
+            all_mx.append(np.fft.fftfreq(len(grid[idx]), step).max())
         
-        wmax = np.max(all_mx)
+        # wmax = np.max(all_mx)
 
         threshold = self.params['threshold']
+        print("debug freqs for token", choiced_tokens[0].param('Frequency').shape)
         for idx, token in enumerate(individ.structure):
             if token in choiced_tokens:
-                if len(token.param('Frequency')[token.param('Frequency') > threshold*wmax]) == len(token.param('Frequency')):
+                if np.any(token.param('Frequency') > threshold*np.array(all_mx)):
                     continue
                 new_complex_token = complex_token.extra_clean_copy()
                 new_complex_token.pattern = token.copy()
@@ -194,6 +195,7 @@ class MutationPopulation(GeneticOperatorPopulation):
     def apply(self, population, *args, **kwargs):
         selected_population = list(filter(lambda individ: individ.selected, population.structure))
         mutation_size = self.params['mutation_size']
+        print("debug mutation size", mutation_size)
         if mutation_size is None:
             selected_individs = selected_population
         else:

@@ -1,5 +1,6 @@
 """Реализация операторов кроссовера для индивида и популяции, работают inplace"""
 
+from audioop import cross
 from multiprocessing import current_process
 
 # from buildingBlocks.baseline.GeneticOperators import GeneticOperatorIndivid, GeneticOperatorPopulation

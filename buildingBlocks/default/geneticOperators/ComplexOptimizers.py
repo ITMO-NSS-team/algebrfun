@@ -93,7 +93,7 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
         for i in range(grid.shape[0]):
             print(grid[i], T[i], fi[i], T1[i], T2[i])
             cur_mask = np.zeros(grid.shape[-1], dtype=bool)
-            cur_mask[(grid[i] >= T[0] - fi[0] * T[0] + T1[0]) & (grid[0] <= T[0] - fi[0] * T[0] + T1[0] + T2[0])] = True
+            cur_mask[(grid[i] >= T[i] - fi[i] * T[i] + T1[i]) & (grid[i] <= T[i] - fi[i] * T[i] + T1[i] + T2[i])] = True
             mask *= cur_mask
         mask = mask.reshape(constants['shape_grid'])
         print(mask)
@@ -442,6 +442,7 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
 
             token_duration = token.param(name='Duration')
             token_start = token.param(name='Pulse start')
+            print("info tokrn", token_start, token_duration, delta)
             if token_idx == 0:
                 token.set_descriptor(key=1, descriptor_name='bounds',
                                      # descriptor_value=(-token_duration,
@@ -477,12 +478,12 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
             print('name token', token, bounds)
             # print("type of grid", type(grid), grid)
             try:
-                left_grid_bound = np.array(bounds[1])[:, 0] + np.array(bounds[2])[ :, 0]
+                left_grid_bound = np.array(bounds[1])[0, :] + np.array(bounds[2])[0, :]
             except:
                 left_grid_bound = bounds[1][0] + bounds[2][0]
 
             try:
-                right_grid_bound = np.array(bounds[1])[:, 1] + np.array(bounds[2])[:, 1]
+                right_grid_bound = np.array(bounds[1])[1, :] + np.array(bounds[2])[1, :]
             except:
                 right_grid_bound = bounds[1][1] + bounds[2][1]
 
@@ -495,9 +496,8 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
 
             constants = get_full_constant()
             new_target_idxs = np.arange(0, grid.shape[0], 1, dtype=int)
-            print(len(new_target_idxs), new_target_idxs, np.apply_along_axis(np.any, 1, grid <= right_grid_bound))
-            new_target_idxs = new_target_idxs[np.apply_along_axis(np.any, 1, grid <= right_grid_bound)]
-            print(len(new_target_idxs), new_target_idxs, len(np.apply_along_axis(np.all, 1, grid_optimize >= left_grid_bound)))
+            # print(len(new_target_idxs), new_target_idxs, np.apply_along_axis(np.any, 1, grid <= right_grid_bound))
+            new_target_idxs = new_target_idxs[msk]
             new_target_idxs = new_target_idxs[np.apply_along_axis(np.any, 1, grid_optimize >= left_grid_bound)]
             grid_optimize = grid_optimize[np.apply_along_axis(np.any, 1, grid_optimize >= left_grid_bound), :]
             new_target_value = deepcopy(constants[target_token.name_])[new_target_idxs]
@@ -510,19 +510,21 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
             set_constants(ntm=new_target_value)
             target_token.name_ = new_target_name
 
+            grid_optimize = grid_optimize.T
             inv_idx = token_idx-1
             while inv_idx >= 0:
-                if (tokens_to_optimize[inv_idx].param('Pulse start') +
-                        tokens_to_optimize[inv_idx].param('Duration')) < grid_optimize.min():
+                if np.all((tokens_to_optimize[inv_idx].param('Pulse start') +
+                        tokens_to_optimize[inv_idx].param('Duration')) < np.array([grid_optimize_iter.min() for grid_optimize_iter in grid_optimize])):
                     tokens_to_optimize[inv_idx].fixator['self'] = False
                     break
                 tokens_to_optimize[inv_idx].fixator['val'] = False
                 inv_idx -= 1
 
-            print("before optimize i want check data", deepcopy(token.params), grid_optimize)
-            print("zaebalo blat' vaebavat'sa, rabotay suka!!!!!", grid_optimize.shape, (grid_optimize.T).shape)
-            grid_optimize = grid_optimize.T
+            # print("before optimize i want check data", deepcopy(token.params), grid_optimize)
+            # print("zaebalo blat' vaebavat'sa, rabotay suka!!!!!", grid_optimize.shape, (grid_optimize.T).shape)
+            
             prms = deepcopy(token.params)
+            print("parametrs before minimize", prms)
             res = minimize(self._fitness_wrapper, prms.reshape(-1),
                            args=(individ, grid_optimize, token), method='Nelder-Mead')
             # res = differential_evolution(self._fitness_wrapper, deepcopy(bounds),
@@ -537,7 +539,9 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
             # except ValueError:
             #     pass
             # token.params = res.x
+            print("complex optimize result after minimize", res.x, res.x.shape)
             self._fitness_wrapper(res.x, individ, grid_optimize, token)
+            print("results self parametrs", token, token.params)
             token.params_description = tmp_params_description
             token.fixator['self'] = True
 
@@ -551,7 +555,7 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
 
         target = -extra_tmp_individ.value(grid)
         target -= target.min()
-        target /= target.max()
+        target /= target.max()  
 
         pulse_starts = self._find_pulse_starts(target, complex_token)
         self._init_structure_with_pulse_starts(complex_token, pulse_starts)
@@ -583,23 +587,13 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
 
     @staticmethod
     def _remove_small_tokens(complex_token):
-        amps = list(map(lambda token: token.param('Amplitude'), complex_token.structure))
+        amps = list(map(lambda token: token.param('Amplitude')[0], complex_token.structure))
         mx_amp = np.max(amps)
         new_structure = []
         for idx, token in enumerate(complex_token.structure):
             if amps[idx] >= 0.02*mx_amp:
                 new_structure.append(token)
         complex_token.structure = new_structure
-
-
-
-
-
-
-
-
-
-
 
 
 class ImpSimpleOptimizerIndivid(GeneticOperatorIndivid):

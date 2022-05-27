@@ -1,5 +1,5 @@
 """
-Contains optimizers of parameters of tokens which are need to optimize.
+Contains optimizers of image.pngers of tokens which are need to optimize.
 Лучше сюда не заглядывать, тут есть и будут еще сложные логики оптимизации токенов.
 """
 from functools import reduce
@@ -99,6 +99,7 @@ class PeriodicTokensOptimizerIndivid(GeneticOperatorIndivid):
                                                     descriptor_value='Frequency')] = freq[0][i]
             # print("showing x0", x0)
             # x0[0] = 1.
+            print("result before optimize in simple optimizer", token, token.params)
             if self.params['optimizer'] == 'DE':
                 # print("x0 not")
                 res = differential_evolution(self._fitness_wrapper, new_bounds,
@@ -112,6 +113,7 @@ class PeriodicTokensOptimizerIndivid(GeneticOperatorIndivid):
             token.params = res.x.reshape(grid.shape[0], len(res.x)//grid.shape[0])
             # print(token.params)
         # individ.change_all_fixes(False)
+        print("result after optimize in simple optimizer", token.params)
         individ.structure = individ.structure
 
     def _choice_tokens_for_optimize(self, individ):
@@ -400,11 +402,14 @@ class TrendDiscreteTokensOptimizerIndivid(PeriodicTokensOptimizerIndivid):
 
         freq = fp.choice_freq_for_summand(grid, target-target.mean(),
                                           number_selecting=5, number_selected=5, token_type='trend')
+        print("trend freq", freq)
         if freq is None: #TODO: сделать проверку присутствия нужного токена в неком пуле, чтобы избежать повторной оптимизаци
             individ.structure.remove(token) # del hopeless token and out
         else:
             bounds = deepcopy(token.get_descriptor_foreach_param(descriptor_name='bounds'))
             x0 = deepcopy(token.params)
+
+            print("before trend discrete tokens optimizer", bounds, x0)
 
             if self.params['optimizer'] == 'DE':
                 res = differential_evolution(self._fitness_wrapper, bounds,
@@ -415,11 +420,13 @@ class TrendDiscreteTokensOptimizerIndivid(PeriodicTokensOptimizerIndivid):
                                args=(tmp_individ, grid, token))
             token.params = res.x
             token.fixator['self'] = True
+            print("after trend discrete tokens optimizer", token.params)
         individ.structure = individ.structure
 
     @apply_decorator
     def apply(self, individ, *args, **kwargs):
         choiced_tokens = self._choice_tokens_for_optimize(individ)
+        print("number of choice_tokens", len(choiced_tokens))
         for token in choiced_tokens:
             self._optimize_token_params(individ, token)
 
@@ -453,6 +460,7 @@ class PeriodicTokensOptimizerPopulation(GeneticOperatorPopulation):
     def apply(self, population, *args, **kwargs):
         for individ in population.structure:
             # individ.apply_operator('TrendTokensOptimizerIndivid')
+            print("tutuutuutuut")
             individ.apply_operator('TrendDiscreteTokensOptimizerIndivid')
             # individ.apply_operator('ImpComplexOptimizerIndivid2')
             individ.apply_operator('ImpComplexDiscreteTokenParamsOptimizer')
