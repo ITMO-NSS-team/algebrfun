@@ -118,7 +118,7 @@ class Token:
 
     def check_params(self):
         isinstance(self._params, np.ndarray)
-        print("assert shape of params", self._params.shape[-1], self._number_params)
+        # print("assert shape of params", self._params.shape[-1], self._number_params)
         assert self._params.shape[-1] == self._number_params, "The number of parameters does not match the length of params array"\
                                                   + "\nUse methods 'params.setter' or 'set_param' to change params"
         # TODO проверка на количество переменных в уравнениии self._params.shape[0]

@@ -137,8 +137,14 @@ class Sin(TerminalToken):
 
     def name(self, with_params=False):
         # return self.name_ + str(self.params)
-        a, w, fi = self.params[0] # !!!!!
-        return '{}Sin({}t + {}pi)'.format(round(a, 2), round(w, 2), round(fi, 2))
+        a = self.params[0][0]
+        params_str = ''
+        for iter_param in self.params:
+            ai, w, fi = iter_param
+            params_str += '{}t + {}pi + '.format(round(w, 2), round(fi, 2))
+
+        # a, w, fi = self.params.T # !!!!!
+        return '{}Sin({})'.format(round(a, 2), params_str[:-2])
 
     def __eq__(self, other):
         if type(self) == type(other):
@@ -337,7 +343,12 @@ class Imp(TerminalToken):
     def name(self, with_params=False):
         # return self.name_ + str(self.params)
         a, w, fi = self.params[0][[0, 1, -1]] # !!!!!
-        return '{}Imp({}t + {}pi)'.format(round(a, 2), round(w, 2), round(fi, 2))
+        param_str = ''
+        for iter_param in self.params:
+            w, fi = iter_param[[1, -1]]
+            param_str += '{}t + {}pi + '.format(round(w, 2), round(fi, 2))
+
+        return '{}Imp({})'.format(round(a, 2), param_str[:-2])
 
     # TODO придумать нормальный метод сравнения
     # def __eq__(self, other):

@@ -117,14 +117,19 @@ class PeriodicTokensOptimizerIndivid(GeneticOperatorIndivid):
         individ.structure = individ.structure
 
     def _choice_tokens_for_optimize(self, individ):
+        print('try to find tokens for optimize')
         optimize_id = self.params['optimize_id']
+        print('mur')
         choiced_tokens = list(filter(lambda token: token.optimize_id == optimize_id and not token.fixator['self'],
                                      individ.structure))
+        print("mur 2")
         return choiced_tokens
 
     @apply_decorator
     def apply(self, individ, *args, **kwargs) -> None:
+        print("am in periodic token")
         choiced_tokens = self._choice_tokens_for_optimize(individ)
+        print("choiced tooken for perioodic tokens optimize", choiced_tokens)
         for token in choiced_tokens:
             self._optimize_token_params(individ, token)
 
@@ -462,10 +467,13 @@ class PeriodicTokensOptimizerPopulation(GeneticOperatorPopulation):
             # individ.apply_operator('TrendTokensOptimizerIndivid')
             print("tutuutuutuut")
             individ.apply_operator('TrendDiscreteTokensOptimizerIndivid')
+            print("complete trend discrete")
             # individ.apply_operator('ImpComplexOptimizerIndivid2')
             individ.apply_operator('ImpComplexDiscreteTokenParamsOptimizer')
+            print("complete imp complex")
             # individ.apply_operator('AllImpComplexOptimizerIndivid')
             individ.apply_operator('PeriodicTokensOptimizerIndivid')
+            print("complete periodic tokens")
             # individ.apply_operator('PeriodicExtraTokensOptimizerIndivid')
         return population
 

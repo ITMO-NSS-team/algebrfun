@@ -137,6 +137,8 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
         complex_token_fitness = ImpComplexTokenParamsOptimizer._tokens_fitnesses(tmp_individ,
                                                                                  [complex_token.pattern])
 
+        print('fitnesses:', fitnesses)
+
         idxs_significant_fixed_optimized_tokens_in_structure = list(filter(
             lambda idx: fitnesses[idx] <= complex_token_fitness[0],
             range(len(fitnesses))))
@@ -230,12 +232,13 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
         # plt.legend()
         # plt.show()
 
-        ret = grid[0][mas_idxs]
+        ret = grid[:, mas_idxs]
         # print('lenghth choose time steps: ', len(ret))
 
         return ret
 
     def _init_structure_with_pulse_starts(self, complex_token, pulse_starts):
+        print("pulse starts that we want", pulse_starts)
         grid = self.params['grid']
         complex_token.init_structure_from_pattern(grid)
         init_pulses_starts = np.array(list(map(lambda imp: imp.param(name='Pulse start'), complex_token.structure)))
@@ -244,7 +247,7 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
         imp_single_pattern = complex_token.get_substructure(idx=0)
         imp_single_pattern.val = None
         imps = []
-        for start in pulse_starts:
+        for start in pulse_starts.T:
             # flag = False
             # idxs_candidates = np.argsort(np.abs((init_pulses_starts - start)))
             # # к каждому экстремуму пододвигаем ближайший пульс
@@ -339,10 +342,13 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
     def apply(self, individ, *args, **kwargs):
 
         choiced_tokens = self._choice_tokens_for_optimize(individ)
+        print("number of tokens for impcomplexdiscretetokrnoptimizer", len(choiced_tokens))
         if len(choiced_tokens) == 0:
+            print("exit without optimize (ICDTPO)")
             return
 
         for complex_token in choiced_tokens:
+            print(complex_token, complex_token.params, complex_token.pattern, complex_token.pattern.params)
             self._optimize_token_params(individ, complex_token)
         return
 
