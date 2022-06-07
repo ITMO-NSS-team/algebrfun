@@ -80,6 +80,16 @@ class Equation(Individ):
         #         return reduce(lambda val, x: val * x, list(map(lambda x: x.value(t), self.chromo)))
         return np.zeros(grid.shape)
 
+    def get_norm_of_amplitudes(self):
+        fixed_optimized_tokens_in_structure = list(filter(lambda token: token.fixator['self'], self.structure))
+
+        if len(fixed_optimized_tokens_in_structure) != 0:
+            norm = reduce(lambda norm, ampl: norm + ampl, list(map(lambda token: np.abs(token.param(name='Amplitude')[0]), fixed_optimized_tokens_in_structure)))
+
+            return norm
+        
+        return 0
+
     def get_structure(self, *types):
         if not types:
             return copy(self.structure)

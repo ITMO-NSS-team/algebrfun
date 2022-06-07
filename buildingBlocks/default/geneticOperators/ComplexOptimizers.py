@@ -87,15 +87,16 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
         fi = pattern.param(name='Phase')
         print("ValueError", T.shape, T1.shape, fi.shape)
         test_val = pattern.value(grid)
-        test_val = test_val.reshape(constants['shape_grid'])
+        # test_val = test_val.reshape(constants['shape_grid'])
         print("test value", test_val)
         mask = np.ones(grid.shape[-1], dtype=bool)
         for i in range(grid.shape[0]):
             print(grid[i], T[i], fi[i], T1[i], T2[i])
+            print(T[i] - fi[i] * T[i] + T1[i], T[i] - fi[i] * T[i] + T1[i] + T2[i])
             cur_mask = np.zeros(grid.shape[-1], dtype=bool)
             cur_mask[(grid[i] >= T[i] - fi[i] * T[i] + T1[i]) & (grid[i] <= T[i] - fi[i] * T[i] + T1[i] + T2[i])] = True
             mask *= cur_mask
-        mask = mask.reshape(constants['shape_grid'])
+        # mask = mask.reshape(constants['shape_grid'])
         print(mask)
         single_pattern_value = test_val[mask]
                                # * np.sign(pattern.param(name='Amplitude'))
@@ -167,9 +168,12 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
         target /= target.max()
 
         T = 1 / complex_token.pattern.param(name='Frequency')
+        print("period", T)
         cor = np.correlate(target, single_pattern_value, mode='valid')  # /np.var(pattern)
         cor -= cor.min()
         cor /= max(cor.min(), cor.max(), key=abs)
+
+        print("correlation", cor)
         # todo дисперсия = двоякая величина. Бывает токенам выгоднее стать плоскими в другом месте, чтоюы дисперсию
         # максимизировать, потому что на том промежутке это действительно выгодней (???). Почему токены в новом месте
         # начинают странно оптимизироваться? Может метрика неверна?
@@ -212,6 +216,7 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
 
         # mas_idxs = np.array(extremas)
         mas_idxs = np.array(idxs)
+        print("mas idxs", mas_idxs)
 
         # plt.figure('corr' + str(np.random.uniform()))
         # plt.plot(target, label='target')

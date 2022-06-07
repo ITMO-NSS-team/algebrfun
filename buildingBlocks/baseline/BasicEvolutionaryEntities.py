@@ -108,83 +108,6 @@ class TerminalToken(Bs.Token):
 
         self.variable_params = None
 
-
-    def __select_parametrs__h(self, x, data, population_size):
-        temp_params = []
-        index_params = []
-        # count_temp_params = len(nex)
-        count_temp_params = 4
-        for key_param in range(1, self._number_params):
-            bounds = list(self.params_description[key_param]['bounds'])
-            if bounds[1] == float('inf'):
-                bounds[1] = count_temp_params
-            temp_param = np.linspace(bounds[0], bounds[1], count_temp_params)
-            
-            temp_params.append((temp_param, bounds[0], bounds[1]))
-            index_params.append(len(temp_param))
-
-        if len(index_params) == 0:
-            return 0
-        index_params[-1] = 0
-        flag = 0
-        res = {}
-
-        while index_params[0] != 0 or flag == 0:
-            current_params = []
-            flag = 1
-            for i in range(len(index_params) - 1):
-                if index_params[i] == 0:
-                    index_params[i] = len(temp_params[i][0])
-                current_param_index = len(temp_params[i][0]) - index_params[i]
-                if index_params[i + 1] == 0:
-                    index_params[i] -= 1
-                current_params.append(temp_params[i][0][current_param_index])
-            res_evl = []
-            t = 2
-            # for param in temp_params[-1]:
-            #     tmp = self.evaluate(np.hstack((0, current_params, param)), t)
-            #     res_evl.append(tmp)
-            
-            gs = []
-            # # нормировка, непонятно нужна или нет
-            # data = (2 * np.array(data) - temp_params[-1][1] - temp_params[-1][2]) / (temp_params[-1][2] - temp_params[-1][1])
-            nex = (2 * np.array(x) - temp_params[-1][1] - temp_params[-1][2]) / (temp_params[-1][2] - temp_params[-1][1])
-            # for i, param in enumerate(np.linspace(temp_params[-1][1], temp_params[-1][2], population_size)):
-            #     if not i:
-            #         gs.append(np.exp(nex * param))
-            #         res[tuple(np.hstack((current_params, param)))] = np.sum(gs[i] * res_evl)
-            #         continue
-            #     temp_f = np.exp(nex * param)
-            #     gs.append(temp_f)
-            #     for j in range(i):
-            #         gs[i] -= (np.sum(temp_f * gs[j]) / np.sum(gs[j] * gs[j]) * gs[j])
-            #     res[tuple(np.hstack((current_params, param)))] = np.sum(gs[i] * res_evl)
-
-            for i, param in enumerate(temp_params[-1][0]):
-                # tmp = self.evaluate(np.hstack((0, current_params, param)), nex)
-                tmp = data
-                if not i:
-                    gs.append(np.exp(nex * param))
-                    # res[tuple(np.hstack((current_params, param)))] = np.sum(gs[i] * tmp)
-                    res[tuple(np.hstack((current_params, param)))] = np.tensordot(gs[i], tmp, tmp.ndim)
-                    continue
-                temp_f = np.exp(nex * param)
-                gs.append(temp_f)
-                for j in range(i):
-                    # gs[i] -= (np.sum(temp_f * gs[j]) / np.sum(gs[j] * gs[j]) * gs[j])
-                    gs[i] -= (np.tensordot(temp_f, gs[j], temp_f.ndim) / np.tensordot(gs[j], gs[j], temp_f.ndim) * gs[j])
-                # res[tuple(np.hstack((current_params, param)))] = np.sum(gs[i] * tmp)
-                res[tuple(np.hstack((current_params, param)))] = np.tensordot(gs[i], tmp, tmp.ndim)
-
-
-        
-        res = np.array([key for key in sorted(res, key=res.get, reverse=True)])
-        self.variable_params = res
-        # print(self.name, self.variable_params)
-        test_np_array = np.array(self.variable_params)
-        # print('mur', test_np_array.shape)
-        return res
-
     def __select_parametrs__m(self, in_data, data, population_size, gen=True):
         if self._number_params == 1:
             return 0
@@ -262,7 +185,7 @@ class TerminalToken(Bs.Token):
             if bounds[1] == float('inf'):
                 bounds[1] = sz
             params_lin = np.linspace(bounds[0], bounds[1], sz)
-            params_wvar = np.tensordot(params_lin, in_data, axes=0)
+            params_wvar = np.tensordot(params_lin, in_data, axes=0)   
             params_wvar = (params_wvar - np.min(params_wvar))/(np.max(params_wvar) - np.min(params_wvar))
             params_wvar = np.exp(params_wvar)
             # print("kkg", params_wvar.shape)

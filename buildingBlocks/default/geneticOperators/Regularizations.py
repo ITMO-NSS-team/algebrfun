@@ -250,13 +250,20 @@ class LRIndivid1Target(GeneticOperatorIndivid):
         return data
 
     @staticmethod
-    def _set_amplitudes(tokens, coefs, target_idx):
+    def _set_amplitudes(individ, tokens, coefs, target_idx):
+        new_structure = []
         print("coefs", tokens, coefs)
         coefs = list(coefs)
         coefs.insert(target_idx, 1.)
         print("after add", coefs)
         for idx, token in enumerate(tokens):
-            token.set_param(token.param(name='Amplitude') * coefs[idx], name='Amplitude')
+            new_amplitude = token.param(name='Amplitude') * coefs[idx]
+            # if new_amplitude[0] <= 1e-8:
+            #     continue
+            token.set_param(new_amplitude, name='Amplitude')
+            new_structure.append(token)
+
+        individ.strucutre = new_structure
 
     def _lr(self, individ):
         fixed_optimized_tokens_in_structure = list(filter(lambda token: token.fixator['self'],
@@ -274,9 +281,7 @@ class LRIndivid1Target(GeneticOperatorIndivid):
         model = LinearRegression(fit_intercept=True)
         model.fit(features.T, target)
 
-        print("?==?", len(model.coef_), len(features))
-
-        self._set_amplitudes(fixed_optimized_tokens_in_structure, model.coef_, target_idx)
+        self._set_amplitudes(individ, fixed_optimized_tokens_in_structure, model.coef_, target_idx)
         individ.intercept = model.intercept_
 
     @apply_decorator

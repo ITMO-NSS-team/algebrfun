@@ -317,7 +317,7 @@ class Imp(TerminalToken):
             if T2 != 0:
                 m[cond1] = (np.abs(t1[cond1] - T1) / T2) ** p1#np.abs(p1)
             if T3 != 0:
-                m[cond2] = (np.abs(t1[cond2] - T) / T3) ** p2#np.abs(p2)
+                m[cond2] = (np.abs(t1[cond2] - T) / T3) ** p2 #np.abs(p2)
         except:
             m = None
             if cond1:
@@ -331,8 +331,10 @@ class Imp(TerminalToken):
         result = np.nan
         if len(params.shape) == 1:
             params = list([params])
+        print("shape grid in impulse token", t.shape)
         for i in range(t.shape[0]):
             cur_val = self.each_evaluate(params[i], t[i])
+            print("grid val impulse", np.all(cur_val))
             if np.all(np.isnan(result)):
                 result = cur_val
             else:
