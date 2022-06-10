@@ -118,7 +118,6 @@ class Token:
 
     def check_params(self):
         isinstance(self._params, np.ndarray)
-        # print("assert shape of params", self._params.shape[-1], self._number_params)
         assert self._params.shape[-1] == self._number_params, "The number of parameters does not match the length of params array"\
                                                   + "\nUse methods 'params.setter' or 'set_param' to change params"
         # TODO проверка на количество переменных в уравнениии self._params.shape[0]
@@ -139,7 +138,6 @@ class Token:
         except KeyError:
             raise KeyError('"{}" have no parameter with name "{}"'.format(self, name))
         try:
-            print("Gg", self, idx, self._params[0][idx], param)
             try:
                 for i in range(len(param)):
                     self._params[i][idx] = param[i] # разобраться, так как не все параметры расширяемы!!!!

@@ -142,7 +142,6 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
         features, target, target_idx = self._preprocessing_data(individ, normalize_=False)
         model.fit(features, target)
         self._set_amplitudes_after_regression(individ, model.coef_, target_idx)
-        # print(model.intercept_, model.coef_)
 
         try:
             individ.forms.append(type(self).__name__ + individ.formula() + '<---' + current_process().name)
@@ -158,7 +157,6 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
         target_idx, model, _ = self._regression_cascade(individ, lasso=lasso)
         if lasso:
             self._del_tokens_with_zero_coef(individ, model.coef_, target_idx)
-        # print(model.intercept_, model.coef_)
 
         try:
             individ.forms.append(type(self).__name__ + individ.formula() + '<---' + current_process().name)
@@ -252,18 +250,16 @@ class LRIndivid1Target(GeneticOperatorIndivid):
     @staticmethod
     def _set_amplitudes(individ, tokens, coefs, target_idx):
         new_structure = []
-        print("coefs", tokens, coefs)
         coefs = list(coefs)
         coefs.insert(target_idx, 1.)
-        print("after add", coefs)
         for idx, token in enumerate(tokens):
             new_amplitude = token.param(name='Amplitude') * coefs[idx]
-            # if new_amplitude[0] <= 1e-8:
-            #     continue
+            if np.abs(new_amplitude[0]) < 1:
+                continue
             token.set_param(new_amplitude, name='Amplitude')
             new_structure.append(token)
 
-        individ.strucutre = new_structure
+        # individ.strucutre = new_structure
 
     def _lr(self, individ):
         fixed_optimized_tokens_in_structure = list(filter(lambda token: token.fixator['self'],

@@ -117,22 +117,20 @@ class Sin(TerminalToken):
         # if (params[0:2] == 0).any():
         #     return np.zeros(t.shape)
         # return params[0] * np.sin(1 * np.pi * (2 * params[1] * t + abs(math.modf(params[2])[0])))
-        return np.sin(2 * np.pi * (params[1] * t + params[2]))
+        # return np.sin(2 * np.pi * (params[1] * t + params[2]))
+        return 2 * np.pi * (params[1] * t + params[2])
 
     def evaluate(self, params, t):
         result = np.nan
         if len(params.shape) == 1:
             params = list([params])
-        # print("prm", params)
         for i in range(t.shape[0]):
-            # print("allany", params[i], t[i])
             cur_temp = self.each_evaluate(params[i], t[i])
-            # print("allanyres", cur_temp)
             if np.all(np.isnan(result)):
                 result = cur_temp
             else:    
-                result *= cur_temp
-        return params[0][0] * result
+                result += cur_temp
+        return params[0][0] * np.sin(result)
 
 
     def name(self, with_params=False):
@@ -157,7 +155,6 @@ class Sin(TerminalToken):
             # if np.all(self.params == np.zeros(self.params.shape)) or \
             #         np.all(other.params == np.zeros(other.params.shape)):
             #     return False
-            print("freqs", type(self_freq), type(other_freq), self_freq, other_freq)
             if np.all(self_freq == other_freq) & np.all(other_freq == np.zeros(len(other_freq))):
                 return True
             if np.all(self_phase == other_phase) & np.all(other_phase == np.zeros(len(other_phase))):
@@ -331,10 +328,8 @@ class Imp(TerminalToken):
         result = np.nan
         if len(params.shape) == 1:
             params = list([params])
-        print("shape grid in impulse token", t.shape)
         for i in range(t.shape[0]):
             cur_val = self.each_evaluate(params[i], t[i])
-            print("grid val impulse", np.all(cur_val))
             if np.all(np.isnan(result)):
                 result = cur_val
             else:
@@ -531,7 +526,6 @@ class ImpComplex(ComplexToken):
         if len(self.structure) != 0:
             return
         dif_params = deepcopy(self.pattern.params)
-        # print(self, params)
         new_imps = [[] for _ in range(dif_params.shape[0])]
         for idx, params in enumerate(dif_params):
             A, w, n1, n2, p1, p2, fi = params

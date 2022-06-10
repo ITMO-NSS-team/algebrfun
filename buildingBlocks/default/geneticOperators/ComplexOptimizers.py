@@ -85,19 +85,14 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
         T1 = pattern.param(name='Zero part of period') * T
         T2 = T - T1
         fi = pattern.param(name='Phase')
-        print("ValueError", T.shape, T1.shape, fi.shape)
         test_val = pattern.value(grid)
         # test_val = test_val.reshape(constants['shape_grid'])
-        print("test value", test_val)
         mask = np.ones(grid.shape[-1], dtype=bool)
         for i in range(grid.shape[0]):
-            print(grid[i], T[i], fi[i], T1[i], T2[i])
-            print(T[i] - fi[i] * T[i] + T1[i], T[i] - fi[i] * T[i] + T1[i] + T2[i])
             cur_mask = np.zeros(grid.shape[-1], dtype=bool)
             cur_mask[(grid[i] >= T[i] - fi[i] * T[i] + T1[i]) & (grid[i] <= T[i] - fi[i] * T[i] + T1[i] + T2[i])] = True
             mask *= cur_mask
         # mask = mask.reshape(constants['shape_grid'])
-        print(mask)
         single_pattern_value = test_val[mask]
                                # * np.sign(pattern.param(name='Amplitude'))
         try:
@@ -105,7 +100,6 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
             assert len(single_pattern_value) != 0, 'hmm'
         except:
             pass
-        print("single_pattern_value", single_pattern_value)
         assert (single_pattern_value != 0).any(), 'hmm'
         return single_pattern_value
 
@@ -138,7 +132,6 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
         complex_token_fitness = ImpComplexTokenParamsOptimizer._tokens_fitnesses(tmp_individ,
                                                                                  [complex_token.pattern])
 
-        print('fitnesses:', fitnesses)
 
         idxs_significant_fixed_optimized_tokens_in_structure = list(filter(
             lambda idx: fitnesses[idx] <= complex_token_fitness[0],
@@ -164,16 +157,12 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
         # single_pattern_value -= single_pattern_value.min()
         single_pattern_value /= single_pattern_value.max()
         # target -= target.min()
-        print(target.shape)
         target /= target.max()
 
         T = 1 / complex_token.pattern.param(name='Frequency')
-        print("period", T)
         cor = np.correlate(target, single_pattern_value, mode='valid')  # /np.var(pattern)
         cor -= cor.min()
         cor /= max(cor.min(), cor.max(), key=abs)
-
-        print("correlation", cor)
         # todo дисперсия = двоякая величина. Бывает токенам выгоднее стать плоскими в другом месте, чтоюы дисперсию
         # максимизировать, потому что на том промежутке это действительно выгодней (???). Почему токены в новом месте
         # начинают странно оптимизироваться? Может метрика неверна?
@@ -187,8 +176,6 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
         #         idxs.append(i)
         all_idxs = argrelextrema(cor, lambda x1, x2: x1 > x2, mode='wrap')[0]
 
-        # print('Imp freq: ', 1/T)
-        # print('length all time steps: ', len(all_idxs))
         # all_idxs = np.array(idxs)
 
         idxs = list(all_idxs)
@@ -216,7 +203,6 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
 
         # mas_idxs = np.array(extremas)
         mas_idxs = np.array(idxs)
-        print("mas idxs", mas_idxs)
 
         # plt.figure('corr' + str(np.random.uniform()))
         # plt.plot(target, label='target')
@@ -238,12 +224,10 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
         # plt.show()
 
         ret = grid[:, mas_idxs]
-        # print('lenghth choose time steps: ', len(ret))
 
         return ret
 
     def _init_structure_with_pulse_starts(self, complex_token, pulse_starts):
-        print("pulse starts that we want", pulse_starts)
         grid = self.params['grid']
         complex_token.init_structure_from_pattern(grid)
         init_pulses_starts = np.array(list(map(lambda imp: imp.param(name='Pulse start'), complex_token.structure)))
@@ -321,8 +305,6 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
         # plt.legend()
         # plt.show()
 
-        # print('test')
-
     def _choice_tokens_for_optimize(self, individ):
         optimize_id = self.params['optimize_id']
         choiced_tokens = list(filter(lambda token: token.optimize_id == optimize_id and not token.fixator['self'],
@@ -347,13 +329,10 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
     def apply(self, individ, *args, **kwargs):
 
         choiced_tokens = self._choice_tokens_for_optimize(individ)
-        print("number of tokens for impcomplexdiscretetokrnoptimizer", len(choiced_tokens))
         if len(choiced_tokens) == 0:
-            print("exit without optimize (ICDTPO)")
             return
 
         for complex_token in choiced_tokens:
-            print(complex_token, complex_token.params, complex_token.pattern, complex_token.pattern.params)
             self._optimize_token_params(individ, complex_token)
         return
 
@@ -384,7 +363,6 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
         individ, grid, token = args
         # T0 = token.params[1]
         # try:
-        print("token params reshape", grid.shape, len(params))
         token.params = params.reshape(grid.shape[0], len(params)//grid.shape[0])
         # except:
         #     token.params = params
@@ -410,11 +388,8 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
         target_token = target_tokens[0]
 
         pulse_starts = list(map(lambda imp: imp.param(name='Pulse start'), tokens_to_optimize))
-        # print("pulse_starts", pulse_starts)
         idxs = np.argsort(pulse_starts)
-        print("token to optimize with idxs", len(tokens_to_optimize), idxs)
         tokens_to_optimize = [tokens_to_optimize[idx.min()] for idx in idxs]
-        # print(tokens_to_optimize)
 
         # self.random_fig_mark = np.random.uniform()
         # plt.figure('result {}'.format(self.random_fig_mark))
@@ -453,7 +428,6 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
 
             token_duration = token.param(name='Duration')
             token_start = token.param(name='Pulse start')
-            print("info tokrn", token_start, token_duration, delta)
             if token_idx == 0:
                 token.set_descriptor(key=1, descriptor_name='bounds',
                                      # descriptor_value=(-token_duration,
@@ -486,8 +460,6 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
                                                         - token_start)*(1+delta)))
 
             bounds = deepcopy(token.get_descriptor_foreach_param(descriptor_name='bounds'))
-            print('name token', token, bounds)
-            # print("type of grid", type(grid), grid)
             try:
                 left_grid_bound = np.array(bounds[1])[0, :] + np.array(bounds[2])[0, :]
             except:
@@ -498,16 +470,13 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
             except:
                 right_grid_bound = bounds[1][1] + bounds[2][1]
 
-            # print("r_b and l_b", right_grid_bound, left_grid_bound)
             # grid_optimize = np.array([grid[k] if grid[k] <= right_grid_bound] for k in range(grid.shape[0])])
             msk = np.apply_along_axis(np.any, 1, grid <= right_grid_bound)
             grid_optimize = grid[msk, :]
-            print("grid optimize", msk, grid_optimize, grid[0, :])
 
 
             constants = get_full_constant()
             new_target_idxs = np.arange(0, grid.shape[0], 1, dtype=int)
-            # print(len(new_target_idxs), new_target_idxs, np.apply_along_axis(np.any, 1, grid <= right_grid_bound))
             new_target_idxs = new_target_idxs[msk]
             new_target_idxs = new_target_idxs[np.apply_along_axis(np.any, 1, grid_optimize >= left_grid_bound)]
             grid_optimize = grid_optimize[np.apply_along_axis(np.any, 1, grid_optimize >= left_grid_bound), :]
@@ -531,11 +500,8 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
                 tokens_to_optimize[inv_idx].fixator['val'] = False
                 inv_idx -= 1
 
-            # print("before optimize i want check data", deepcopy(token.params), grid_optimize)
-            # print("zaebalo blat' vaebavat'sa, rabotay suka!!!!!", grid_optimize.shape, (grid_optimize.T).shape)
             
             prms = deepcopy(token.params)
-            print("parametrs before minimize", prms)
             res = minimize(self._fitness_wrapper, prms.reshape(-1),
                            args=(individ, grid_optimize, token), method='Nelder-Mead')
             # res = differential_evolution(self._fitness_wrapper, deepcopy(bounds),
@@ -550,9 +516,7 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
             # except ValueError:
             #     pass
             # token.params = res.x
-            print("complex optimize result after minimize", res.x, res.x.shape)
             self._fitness_wrapper(res.x, individ, grid_optimize, token)
-            print("results self parametrs", token, token.params)
             token.params_description = tmp_params_description
             token.fixator['self'] = True
 
@@ -593,8 +557,6 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
         # plt.ylabel('time series')
         # plt.legend()
         # plt.show()
-
-        # print('test')
 
     @staticmethod
     def _remove_small_tokens(complex_token):
@@ -837,8 +799,6 @@ class AllImpComplexOptimizerIndivid(GeneticOperatorIndivid):
         # plt.grid(True)
         # plt.legend()
         # plt.show()
-        #
-        # print('test')
 
     def _choice_tokens_for_optimize1(self, individ):
         optimize_id = self.params['optimize_id']
@@ -857,7 +817,6 @@ class AllImpComplexOptimizerIndivid(GeneticOperatorIndivid):
 
         for complex_token in choiced_tokens:
             individ.apply_operator('TokenFitnessIndivid')
-            # print('Начало оптимизации с частотой {}'.format(complex_token.pattern.param(name='Frequency')))
             self._optimize_token_params(individ, complex_token)
             complex_token.fixator['self'] = True
 
@@ -897,10 +856,8 @@ class ImpComplexOptimizerIndivid2(GeneticOperatorIndivid):
                 token_start = token.param(name='Pulse start')
                 token_duration = token.param(name='Duration')
                 if token_start + token_duration <= grid.min():
-                    # print('токен вне границ поля (минимум)')
                     continue
                 if token_start >= grid.max():
-                    # print('токен вне границ поля (максимум)')
                     continue
 
                 if token_idx != 0:

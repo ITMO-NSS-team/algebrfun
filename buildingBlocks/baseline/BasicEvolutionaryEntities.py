@@ -108,72 +108,6 @@ class TerminalToken(Bs.Token):
 
         self.variable_params = None
 
-    def __select_parametrs__m(self, in_data, data, population_size, gen=True):
-        if self._number_params == 1:
-            return 0
-        # print('count_param:', self._number_params)
-        # print('shape grid:', in_data.shape)
-        combin_params = 1
-        sz = 4
-        for key_param in range(1, self._number_params):
-            bounds = list(self.params_description[key_param]['bounds'])
-            if bounds[1] == float('inf'):
-                bounds[1] = sz
-            params_lin = np.linspace(bounds[0], bounds[1], sz)
-            combin_params = np.tensordot(combin_params, params_lin, axes=0)
-    
-        combin_params = (combin_params - np.min(combin_params))/(np.max(combin_params) - np.min(combin_params)) # нормировка
-        combin_params_flat = combin_params.reshape(-1)
-        
-        count_axis = 0
-        exp_indata = np.nan
-        for number_var in range(data.ndim):
-            t_parametrs = np.tensordot(combin_params_flat, in_data[number_var], axes=0)
-            t_parametrs = np.exp(t_parametrs)
-            if number_var == 0:
-                exp_indata = t_parametrs
-                continue
-            if gen:
-                exp_indata = ex_indata * t_parametrs
-            else:
-                exp_indata = np.array([x * y for x,y in list(product(exp_indata, t_parametrs))])
-        
-        # print('getting size datas', exp_indata.shape)
-        amplitudes = []
-        for k, exp_indata_iter in enumerate(exp_indata):
-            amplitudes.append(np.tensordot(exp_indata_iter, data, data.ndim))
-
-        
-        sorted_amplitudes = np.array(sorted(list(zip(list(range(len(amplitudes))), amplitudes)), key=lambda x: x[1], reverse=True))[:, 0]
-        # print(len(sorted_amplitudes), 'mur', sorted_amplitudes[0])
-        
-        # print("i'm here")
-        cur_inds = np.zeros((data.ndim))
-        answer = [[] for i in range(data.ndim)]
-        for tv in sorted_amplitudes:
-            tv = int(tv)
-            lnc = len(combin_params_flat)
-            cur_inds = np.array([tv // lnc ** itr for itr in np.arange(data.ndim)])
-            for i in range(data.ndim - 1):
-                ind_var = cur_inds[i] - lnc * cur_inds[i+1]
-                combin_p_indexs = [ind_var // sz ** itr for itr in np.arange(self._number_params - 1)]
-                tmp = combin_p_indexs[-1]
-                combin_p_indexs = [combin_p_indexs[i-1] - sz * combin_p_indexs[i] for i in np.arange(1, self._number_params - 1)]
-                combin_p_indexs.append(tmp)
-                answer[i].append(combin_p_indexs)
-            ind_var = cur_inds[-1]
-            combin_p_indexs = [ind_var // sz ** itr for itr in np.arange(self._number_params - 1)]
-            tmp = combin_p_indexs[-1]
-            combin_p_indexs = [combin_p_indexs[i-1] - sz * combin_p_indexs[i] for i in np.arange(1, self._number_params - 1)]
-            combin_p_indexs.append(tmp)
-            answer[-1].append(combin_p_indexs)
-        # print('len answer', np.array(answer).shape)
-        if gen:
-            self.variable_params = answer[0]
-        else:
-            self.variable_params = answer
-            # print(self._number_params)
-            # print(answer, np.array(answer).shape)
 
     def __select_parametrs__(self, in_data, data, population_size, gen=True):
         if self._number_params == 1:
@@ -188,11 +122,7 @@ class TerminalToken(Bs.Token):
             params_wvar = np.tensordot(params_lin, in_data, axes=0)   
             params_wvar = (params_wvar - np.min(params_wvar))/(np.max(params_wvar) - np.min(params_wvar))
             params_wvar = np.exp(params_wvar)
-            # print("kkg", params_wvar.shape)
-            # params_wvar = params_wvar.reshape(in_data.shape[0], sz, in_data.shape[-1])
             params_wvar = np.array([params_wvar[:, i, :] for i in range(in_data.shape[0])])
-            # print("kkg", params_wvar.shape)
-            # print("jhg", list(product(*params_wvar)))
             all_combin = np.array([reduce(lambda x,y: x * y, el) for el in list(product(*params_wvar))])
 
             amplitudes = []
@@ -200,13 +130,9 @@ class TerminalToken(Bs.Token):
                 amplitudes.append(np.tensordot(exp_indata_iter, data, data.ndim))
             shp = tuple([sz for _ in range(in_data.shape[0])])
             my_idxs = [ix for ix in np.ndindex(shp)]
-            # print(my_idxs)
-            # print(np.array(sorted(list(zip(my_idxs, amplitudes)), key=lambda x: x[1], reverse=True))[:, 0])
             sort_ampls = np.array(sorted(list(zip(my_idxs, amplitudes)), key=lambda x: x[1], reverse=True))[:, 0]
             sort_ampls = np.array([np.array(el) for el in sort_ampls])
-            # print("kkg four", sort_ampls.shape)
             for number_variable in range(in_data.shape[0]):
-                # print("nf", params_lin[sort_ampls[:, number_variable]])
                 try:
                     answer[number_variable].append(params_lin[sort_ampls[:, number_variable]])
                     # answer[number_variable].append(sort_ampls[:, number_variable])
@@ -214,13 +140,9 @@ class TerminalToken(Bs.Token):
                     answer.append([])
                     answer[number_variable].append(params_lin[sort_ampls[:, number_variable]])
                     # answer[number_variable].append(sort_ampls[:, number_variable])
-                # print(number_variable, key_param, answer)
         answer = np.array(answer)
-        # print("shape array answer", answer.shape)
-        # print(answer)
         # self.variable_params = answer.reshape((in_data.shape[0], sz, self._number_params - 1))
         self.variable_params = answer.reshape((answer.shape[0], answer.shape[2], answer.shape[1]))
-        # print(self.variable_params, self.variable_params.shape)
         
 
             
@@ -311,9 +233,7 @@ class TerminalToken(Bs.Token):
             try:
                 if self._params_description[key]['check']:
                     for i in range(self._params.shape[0]):
-                        # print(self, i, key, self._params)
                         min_val, max_val = value['bounds']
-                        # print("murmur", self._params[i][key], max_val, min_val)
                         try:
                             self._params[i][key] = min(self._params[i][key], min(max_val))
                         except:
@@ -359,10 +279,7 @@ class TerminalToken(Bs.Token):
             # эта централизация в целом то полезна (для ЛАССО например), но искажает продукт-токен
             # centralization
             # self.val -= np.mean(self.val)
-        print(self.val.shape, grid.shape)
         assert self.val.shape[0] == grid.shape[-1], "Value must be the same shape as grid "
-        # print("return self val", self.val)
-        # print("return self val shape", self.val.shape)
         return self.val
 
     @staticmethod
@@ -386,7 +303,6 @@ class TerminalToken(Bs.Token):
         return np.zeros(grid.shape)
 
     def func_params(self, params, grid):
-        # print(self, params)
         params = list(params)
         for idx in range(len(params)):
             try:

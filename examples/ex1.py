@@ -5,6 +5,7 @@ sys.path.append(root_dir)
 
 from copy import deepcopy
 from functools import reduce
+import seaborn as sns
 
 from buildingBlocks.Synthesis import Chain
 from buildingBlocks.Synthesis.Synthesizer import Synthesizer
@@ -16,7 +17,7 @@ from buildingBlocks.default.EvolutionEntities import PopulationOfEquations
 from buildingBlocks.Globals.supplementary.FrequencyProcessor import FrequencyProcessor4TimeSeries as fp
 import buildingBlocks.Globals.GlobalEntities as Bg
 import buildingBlocks.Builder.OperatorsBuilder as Ob
-# from load_data import get_data
+from load_data import get_data
 
 from moea_dd.src.moeadd import *
 from moea_dd.src.moeadd_supplementary import *
@@ -44,6 +45,7 @@ token4 = Power(optimize_id=2, name_='Power')
 pattern = Imp(optimize_id=1)
 impComplex_token = ImpComplex(pattern=pattern, optimize_id=3)
 
+
 ## Choose dataset
 # There are 3 datasets 
 # of series with different structure. 
@@ -67,7 +69,7 @@ build_settings = {
 ### Time series without seasonality
 
 i = 2 #3
-# data = get_data(i)
+data = get_data(i)
 build_settings = {
     'mutation': {
         'simple': dict(intensive=1, increase_prob=1),
@@ -88,14 +90,20 @@ build_settings = {
 # grid = np.array([data['grid']])
 # target = data['target']
 # target -= target.mean()
-x = np.linspace(0, 1, 50)
+x = np.linspace(0, 2 * np.pi, 50)
 y = x / 2
 xy = np.array(list(product(x, y)))
+XX, YY = np.meshgrid(x, y)
 target = np.array([np.sin(el[0] + el[1]) for el in xy])
 
+# target.reshape(-1)
+
 grid = np.array([xy[:, 0], xy[:, 1]])
-print('chuchuh', grid.shape, target.shape)
+# print('chuchuh', grid.shape, target.shape)
 target -= target.mean()
+
+# plt.plot(target)
+# plt.show()
 
 # shp = (grid.shape[1],)
 shp = (50,50)
@@ -106,6 +114,13 @@ set_constants(target=target, shape_grid=shp)
 
 individ = Equation(max_tokens=10)
 Ob.set_operators(grid, individ, build_settings)
+
+# строительство импульсов
+# imp_token = Imp(optimize_id=1, name_='Imp')
+# print('start', imp_token.params)
+# imp_token.__select_parametrs__(grid, target, 10)
+# print('after select parametrs', imp_token.variable_params)
+
 
 
 # Choose type of algorithm
@@ -178,7 +193,11 @@ print(time)
 # They are sorted by their quality (the first objective)
 
 
+for iter_forml in range(len(inds)):
+    print(inds[iter_forml].formula(), inds[iter_forml].fitness)
 
+
+print("RESULTING")
 n = 1
 ind = deepcopy(inds[n])
 print(ind.formula(), ind.fitness)
@@ -193,12 +212,127 @@ residuals -= residuals.mean()
 tmp_ind = deepcopy(ind)
 
 print("error", np.average((target - model) ** 2))
-plt.plot(grid[0][:300], target[:300], label="Input data")
-plt.plot(grid[0][:300], model[:300], label="Model")
+
+# plt.plot(grid[0][:], target[:], label="Input data")
+# plt.plot(grid[0][:], model[:], label="Model")
+# plt.legend()
+# plt.savefig('ptc0.png')
+
+mse = (target - model) ** 2
+sns.heatmap(mse.reshape(len(x), len(x)))
 plt.legend()
 plt.savefig('ptc0.png')
-# plt.show()
 
+plt.clf()
+f, axs = plt.subplots(1, 2)
+# plt.plot(target, label="Input data")
+# plt.plot(model, label="Model")
+
+sns.heatmap(target.reshape(shp), ax=axs[0])
+axs[0].set_title("Input data")
+sns.heatmap(model.reshape(shp), ax=axs[1])
+axs[1].set_title("Model")
+
+plt.legend()
+plt.savefig('ptc1.png')
+
+plt.clf()
+f, axs = plt.subplots(1, len(ind.structure), figsize=(12, 3))
+for iter, iter_token in enumerate(ind.structure):
+    token_value = iter_token.value(grid)
+    # token_value = target + token_value
+    sns.heatmap(token_value.reshape(shp), ax=axs[iter])
+    axs[iter].set_title(iter_token.name())
+
+plt.savefig("Tokens.png")
+
+
+my_target_equation = Equation(max_tokens = 10)
+my_token1 = Constant(val=None, name_='target', mandatory=1)
+my_token2 = Sin(params=np.array([[1,1/(2*np.pi),0],[1,1/(2*np.pi),0]]), optimize_id=1, name_='Sin')
+my_target_equation.structure = [my_token1, my_token2]
+
+my_token2.mandatory = 4
+my_token2.fixator['self'] = True
+
+print("info about token", my_token2.mandatory, my_token2.fixator['self'])
+
+my_target_equation.apply_operator("VarFitnessIndivid")
+print("hand-made equation", my_target_equation.formula(), my_target_equation.fitness)
+redul = my_target_equation.value(grid)
+
+test_model = target + redul
+test_model -= test_model.mean()
+redul -= redul.mean()
+
+
+print("TESTING SINUS")
+
+only_sin = my_token2.value(grid)
+# only_sin -= only_sin.mean()
+
+plt.clf()
+f, axs = plt.subplots(1, 4)
+mse = np.average((target - test_model) ** 2)
+sns.heatmap(target.reshape(shp), ax=axs[0])
+axs[0].set_title("Input data")
+sns.heatmap(test_model.reshape(shp), ax=axs[1])
+axs[1].set_title("Model")
+sns.heatmap(redul.reshape(shp), ax=axs[2])
+axs[2].set_title("Origin")
+sns.heatmap(only_sin.reshape(shp), ax=axs[3])
+axs[3].set_title("Sin")
+
+plt.legend()
+plt.savefig('hm.png')
+
+print("hand made error", mse)
+
+
+plt.clf()
+plt.plot(only_sin.reshape(shp)[shp[0] // 2])
+plt.show()
+
+# plt.clf()
+# f, axs = plt.subplots(1, 4, figsize=(12, 3))
+# print("check impule evaluate")
+# for iter_token in ind.structure:
+#     if iter_token.name_ == 'Imp':
+#         print(iter_token)
+#         print("parametrs end", iter_token.params)
+#         iter_token.set_param([1, 0], name='Frequency')
+#         iter_token.set_param([0, 0], name='Phase')
+#         cur_grid = np.array([grid[0]])
+#         token_value = iter_token.value(grid)
+#         # token_value = target - token_value
+#         sns.heatmap(token_value.reshape(shp), ax=axs[0])
+#         axs[0].set_title(iter_token.name())
+
+#         # iter_token.set_param([1, 0], name='Frequency')
+#         iter_token.set_param([1, 0], name='Phase')
+#         # token_value = iter_token.value(grid)
+#         cur_grid = np.array([grid[0]])
+#         token_value = iter_token.value(grid)
+#         # token_value = target - token_value
+#         sns.heatmap(token_value.reshape(shp), ax=axs[1])
+#         axs[1].set_title(iter_token.name())
+
+#         iter_token.set_param([1, 1], name='Frequency')
+#         iter_token.set_param([1, 0], name='Phase')
+#         token_value = iter_token.value(grid)
+#         # token_value = target - token_value
+#         sns.heatmap(token_value.reshape(shp), ax=axs[2])
+#         axs[2].set_title(iter_token.name())
+
+#         iter_token.set_param([1, 1], name='Frequency')
+#         iter_token.set_param([1, 1], name='Phase')
+#         token_value = iter_token.value(grid)
+#         # token_value = target - token_value
+#         sns.heatmap(token_value.reshape(shp), ax=axs[3])
+#         axs[3].set_title(iter_token.name())
+
+#         plt.show()
+#         break
 
 '''
 # Generate synthetics based on the model

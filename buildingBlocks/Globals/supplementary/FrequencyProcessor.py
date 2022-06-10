@@ -31,7 +31,6 @@ class FrequencyProcessor4TimeSeries:
                 mask = current_mask
             else:
                 mask *= current_mask
-        print("msk", mask.shape, mask)
         x = x.reshape((constants['shape_grid']))
         y = np.fft.fftn(x, s=shp)
         y = np.abs(y)
@@ -42,9 +41,7 @@ class FrequencyProcessor4TimeSeries:
 
     @staticmethod
     def findextrema_prev(w, spec):
-        # print(spec.shape)
         # spec = np.abs(spec)
-        # print(spec.shape)
         extremums_idxs = argrelextrema(spec, np.greater, mode='wrap')[0]
         kw = w[extremums_idxs]
         kspec = spec[extremums_idxs]
@@ -71,7 +68,6 @@ class FrequencyProcessor4TimeSeries:
         idxs_sorted = np.argsort(spec)[::-1]
         # sortspec = np.array([spec[i] for i in idxs])
         # sortw = np.array([w[i] for i in idxs])
-        # print("spec + idxs", spec.shape, idxs_sorted)
         spec_sorted = spec[idxs_sorted]
         w_sorted = []
         for wi, we in enumerate(w):
@@ -82,8 +78,6 @@ class FrequencyProcessor4TimeSeries:
     def choice_freqs(w, spec, pow=1, number_selected=1, number_selecting=None):
         if number_selecting is None:
             number_selecting = len(w)
-        # print("number selection and len w", number_selected, len(w))
-        # print("content in w", w)    
         # assert number_selecting <= len(w), 'selecting number more than all freqs number'
         # assert 0 <= number_selected <= number_selecting, 'selected freqs number more than' \
                                                         #  ' selecting number or less than zero'
@@ -128,21 +122,15 @@ class FrequencyProcessor4TimeSeries:
 
     @staticmethod
     def find_freq_for_summand(grid, x, wmin=0, wmax=None, c=10, number_selecting=1, number_selected=1):
-        # print("shapes for start", grid.shape, x.shape)
         w, s, wmax = FrequencyProcessor4TimeSeries.fft(grid, x, wmin, wmax, c)
-        # print("amplitudes", w)
-        # print("we found fft", w.shape, s.shape)
         kw, ks = FrequencyProcessor4TimeSeries.findextrema(w, s, number_selecting)
-        # print("we found extrema", kw)
         # kw, ks = FrequencyProcessor4TimeSeries.findextrema(kw, ks)
-        # print("we found extrema", ks.shape)
         kw, ks = FrequencyProcessor4TimeSeries.sort_by_specter(kw, ks)
         out_freqs = FrequencyProcessor4TimeSeries.choice_freqs(kw, ks,
                                                             # pow=number_selecting ** 0.5,
                                                             pow=2,
                                                             number_selected=number_selected,
                                                             number_selecting=number_selecting)
-        # print("also aort", out_freqs)
         return out_freqs, wmax
 
     @staticmethod
@@ -166,10 +154,7 @@ class FrequencyProcessor4TimeSeries:
         if choice_freqs is None:
             return None
         ending_freqs = []
-        # print("choice freqs shape", choice_freqs)
-        # print("fkg", threshold*Wmax, token_type)
         for choice_freq in choice_freqs:
-            # print(choice_freq)
             if len(choice_freq[choice_freq < threshold*Wmax]) == len(choice_freq):
                 if token_type == 'seasonal':
                     continue
@@ -180,5 +165,4 @@ class FrequencyProcessor4TimeSeries:
                     continue
             ending_freqs.append(choice_freq)
             break
-        # print("ending freqs shape", ending_freqs)
         return ending_freqs

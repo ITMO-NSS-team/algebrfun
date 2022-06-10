@@ -72,9 +72,6 @@ class Equation(Individ):
                                                           fixed_optimized_tokens_in_structure)))
             # val -= self.intercept
             # val = val.reshape(grid.shape) 
-            # print("count fixed_optimized_tokens", len(fixed_optimized_tokens_in_structure))
-            # print("return individ val", val)
-            # print("return individ val shape", val.shape)
             return val
         #     elif self.used_value == 'product':
         #         return reduce(lambda val, x: val * x, list(map(lambda x: x.value(t), self.chromo)))

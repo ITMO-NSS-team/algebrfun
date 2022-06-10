@@ -27,7 +27,6 @@ class ClustererPulses:
         # max_duration = min(np.max(durations), grid.max() - grid.min())
         # points = np.array(list(map(lambda token: token.value(grid))))
         pulse_starts = list(map(lambda token: token.param('Pulse start'), tokens))
-        # print("check param", tokens[0].param("Pulse start"))
         for idx, token in enumerate(tokens):
             token.set_param(grid[0][1], name='Pulse start') # !!!!!!
         points = list(map(lambda token: token.value(grid), tokens))

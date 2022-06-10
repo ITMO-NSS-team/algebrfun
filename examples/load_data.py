@@ -3,7 +3,7 @@ import pickle
 
 load_data = []
 
-path = r'./data/ts_samples.pkl'
+path = r'./examples/data/ts_samples.pkl'
 
 with open(path, 'rb') as file:
     while True:
