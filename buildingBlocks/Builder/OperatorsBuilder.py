@@ -56,8 +56,6 @@ def set_operators(grid, individ, kwargs):
 
     for token in tokens:
         token.__select_parametrs__(grid, Bg.constants['target'], population_size, gen=False)
-    
-    print("select parametrs ended")
 
 
     operatorsMap = OperatorsKeeper()
