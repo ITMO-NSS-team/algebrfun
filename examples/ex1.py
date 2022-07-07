@@ -94,7 +94,7 @@ x = np.linspace(0, 2 * np.pi, 50)
 y = x / 2
 xy = np.array(list(product(x, y)))
 XX, YY = np.meshgrid(x, y)
-target = np.array([np.sin(el[0] + el[1]) for el in xy])
+target = np.array([el[0]**2/6 + el[1]**2/2 for el in xy])
 
 # target.reshape(-1)
 
@@ -198,7 +198,7 @@ for iter_forml in range(len(inds)):
 
 
 print("RESULTING")
-n = 1
+n = 0
 ind = deepcopy(inds[n])
 print(ind.formula(), ind.fitness)
 
@@ -240,6 +240,7 @@ plt.clf()
 f, axs = plt.subplots(1, len(ind.structure), figsize=(12, 3))
 for iter, iter_token in enumerate(ind.structure):
     token_value = iter_token.value(grid)
+    print(iter_token, iter_token._params_description)
     # token_value = target + token_value
     sns.heatmap(token_value.reshape(shp), ax=axs[iter])
     axs[iter].set_title(iter_token.name())
