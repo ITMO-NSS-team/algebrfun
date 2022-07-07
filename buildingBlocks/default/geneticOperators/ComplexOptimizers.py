@@ -562,10 +562,15 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
     def _remove_small_tokens(complex_token):
         amps = list(map(lambda token: token.param('Amplitude')[0], complex_token.structure))
         mx_amp = np.max(amps)
+        mn_amp = np.min(amps)
+        diff = mx_amp - mn_amp
         new_structure = []
+        print("part with removed small tokens", mn_amp + 0.3 * diff, mx_amp*0.05)
         for idx, token in enumerate(complex_token.structure):
-            if amps[idx] >= 0.02*mx_amp:
+            if amps[idx] >= 0.06*mx_amp:
                 new_structure.append(token)
+            # if amps[idx] >= (mn_amp + diff * 0.3):
+            #     new_structure.append(token)
         complex_token.structure = new_structure
 
 

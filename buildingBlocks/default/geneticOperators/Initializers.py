@@ -45,10 +45,15 @@ class InitIndivid(GeneticOperatorIndivid):
         
         count_mandatory_tokens = 0
         mandatory_tokens = list(filter(lambda token: token.mandatory != 0, self.params['tokens']))
-        non_mandatory_tokens = list(filter(lambda token: token.mandatory == 0, self.params['tokens']))
+        non_mandatory_tokens_all = list(filter(lambda token: token.mandatory == 0, self.params['tokens']))
         if mandatory_tokens:
             individ.add_substructure([token.clean_copy() for token in mandatory_tokens])
             count_mandatory_tokens = len(mandatory_tokens)
+
+        print("test randomize individ")
+        number_of_tokens = np.random.choice(np.arange(1, len(non_mandatory_tokens_all) + 1), 1)[0]
+        non_mandatory_tokens = np.random.choice(non_mandatory_tokens_all, number_of_tokens)
+        print("number of tokens", number_of_tokens, non_mandatory_tokens)
         
         # non_mandatory_tokens_params = np.array([np.array(token.variable_params)[:, args[0], :] for token in non_mandatory_tokens])
         non_mandatory_tokens_params = [np.array(token.variable_params)[:, args[0]] for token in non_mandatory_tokens]
