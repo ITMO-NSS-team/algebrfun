@@ -90,11 +90,12 @@ build_settings = {
 # grid = np.array([data['grid']])
 # target = data['target']
 # target -= target.mean()
-x = np.linspace(0, 2 * np.pi, 50)
+x = np.linspace(0, 5, 100)
 y = x / 2
 xy = np.array(list(product(x, y)))
 XX, YY = np.meshgrid(x, y)
-target = np.array([el[0]**2/6 + el[1]**2/2 for el in xy])
+# target = np.array([el[0]**2 + el[1]**2 for el in xy])
+target = np.array([np.sin(el[0] + el[1]) for el in xy])
 
 # target.reshape(-1)
 
@@ -106,7 +107,7 @@ target -= target.mean()
 # plt.show()
 
 # shp = (grid.shape[1],)
-shp = (50,50)
+shp = (100,100)
 set_constants(target=target, shape_grid=shp)
 
 ## Confirm build_settings and set info about individual into evolutionary operators

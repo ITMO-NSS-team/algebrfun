@@ -8,6 +8,7 @@ class UnifierIndivid(GeneticOperatorIndivid):
         super().__init__(params=params)
 
     def apply(self, individ, *args, **kwargs):
+
         individ.apply_operator('CheckMandatoryTokensIndivid')
 
         individ.apply_operator('TrendDiscreteTokensOptimizerIndivid')

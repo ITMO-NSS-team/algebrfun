@@ -18,25 +18,30 @@ class FrequencyProcessor4TimeSeries:
         shp = constants['shape_grid']
         w = []
         mask = []
+        wmax = []
         for i in range(len(grid)):
-            step = np.mean(grid[i][1:] - grid[i][:-1])
-            w_c = np.fft.fftfreq(len(grid[i]), step)
-            w_c = w_c.reshape(shp)
+            current_grid = grid[i].reshape(shp)
+            if len(np.unique(current_grid[0])) == 1:
+                current_grid = current_grid.T
+            current_grid = current_grid[0]
+            step = np.mean(current_grid[1:] - current_grid[:-1])
+            w_c = np.fft.fftfreq(len(current_grid), step)
             w.append(w_c)
             c_max = w_c.max()
-            if wmax == None or c_max > wmax:
-                wmax = c_max
+            wmax.append(c_max)
             current_mask = (w_c >= wmin) & (w_c <= c_max)
-            if len(mask) == 0:
-                mask = current_mask
-            else:
-                mask *= current_mask
+            mask.append(current_mask)
+        w = np.array(list(product(*w)))
+        w = np.array([cur_w.reshape(shp) for cur_w in w.T])
+        mask = np.array([np.prod(tpl) for tpl in product(*mask)])
+        mask = mask.reshape(shp)
         x = x.reshape((constants['shape_grid']))
         y = np.fft.fftn(x, s=shp)
         y = np.abs(y)
         y[~mask] = y.min()
         for wi, we in enumerate(w):
             w[wi][~mask] = wmin
+        print("resulting fft procedure", w)
         return w, y, wmax
 
     @staticmethod
@@ -49,8 +54,9 @@ class FrequencyProcessor4TimeSeries:
         return kw, kspec
     
     @staticmethod
-    def findextrema(w, spec, n):
+    def findextrema_my(w, spec, n):
         # spec = np.abs(spec)
+        print("fft sizes", np.array(w).shape, np.array(spec).shape)
         sorted_spec = sorted(list(zip(np.ndindex(spec.shape), spec.reshape(-1))), key=lambda zp: zp[1], reverse=True)
         n_indexs = np.array([list(sorted_spec_elem[0]) for sorted_spec_elem in sorted_spec[:n]])
         n_indexs = [n_indexs[:, it] for it in range(len(spec.shape))]
@@ -60,6 +66,20 @@ class FrequencyProcessor4TimeSeries:
         kspec = spec[n_indexs]
         
         return kw, kspec 
+
+    @staticmethod
+    def findextrema(w, spec, n):
+        spec_line = np.array(spec).reshape(-1)
+        extremums_idxs = argrelextrema(spec_line, np.greater, mode='wrap')[0]
+        # print("why zero", extremums_idxs)
+        kw = []
+        for w_iter in w:
+            w_line = np.array(w_iter).reshape(-1)
+            kw.append(w_line[extremums_idxs])
+        kspec = spec_line[extremums_idxs]
+
+        return kw, kspec
+
         
 
 
@@ -89,6 +109,7 @@ class FrequencyProcessor4TimeSeries:
         # probabilities = list(map(lambda x: x ** pow / spec_sum, spec))
         probabilities = (spec**pow)/spec_sum
         idxs = np.arange(len(w[0]))
+        print(idxs.shape, number_selected)
         choice_i = np.random.choice(idxs, size=number_selected, replace=False, p=probabilities)
         choice = np.array(w)[:, choice_i]
 
@@ -122,23 +143,29 @@ class FrequencyProcessor4TimeSeries:
 
     @staticmethod
     def find_freq_for_summand(grid, x, wmin=0, wmax=None, c=10, number_selecting=1, number_selected=1):
+        print("check freqsss")
         w, s, wmax = FrequencyProcessor4TimeSeries.fft(grid, x, wmin, wmax, c)
+        print("after fft", w, "apec", s)
+        # kw, ks = FrequencyProcessor4TimeSeries.findextrema(w, s, number_selecting)
         kw, ks = FrequencyProcessor4TimeSeries.findextrema(w, s, number_selecting)
         # kw, ks = FrequencyProcessor4TimeSeries.findextrema(kw, ks)
         kw, ks = FrequencyProcessor4TimeSeries.sort_by_specter(kw, ks)
+        print("after sorting", kw, "apec", ks)
         out_freqs = FrequencyProcessor4TimeSeries.choice_freqs(kw, ks,
                                                             # pow=number_selecting ** 0.5,
                                                             pow=2,
                                                             number_selected=number_selected,
                                                             number_selecting=number_selecting)
+        print("after choose", out_freqs)
         return out_freqs, wmax
 
     @staticmethod
     def find_freq_for_multiplier(grid, x, w0, wmin=0, wmax=None, c=10, max_len=1):
         w, s = FrequencyProcessor4TimeSeries.fft(grid, x, wmin, wmax, c)
         kw, ks = FrequencyProcessor4TimeSeries.findextrema(w, s)
-        kw, ks = FrequencyProcessor4TimeSeries.findextrema(kw, ks)
+        # kw, ks = FrequencyProcessor4TimeSeries.findextrema(kw, ks)
         kw, ks = FrequencyProcessor4TimeSeries.sort_by_specter(kw, ks)
+        print("result fft", kw, ks)
         return FrequencyProcessor4TimeSeries.find_dif_in_freqs(kw, w0) # todo refactor
 
     @staticmethod
@@ -151,11 +178,19 @@ class FrequencyProcessor4TimeSeries:
                                                                            wmax, c=c,
                                                                            number_selecting=number_selecting,
                                                                            number_selected=number_selected)
+
+        print("freqsss", choice_freqs, Wmax)
         if choice_freqs is None:
             return None
         ending_freqs = []
+        try:
+            print(len(Wmax))
+            Wmax = np.array(Wmax)
+        except:
+            Wmax = np.array([Wmax]) 
         for choice_freq in choice_freqs:
-            if len(choice_freq[choice_freq < threshold*Wmax]) == len(choice_freq):
+            # if len(choice_freq[choice_freq < threshold*Wmax]) == len(choice_freq):
+            if np.all(choice_freq < threshold*Wmax):
                 if token_type == 'seasonal':
                     continue
                 ending_freqs.append(choice_freq)

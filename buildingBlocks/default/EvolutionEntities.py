@@ -104,12 +104,25 @@ class PopulationOfEquations(Population):
         self.iterations = iterations
         # self.loggers = [Logger(), Logger()]
 
+    # helper function
+    def text_indiv_param(self):
+        print('checing poulation')
+        for iter, individ in enumerate(self.structure):
+            print(iter)
+            for token in individ.structure:
+                try:
+                    print(token, token.param(name='Frequency'))
+                except:
+                    print(token)
+
     def _evolutionary_step(self):
         # self.apply_operator('RegularisationPopulation')
         # self.apply_operator('PeriodicTokensOptimizerPopulation')
         # self.apply_operator('LassoPopulation')
         # self.apply_operator('FitnessPopulation')
+        self.text_indiv_param()
         self.apply_operator('UnifierParallelizedPopulation')
+        self.text_indiv_param()
 
         self.apply_operator('RestrictPopulation')
         self.apply_operator('Elitism')

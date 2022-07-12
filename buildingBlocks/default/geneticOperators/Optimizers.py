@@ -70,6 +70,7 @@ class PeriodicTokensOptimizerIndivid(GeneticOperatorIndivid):
 
         freq = fp.choice_freq_for_summand(grid, target-target.mean(),
                                           number_selecting=5, number_selected=5, token_type='seasonal')
+        print("getting frequency in optimizer", freq)
         if freq is None: #TODO: сделать проверку присутствия нужного токена в неком пуле, чтобы избежать повторной оптимизаци
             individ.structure.remove(token) # del hopeless token and out
         else:
@@ -88,8 +89,12 @@ class PeriodicTokensOptimizerIndivid(GeneticOperatorIndivid):
             # shp = x0.shape
             # x0 = x0.reshape(-1)
             for i in range(x0.shape[0]):
+                # print("x0 frequency prev", i, token, x0[i][token.get_key_use_params_description(descriptor_name='name',
+                #                                     descriptor_value='Frequency')])
                 x0[i][token.get_key_use_params_description(descriptor_name='name',
                                                     descriptor_value='Frequency')] = freq[0][i]
+                # print("x0 frequency new", i, token, x0[i][token.get_key_use_params_description(descriptor_name='name',
+                #                                     descriptor_value='Frequency')])
             # x0[0] = 1.
             if self.params['optimizer'] == 'DE':
                 res = differential_evolution(self._fitness_wrapper, new_bounds,
@@ -219,6 +224,7 @@ class PeriodicInProductTokensOptimizerIndivid(GeneticOperatorIndivid): # todo и
         return individ.fitness #TODO: нужно сверху наложить штраф на маленькие амплитуды для использования ДЕ
 
     def _preprocessing_product_tokens(self, individ):
+        print("start preproces product")
         grid = self.params['grid']
         choiced_subtokens, complex_tokens_with_choiced_subtokens = self._choice_tokens_for_optimize(
             individ, ret_complex_tokens_with_choiced_subtokens=True)
@@ -239,8 +245,10 @@ class PeriodicInProductTokensOptimizerIndivid(GeneticOperatorIndivid): # todo и
             optimization_info = []
             for target_idx, target_token in enumerate(target_chromo):
                 target = -target_token.value(grid)
+                print("m")
                 recommended_freqs = fp.find_freq_for_multiplier(grid, target,
                                                                 current_complex_token_freqs, max_len=10)
+                print("uy")                                                
                 if len(recommended_freqs) == 0:
                     continue
                 for recommended_freq in recommended_freqs:
@@ -269,6 +277,7 @@ class PeriodicInProductTokensOptimizerIndivid(GeneticOperatorIndivid): # todo и
             assert len(choiced_subtokens) == 1
 
     def _optimize_token_params(self, individ, tokens: list):
+        print("optimize token params")
         grid = self.params['grid']
         individ.apply_operator(name='LassoIndivid1Target', use_lasso=False)
         freq = self._preprocessing_product_tokens(individ)
@@ -436,6 +445,15 @@ class PeriodicTokensOptimizerPopulation(GeneticOperatorPopulation):
     def __init__(self, params=None):
         super().__init__(params=params)
 
+    # helper function
+    def text_all_freqs(self, individ):
+        print("check parameter")
+        for token in individ.structure:
+            try:
+                print(token, token.param(name="Frequency"))
+            except:
+                print(token)
+
     def apply(self, population, *args, **kwargs):
         for individ in population.structure:
             # individ.apply_operator('TrendTokensOptimizerIndivid')
@@ -444,6 +462,8 @@ class PeriodicTokensOptimizerPopulation(GeneticOperatorPopulation):
             individ.apply_operator('ImpComplexDiscreteTokenParamsOptimizer')
             # individ.apply_operator('AllImpComplexOptimizerIndivid')
             individ.apply_operator('PeriodicTokensOptimizerIndivid')
+            print('PeriodicTokensOptimizerIndivid is completed')
+            self.text_all_freqs(individ=individ)
             # individ.apply_operator('PeriodicExtraTokensOptimizerIndivid')
         return population
 

@@ -95,6 +95,7 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
         # mask = mask.reshape(constants['shape_grid'])
         single_pattern_value = test_val[mask]
                                # * np.sign(pattern.param(name='Amplitude'))
+        print("len single pattern value testing", len(single_pattern_value), pattern, pattern.param(name='Frequency'), pattern.param(name='Zero part of period'), fi, T, T1, T2)
         try:
             single_pattern_value = single_pattern_value[single_pattern_value > 0]
             assert len(single_pattern_value) != 0, 'hmm'
