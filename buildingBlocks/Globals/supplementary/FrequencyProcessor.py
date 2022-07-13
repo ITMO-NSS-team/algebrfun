@@ -25,16 +25,21 @@ class FrequencyProcessor4TimeSeries:
                 current_grid = current_grid.T
             current_grid = current_grid[0]
             step = np.mean(current_grid[1:] - current_grid[:-1])
-            w_c = np.fft.fftfreq(len(current_grid), step)
+            w_c = np.fft.fftfreq(len(grid[i]), step)
+            w_c = w_c.reshape(shp)
             w.append(w_c)
             c_max = w_c.max()
             wmax.append(c_max)
             current_mask = (w_c >= wmin) & (w_c <= c_max)
-            mask.append(current_mask)
-        w = np.array(list(product(*w)))
-        w = np.array([cur_w.reshape(shp) for cur_w in w.T])
-        mask = np.array([np.prod(tpl) for tpl in product(*mask)])
-        mask = mask.reshape(shp)
+            # mask.append(current_mask)
+            if len(mask) == 0:
+                mask = current_mask
+            else:
+                mask *= current_mask
+        # w = np.array(list(product(*w)))
+        # w = np.array([cur_w.reshape(shp) for cur_w in w.T])
+        # mask = np.array([np.prod(tpl) for tpl in product(*mask)])
+        # mask = mask.reshape(shp)
         x = x.reshape((constants['shape_grid']))
         y = np.fft.fftn(x, s=shp)
         y = np.abs(y)
