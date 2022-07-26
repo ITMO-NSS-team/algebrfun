@@ -67,7 +67,7 @@ class Power(TerminalToken):
         super().__init__(number_params=number_params, params_description=params_description,
                          params=params, name_=name_, optimize_id=optimize_id)
         self.type = "NonPeriodic"
-
+        
     def each_evaluate(self, params, t):
         params = self.func_params(params, t)
         return t ** params[1]
@@ -84,14 +84,22 @@ class Power(TerminalToken):
 
     def name(self, with_params=False):
         # return self.name_ + str(self.params)
-        a0, n0 = self.params[0]
-        result_cout = "{}("
-        for current_params in self.params:
-             a, n = current_params
-             result_cout += 't**{} + '.format(round(n, 2))
-        result_cout = result_cout[:-3] + ')'
+        ampl = self.params[0][0]
+        # a, n = self.params
+        str_result = '{}('
+        for iter_params in self.params:
+            a, n = iter_params
+            str_result += 't**{} + '.format(round(n, 2))
+
+        try:
+            str_result = str_result[:-3] + ')'
+        except:
+            print("strange size")
+
+        # str_result += ')'
+        return str_result.format(round(ampl, 2))
+            
         # return '{}(t**{})'.format(round(a, 2), round(n, 2))
-        return result_cout.format(round(a0, 2))
 
     def __eq__(self, other):
         if type(self) == type(other):

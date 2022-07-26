@@ -6,6 +6,7 @@ sys.path.append(root_dir)
 from copy import deepcopy
 from functools import reduce
 import seaborn as sns
+import pandas as pd
 
 from buildingBlocks.Synthesis import Chain
 from buildingBlocks.Synthesis.Synthesizer import Synthesizer
@@ -60,7 +61,7 @@ build_settings = {
     'crossover': {
         'simple': dict(intensive=1, increase_prob=0.3)
     },
-    'tokens': [token1, token2, token3, token4],
+    'tokens': [token1, token2, token3],
     'population': {
         'size': 10
     }
@@ -90,17 +91,30 @@ build_settings = {
 # grid = np.array([data['grid']])
 # target = data['target']
 # target -= target.mean()
-x = np.linspace(0, 5, 100)
+
+'''
+# begin - проверка функций, которые мы знаем
+x = np.linspace(-1, 1, 100)
 y = x / 2
 xy = np.array(list(product(x, y)))
 XX, YY = np.meshgrid(x, y)
-# target = np.array([el[0]**2 + el[1]**2 for el in xy])
-target = np.array([np.sin(el[0] + el[1]) for el in xy])
+target = np.array([el[0]**2 + el[1]**2 for el in xy])
+# target = np.array([np.sin(el[0] + el[1]) for el in xy])
 
 # target.reshape(-1)
 
 grid = np.array([xy[:, 0], xy[:, 1]])
-# print('chuchuh', grid.shape, target.shape)
+target -= target.mean()
+# ---- end
+'''
+
+# begin - ЛЕД
+ice_file = pd.read_csv("examples//ice_data//input_data.csv", header=None)
+ice_data = ice_file.iloc[200:300, 200:300]
+
+xy = np.array(list(product(np.arange(200, 300), np.arange(200, 300))))
+target = ice_data.to_numpy().reshape(-1)
+grid = np.array([xy[:, 0], xy[:, 1]])
 target -= target.mean()
 
 # plt.plot(target)

@@ -1,38 +1,36 @@
+C:\Users\User\Desktop\ntcv\alg\algebrfun\buildingBlocks\baseline\BasicEvolutionaryEntities.py:133: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+  sort_ampls = np.array(sorted(list(zip(my_idxs, amplitudes)), key=lambda x: x[1], reverse=True))[:, 0]
 Traceback (most recent call last):
-  File "ex1.py", line 120, in <module>
+  File "C:\Users\User\Desktop\ntcv\alg\algebrfun\examples\ex1.py", line 150, in <module>
     population.evolutionary()
-  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/EvolutionEntities.py", line 117, in evolutionary
+  File "C:\Users\User\Desktop\ntcv\alg\algebrfun\buildingBlocks\default\EvolutionEntities.py", line 137, in evolutionary
     self._evolutionary_step()
-  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/EvolutionEntities.py", line 105, in _evolutionary_step
+  File "C:\Users\User\Desktop\ntcv\alg\algebrfun\buildingBlocks\default\EvolutionEntities.py", line 124, in _evolutionary_step
     self.apply_operator('UnifierParallelizedPopulation')
-  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/baseline/BasicEvolutionaryEntities.py", line 660, in apply_operator
+  File "C:\Users\User\Desktop\ntcv\alg\algebrfun\buildingBlocks\baseline\BasicEvolutionaryEntities.py", line 501, in apply_operator
     return operator.apply_to(self, *args, *kwargs)
-  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/baseline/BasicEvolutionaryEntities.py", line 717, in apply_to
+  File "C:\Users\User\Desktop\ntcv\alg\algebrfun\buildingBlocks\baseline\BasicEvolutionaryEntities.py", line 558, in apply_to
     return self.apply(population, *args, **kwargs)
-  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/geneticOperators/Unifiers.py", line 28, in apply
+  File "C:\Users\User\Desktop\ntcv\alg\algebrfun\buildingBlocks\default\geneticOperators\Unifiers.py", line 29, in apply
     population.apply_operator('PeriodicTokensOptimizerPopulation')
-  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/baseline/BasicEvolutionaryEntities.py", line 660, in apply_operator
+  File "C:\Users\User\Desktop\ntcv\alg\algebrfun\buildingBlocks\baseline\BasicEvolutionaryEntities.py", line 501, in apply_operator
     return operator.apply_to(self, *args, *kwargs)
-  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/baseline/BasicEvolutionaryEntities.py", line 717, in apply_to
+  File "C:\Users\User\Desktop\ntcv\alg\algebrfun\buildingBlocks\baseline\BasicEvolutionaryEntities.py", line 558, in apply_to
     return self.apply(population, *args, **kwargs)
-  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/geneticOperators/Optimizers.py", line 458, in apply
+  File "C:\Users\User\Desktop\ntcv\alg\algebrfun\buildingBlocks\default\geneticOperators\Optimizers.py", line 462, in apply
     individ.apply_operator('ImpComplexDiscreteTokenParamsOptimizer')
-  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/baseline/BasicEvolutionaryEntities.py", line 622, in apply_operator
+  File "C:\Users\User\Desktop\ntcv\alg\algebrfun\buildingBlocks\baseline\BasicEvolutionaryEntities.py", line 463, in apply_operator
     return operator.apply_to(self, *args, **kwargs)
-  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/baseline/BasicEvolutionaryEntities.py", line 692, in apply_to
+  File "C:\Users\User\Desktop\ntcv\alg\algebrfun\buildingBlocks\baseline\BasicEvolutionaryEntities.py", line 533, in apply_to
     ret = self.apply(individ, *args, **kwargs)
-  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/geneticOperators/supplementary/Other.py", line 31, in wrapper
+  File "C:\Users\User\Desktop\ntcv\alg\algebrfun\buildingBlocks\default\geneticOperators\supplementary\Other.py", line 31, in wrapper
     ret = method(*args, **kwargs)
-  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/geneticOperators/ComplexOptimizers.py", line 346, in apply
+  File "C:\Users\User\Desktop\ntcv\alg\algebrfun\buildingBlocks\default\geneticOperators\ComplexOptimizers.py", line 337, in apply
     self._optimize_token_params(individ, complex_token)
-  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/geneticOperators/ComplexOptimizers.py", line 562, in _optimize_token_params
-    self._optimize_complex_token_params(tmp_individ)
-  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/geneticOperators/ComplexOptimizers.py", line 540, in _optimize_complex_token_params
-    self._fitness_wrapper(res.x, individ, grid_optimize, token)
-  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/geneticOperators/ComplexOptimizers.py", line 388, in _fitness_wrapper
-    fixed_optimized_tokens_in_structure)))
-  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/default/geneticOperators/ComplexOptimizers.py", line 387, in <lambda>
-    val = reduce(lambda val, x: val + x, list(map(lambda x: x.value(grid),
-  File "/home/hpc-rosneft/algerfun/algebrfun/buildingBlocks/baseline/BasicEvolutionaryEntities.py", line 438, in value
-    assert self.val.shape[0] == grid.shape[-1], "Value must be the same shape as grid "
-AssertionError: Value must be the same shape as grid 
+  File "C:\Users\User\Desktop\ntcv\alg\algebrfun\buildingBlocks\default\geneticOperators\ComplexOptimizers.py", line 536, in _optimize_token_params
+    pulse_starts = self._find_pulse_starts(target, complex_token)
+  File "C:\Users\User\Desktop\ntcv\alg\algebrfun\buildingBlocks\default\geneticOperators\ComplexOptimizers.py", line 149, in _find_pulse_starts
+    single_pattern_value = self._get_single_pattern_value(complex_token)
+  File "C:\Users\User\Desktop\ntcv\alg\algebrfun\buildingBlocks\default\geneticOperators\ComplexOptimizers.py", line 104, in _get_single_pattern_value
+    assert (single_pattern_value != 0).any(), 'hmm'
+AssertionError: hmm
