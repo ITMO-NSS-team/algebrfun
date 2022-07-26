@@ -76,7 +76,7 @@ class Power(TerminalToken):
         result = np.nan
         for i in range(t.shape[0]):
             cur_temp = self.each_evaluate(params[i], t[i])
-            if np.isnan(result):
+            if np.all(np.isnan(result)):
                 result = cur_temp
             else:
                 result += cur_temp
@@ -84,14 +84,21 @@ class Power(TerminalToken):
 
     def name(self, with_params=False):
         # return self.name_ + str(self.params)
-        a, n = self.params
-        return '{}(t**{})'.format(round(a, 2), round(n, 2))
+        a0, n0 = self.params[0]
+        result_cout = "{}("
+        for current_params in self.params:
+             a, n = current_params
+             result_cout += 't**{} + '.format(round(n, 2))
+        result_cout = result_cout[:-3] + ')'
+        # return '{}(t**{})'.format(round(a, 2), round(n, 2))
+        return result_cout.format(round(a0, 2))
 
     def __eq__(self, other):
         if type(self) == type(other):
             if not self.fixator['self'] or not other.fixator['self']:
                 return False
-            if mape(self.params[1], other.params[1]) < 0.1:
+            # print("MAPE", mape(self.params[:, 1], other.params[:, 1]), self.params)
+            if np.all(mape(self.params[:, 1], other.params[:, 1]) < 0.1):
                 return True
             return False
         return False

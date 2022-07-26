@@ -109,11 +109,12 @@ class PopulationOfEquations(Population):
         print('checing poulation')
         for iter, individ in enumerate(self.structure):
             print(iter)
+
             for token in individ.structure:
                 try:
                     print(token, token.param(name='Frequency'))
                 except:
-                    print(token)
+                    print(token, token.params.shape)
 
     def _evolutionary_step(self):
         # self.apply_operator('RegularisationPopulation')

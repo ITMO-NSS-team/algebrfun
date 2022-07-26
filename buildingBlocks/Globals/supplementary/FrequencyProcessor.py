@@ -205,4 +205,6 @@ class FrequencyProcessor4TimeSeries:
                     continue
             ending_freqs.append(choice_freq)
             break
+        if len(ending_freqs) == 0:
+            return None
         return ending_freqs
