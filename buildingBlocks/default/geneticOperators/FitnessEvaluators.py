@@ -25,10 +25,10 @@ class VarFitnessIndivid(GeneticOperatorIndivid):
         target_token = list(filter(lambda token: token.mandatory != 0, individ.structure))[0]
         ampl_norm = individ.get_norm_of_amplitudes()
         # lmd = 10000000
-        lmd = 10000
-        # lmd = 1e-100000000
-        # vec = individ.value(self.params['grid']) + lmd * ampl_norm
-        vec = individ.value(self.params['grid'])
+        # lmd = 10000
+        lmd = 1e-100000000
+        vec = individ.value(self.params['grid']) + lmd * ampl_norm
+        # vec = individ.value(self.params['grid'])
         individ.fitness = np.var(vec)/np.var(target_token.value(self.params['grid']))
         # individ.fitness = np.abs(vec - vec.mean()).mean() 
 

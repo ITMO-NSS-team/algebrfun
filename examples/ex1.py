@@ -94,7 +94,7 @@ build_settings = {
 
 '''
 # begin - проверка функций, которые мы знаем
-x = np.linspace(-1, 1, 100)
+x = np.linspace(0, 5, 100)
 y = x / 2
 xy = np.array(list(product(x, y)))
 XX, YY = np.meshgrid(x, y)
@@ -107,12 +107,16 @@ grid = np.array([xy[:, 0], xy[:, 1]])
 target -= target.mean()
 # ---- end
 '''
-
 # begin - ЛЕД
 ice_file = pd.read_csv("examples//ice_data//input_data.csv", header=None)
-ice_data = ice_file.iloc[200:300, 200:300]
+mask_file = np.loadtxt("examples//ice_data//bathymetry.npy")
+ice_data = ice_file.iloc[30:130, 100:200].to_numpy()
+mask_data = mask_file[30:130, 100:200]
+print("ice data", ice_data)
 
-xy = np.array(list(product(np.arange(200, 300), np.arange(200, 300))))
+x = np.arange(0, 100)
+y = np.arange(0, 100)
+xy = np.array(list(product(x, y)))
 target = ice_data.to_numpy().reshape(-1)
 grid = np.array([xy[:, 0], xy[:, 1]])
 target -= target.mean()
@@ -121,6 +125,7 @@ target -= target.mean()
 # plt.show()
 
 # shp = (grid.shape[1],)
+print('grid values', grid)
 shp = (100,100)
 set_constants(target=target, shape_grid=shp)
 

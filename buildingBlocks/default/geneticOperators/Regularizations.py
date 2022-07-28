@@ -254,7 +254,7 @@ class LRIndivid1Target(GeneticOperatorIndivid):
         coefs.insert(target_idx, 1.)
         for idx, token in enumerate(tokens):
             new_amplitude = token.param(name='Amplitude') * coefs[idx]
-            if np.abs(new_amplitude[0]) < 2:
+            if np.abs(new_amplitude[0]) < 1:
                 continue
             token.set_param(new_amplitude, name='Amplitude')
             new_structure.append(token)
