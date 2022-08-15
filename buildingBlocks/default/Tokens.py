@@ -75,11 +75,16 @@ class Power(TerminalToken):
     def evaluate(self, params, t):
         result = np.nan
         for i in range(t.shape[0]):
+            # print("beforrre", t[i])
+            if len(t[i][t[i]<0]) > 0:
+                params[i][1] = round(params[i][1])
             cur_temp = self.each_evaluate(params[i], t[i])
             if np.all(np.isnan(result)):
                 result = cur_temp
             else:
                 result += cur_temp
+        self.params = params
+        # print("checking power", result, params)
         return params[0][0] * result
 
     def name(self, with_params=False):
@@ -340,6 +345,7 @@ class Imp(TerminalToken):
         return m
 
     def evaluate(self, params, t):
+        # print("checking parameters of Imp", params)
         result = np.nan
         if len(params.shape) == 1:
             params = list([params])

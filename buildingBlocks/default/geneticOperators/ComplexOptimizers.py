@@ -100,6 +100,9 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
         single_pattern_value = test_val[mask]
                                # * np.sign(pattern.param(name='Amplitude'))
 
+        if len(single_pattern_value) == 0:
+            return []
+
         print("len single pattern value testing", len(single_pattern_value), pattern, pattern.param(name='Frequency'), pattern.param(name='Zero part of period'), fi, T, T1, T2)
         # len single pattern value testing 0 <buildingBlocks.default.Tokens.Imp object at 0x00000225414F86A0> [0.00994741 0.00985536] [0.89174925 0.87892041] [0.99931619 0.94239965] [100.52863214 101.4676441 ] [89.64633232 89.18198361] [10.88229982 12.28566049]
         try:
@@ -107,6 +110,10 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
             assert len(single_pattern_value) != 0, 'hmm'
         except:
             pass
+        
+        if (single_pattern_value != 0).any() == False:
+            return []
+            
         assert (single_pattern_value != 0).any(), 'hmm'
         return single_pattern_value
 
@@ -153,6 +160,8 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
 
     def _find_pulse_starts(self, target, complex_token):
         single_pattern_value = self._get_single_pattern_value(complex_token)
+        if len(single_pattern_value) == 0:
+            return single_pattern_value
         grid = self.params['grid']
 
         # опасно если у нас выделился тупо прямоугольный импульс, поэтому добавим дельту
@@ -196,6 +205,9 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
             else:
                 i += 1
 
+        if len(cor) == 0:
+            return []
+
         # all_idxs_train = all_idxs.reshape(len(all_idxs), 1)
         # # todo опасная вещь, "понижает" частоту, ибо экстремумов меньше чем пульсов
         # # todo сделать проверку на то, что переставленные пульсы забирают больше фитнесса чем паттерн
@@ -220,7 +232,11 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
         # plt.plot(tops, label='alltstarts')
 
         tops = np.zeros(len(cor))
-        tops[mas_idxs] = cor[mas_idxs]
+
+        try:
+            tops[mas_idxs] = cor[mas_idxs]
+        except:
+            return []
         # plt.plot(tops, label='pulse starts')
         #
         # plt.plot(single_pattern_value, label='pattern')
@@ -294,6 +310,9 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
         target /= target.max()
 
         pulse_starts = self._find_pulse_starts(target, complex_token)
+        if len(pulse_starts) == 0:
+            individ.structure = list(filter(lambda token: token != complex_token, individ.structure))
+            return
         self._init_structure_with_pulse_starts(complex_token, pulse_starts)
 
         tmp_individ = create_tmp_individ(extra_tmp_individ, [complex_token], target)
@@ -540,6 +559,9 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
         target /= target.max()  
 
         pulse_starts = self._find_pulse_starts(target, complex_token)
+        if len(pulse_starts) == 0:
+            individ.structure = list(filter(lambda token: token != complex_token, individ.structure))
+            return
         self._init_structure_with_pulse_starts(complex_token, pulse_starts)
 
         optimizing_tokens = copy(complex_token.structure)
@@ -572,7 +594,7 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
         mn_amp = np.min(amps)
         diff = mx_amp - mn_amp
         new_structure = []
-        print("part with removed small tokens", mn_amp + 0.3 * diff, mx_amp*0.05)
+        # print("part with removed small tokens", mn_amp + 0.3 * diff, mx_amp*0.05)
         for idx, token in enumerate(complex_token.structure):
             if amps[idx] >= 0.06*mx_amp:
                 new_structure.append(token)

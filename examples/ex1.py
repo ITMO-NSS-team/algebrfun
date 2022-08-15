@@ -61,7 +61,7 @@ build_settings = {
     'crossover': {
         'simple': dict(intensive=1, increase_prob=0.3)
     },
-    'tokens': [token1, token2, token3],
+    'tokens': [token1, token2, token4],
     'population': {
         'size': 10
     }
@@ -94,11 +94,11 @@ build_settings = {
 
 '''
 # begin - проверка функций, которые мы знаем
-x = np.linspace(0, 5, 100)
+x = np.linspace(0, 2*np.pi, 100)
 y = x / 2
 xy = np.array(list(product(x, y)))
 XX, YY = np.meshgrid(x, y)
-target = np.array([el[0]**2 + el[1]**2 for el in xy])
+target = np.array([np.sin(el[0] + el[1]) for el in xy])
 # target = np.array([np.sin(el[0] + el[1]) for el in xy])
 
 # target.reshape(-1)
@@ -110,8 +110,8 @@ target -= target.mean()
 # begin - ЛЕД
 ice_file = pd.read_csv("examples//ice_data//input_data.csv", header=None)
 mask_file = np.loadtxt("examples//ice_data//bathymetry.npy")
-ice_data = ice_file.iloc[30:130, 100:200].to_numpy()
-mask_data = mask_file[30:130, 100:200]
+ice_data = ice_file.iloc[100:200, 200:300]
+mask_data = np.bool_(mask_file[100:200, 200:300])
 print("ice data", ice_data)
 
 x = np.arange(0, 100)
@@ -120,6 +120,7 @@ xy = np.array(list(product(x, y)))
 target = ice_data.to_numpy().reshape(-1)
 grid = np.array([xy[:, 0], xy[:, 1]])
 target -= target.mean()
+# ------- end
 
 # plt.plot(target)
 # plt.show()
@@ -150,7 +151,7 @@ Ob.set_operators(grid, individ, build_settings)
 # optimizing only approximated quality of the model
 
 
-population = PopulationOfEquations(iterations=2)
+population = PopulationOfEquations(iterations=10)
 time = perf_counter()
 population.evolutionary()
 time = perf_counter() - time
@@ -158,7 +159,7 @@ time = perf_counter() - time
 inds = population.structure
 idxsort = np.argsort(list(map(lambda x: x.fitness, inds)))
 inds = [inds[i] for i in idxsort]
-print(time)
+print('time:', time)
 
 
 
@@ -218,7 +219,7 @@ for iter_forml in range(len(inds)):
 
 
 print("RESULTING")
-n = 0
+n = 1
 ind = deepcopy(inds[n])
 print(ind.formula(), ind.fitness)
 
@@ -228,10 +229,12 @@ model = target + residuals
 model -= model.mean()
 residuals -= residuals.mean()
 
-
 tmp_ind = deepcopy(ind)
 
+print("error", np.mean((target - model) ** 2))
+print("error", np.mean((target.reshape(shp)[mask_data] - model.reshape(shp)[mask_data]) ** 2))
 print("error", np.average((target - model) ** 2))
+print("error", np.average((target.reshape(shp)[mask_data] - model.reshape(shp)[mask_data]) ** 2))
 
 # plt.plot(grid[0][:], target[:], label="Input data")
 # plt.plot(grid[0][:], model[:], label="Model")
@@ -239,7 +242,9 @@ print("error", np.average((target - model) ** 2))
 # plt.savefig('ptc0.png')
 
 mse = (target - model) ** 2
-sns.heatmap(mse.reshape(len(x), len(x)))
+mse = mse.reshape(shp)
+# mse[~mask_data] = np.nan
+plt.imshow(mse)
 plt.legend()
 plt.savefig('ptc0.png')
 
@@ -248,13 +253,30 @@ f, axs = plt.subplots(1, 2)
 # plt.plot(target, label="Input data")
 # plt.plot(model, label="Model")
 
-sns.heatmap(target.reshape(shp), ax=axs[0])
+# masked
+target_draw = target.reshape(shp)
+target_draw[~mask_data] = np.nan
+model_draw = model.reshape(shp)
+model_draw[~mask_data] = np.nan
+
+pc_test = axs[0].imshow(target_draw)
+axs[0].set_title("Input data")
+axs[1].imshow(model_draw)
+axs[1].set_title("Model")
+ 
+f.colorbar(pc_test)
+plt.savefig('ptc1.png')
+
+'''
+# just for basic functions
+sns.heatmap(target.reshape(shp), ax=axs[0], vmax=0.3)
 axs[0].set_title("Input data")
 sns.heatmap(model.reshape(shp), ax=axs[1])
 axs[1].set_title("Model")
 
 plt.legend()
 plt.savefig('ptc1.png')
+'''
 
 plt.clf()
 f, axs = plt.subplots(1, len(ind.structure), figsize=(12, 3))

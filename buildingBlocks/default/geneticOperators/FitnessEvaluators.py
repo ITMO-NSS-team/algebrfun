@@ -24,19 +24,20 @@ class VarFitnessIndivid(GeneticOperatorIndivid):
         # individ.fitness = np.linalg.norm(vec)
         target_token = list(filter(lambda token: token.mandatory != 0, individ.structure))[0]
         ampl_norm = individ.get_norm_of_amplitudes()
-        # lmd = 10000000
-        # lmd = 10000
-        lmd = 1e-100000000
-        vec = individ.value(self.params['grid']) + lmd * ampl_norm
-        # vec = individ.value(self.params['grid'])
-        individ.fitness = np.var(vec)/np.var(target_token.value(self.params['grid']))
+        # lmd = 10
+        # lmd = 1000000
+        lmd = 1e-10
+        # vec = individ.value(self.params['grid']) + lmd * ampl_norm
+        vec = individ.value(self.params['grid'])
+        print("testing fitness value:", vec, lmd * ampl_norm)
+        individ.fitness = np.var(vec)/np.var(target_token.value(self.params['grid'])) + lmd * ampl_norm
         # individ.fitness = np.abs(vec - vec.mean()).mean() 
 
 
 class TokenFitnessIndivid(GeneticOperatorIndivid):
     def __init__(self, params=None):
         super().__init__(params=params)
-        self._check_params()
+        self._check_params()  
 
     @staticmethod
     def _label_tokens(individ):

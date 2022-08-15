@@ -65,13 +65,16 @@ class Equation(Individ):
     def value(self, grid):
         fixed_optimized_tokens_in_structure = list(filter(lambda token: token.fixator['self'],
                                                           self.structure))
+        # print("checking value in equation", fixed_optimized_tokens_in_structure)
         if len(fixed_optimized_tokens_in_structure) != 0:
             # if self.used_value == 'plus':
             # вычисляем валуе только от оптимизированных токенов
+            # print('Mean values of f-ing tokens', [np.mean(token.value(grid)) for token in fixed_optimized_tokens_in_structure])
             val = reduce(lambda val, x: val + x, list(map(lambda x: x.value(grid),
                                                           fixed_optimized_tokens_in_structure)))
             # val -= self.intercept
             # val = val.reshape(grid.shape) 
+            # print("returned value",  val)
             return val
         #     elif self.used_value == 'product':
         #         return reduce(lambda val, x: val * x, list(map(lambda x: x.value(t), self.chromo)))
@@ -121,9 +124,9 @@ class PopulationOfEquations(Population):
         # self.apply_operator('PeriodicTokensOptimizerPopulation')
         # self.apply_operator('LassoPopulation')
         # self.apply_operator('FitnessPopulation')
-        self.text_indiv_param()
+        # self.text_indiv_param()
         self.apply_operator('UnifierParallelizedPopulation')
-        self.text_indiv_param()
+        # self.text_indiv_param()
 
         self.apply_operator('RestrictPopulation')
         self.apply_operator('Elitism')
@@ -136,6 +139,10 @@ class PopulationOfEquations(Population):
         for n in range(self.iterations):
             print('{}/{}\n'.format(n, self.iterations))
             self._evolutionary_step()
+            idxsort = np.argsort(list(map(lambda x: x.fitness, self.structure)))
+            inds = [self.structure[i] for i in idxsort]
+            print("structure of population", [cur_eq.fitness for cur_eq in inds])
+            print("no sort", [cur_eq.fitness for cur_eq in self.structure])
         # self.apply_operator('RegularisationPopulation')
         # self.apply_operator('PeriodicTokensOptimizerPopulation')
         # self.apply_operator('LassoPopulation')
