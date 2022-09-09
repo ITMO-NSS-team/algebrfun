@@ -535,7 +535,7 @@ class GeneticOperatorIndivid(Bs.GeneticOperator):
         return ret
 
 
-class GeneticOperatorPopulation(Bs.GeneticOperator):
+class GeneticOperatorPopulation(Bs.GeneticOperator):  
     """
     Genetic Operator influencing list of Individs in Population.
     May be parallelized.
@@ -556,3 +556,8 @@ class GeneticOperatorPopulation(Bs.GeneticOperator):
             create_pool()
             return map_wrapper(type(self).apply, self, population=population)  #todo разобраться с передачей аргументов
         return self.apply(population, *args, **kwargs)
+
+
+class DifferentialToken(Bs.Token):
+    def __init__(self, number_params: int = 0, params_description: dict = None, params: np.ndarray = None, name_: str = None):
+        super().__init__(number_params, params_description, params, name_)

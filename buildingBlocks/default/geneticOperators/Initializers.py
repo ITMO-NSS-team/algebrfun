@@ -3,9 +3,11 @@
 from re import L
 
 from sklearn.utils import resample
-from buildingBlocks.baseline.BasicEvolutionaryEntities import GeneticOperatorIndivid, GeneticOperatorPopulation
+from buildingBlocks.baseline.BasicEvolutionaryEntities import DifferentialToken, GeneticOperatorIndivid, GeneticOperatorPopulation
+from buildingBlocks.default.EvolutionEntities import DEquation, Equation
 from buildingBlocks.default.geneticOperators.supplementary.Other import check_operators_from_kwargs, apply_decorator
 import buildingBlocks.Globals.GlobalEntities as Bg
+from buildingBlocks.Globals.GlobalEntities import set_constants, get_full_constant
 
 import numpy as np
 from scipy.optimize import minimize
@@ -42,7 +44,16 @@ class InitIndivid(GeneticOperatorIndivid):
     @apply_decorator
     def apply(self, individ, *args, **kwargs) -> None:
         # individ.apply_operator('MutationIndivid')
-        
+
+        # algorithm for Init Dequation
+        if individ.type_ == "DEquation":
+            constants = get_full_constant()
+            der_set = constants['pul_mtrx']
+            number_of_temps = len(der_set)
+            selected_temps = np.random.choice(np.arange(number_of_temps), number_of_temps)
+            sub = [DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Matrichka")}, params=np.array([Equation(max_tokens=10), der_set[current_temp]], dtype=object), name_="DifferencialToken") for current_temp in selected_temps]
+            individ.add_substructure(sub)
+            return
         
         count_mandatory_tokens = 0
         mandatory_tokens = list(filter(lambda token: token.mandatory != 0, self.params['tokens']))
@@ -115,8 +126,12 @@ class InitPopulation(GeneticOperatorPopulation):
 
     def apply(self, population, *args, **kwargs):
         population.structure = []
+        if population.type_ == "PopulationOfDEquation":
+            population.coef_set.apply_operator("InitPopulation")
         for _ in range(self.params['population_size']):
             new_individ = self.params['individ'].copy()
+            if population.type_ == "PopulationOfDEquation":
+                new_individ = DEquation(max_tokens=10)
             new_individ.apply_operator('InitIndivid', _)
             population.structure.append(new_individ)
         return population

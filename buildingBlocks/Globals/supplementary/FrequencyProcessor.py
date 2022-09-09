@@ -41,12 +41,13 @@ class FrequencyProcessor4TimeSeries:
         # mask = np.array([np.prod(tpl) for tpl in product(*mask)])
         # mask = mask.reshape(shp)
         x = x.reshape((constants['shape_grid']))
+        # print("our x", x)
         y = np.fft.fftn(x, s=shp)
         y = np.abs(y)
         y[~mask] = y.min()
         for wi, we in enumerate(w):
             w[wi][~mask] = wmin
-        print("resulting fft procedure", w)
+        # print("resulting fft procedure", y)
         return w, y, wmax
 
     @staticmethod
@@ -61,7 +62,7 @@ class FrequencyProcessor4TimeSeries:
     @staticmethod
     def findextrema_my(w, spec, n):
         # spec = np.abs(spec)
-        print("fft sizes", np.array(w).shape, np.array(spec).shape)
+        # print("fft sizes", np.array(w).shape, np.array(spec).shape)
         sorted_spec = sorted(list(zip(np.ndindex(spec.shape), spec.reshape(-1))), key=lambda zp: zp[1], reverse=True)
         n_indexs = np.array([list(sorted_spec_elem[0]) for sorted_spec_elem in sorted_spec[:n]])
         n_indexs = [n_indexs[:, it] for it in range(len(spec.shape))]
@@ -114,7 +115,7 @@ class FrequencyProcessor4TimeSeries:
         # probabilities = list(map(lambda x: x ** pow / spec_sum, spec))
         probabilities = (spec**pow)/spec_sum
         idxs = np.arange(len(w[0]))
-        print(idxs.shape, number_selected)
+        # print(idxs.shape, number_selected)
         choice_i = np.random.choice(idxs, size=number_selected, replace=False, p=probabilities)
         choice = np.array(w)[:, choice_i]
 
@@ -148,20 +149,20 @@ class FrequencyProcessor4TimeSeries:
 
     @staticmethod
     def find_freq_for_summand(grid, x, wmin=0, wmax=None, c=10, number_selecting=1, number_selected=1):
-        print("check freqsss")
+        # print("check freqsss")
         w, s, wmax = FrequencyProcessor4TimeSeries.fft(grid, x, wmin, wmax, c)
-        print("after fft", w, "apec", s)
+        # print("after fft", w, "apec", s)
         # kw, ks = FrequencyProcessor4TimeSeries.findextrema(w, s, number_selecting)
         kw, ks = FrequencyProcessor4TimeSeries.findextrema(w, s, number_selecting)
         # kw, ks = FrequencyProcessor4TimeSeries.findextrema(kw, ks)
         kw, ks = FrequencyProcessor4TimeSeries.sort_by_specter(kw, ks)
-        print("after sorting", kw, "apec", ks)
+        # print("after sorting", kw, "apec", ks)
         out_freqs = FrequencyProcessor4TimeSeries.choice_freqs(kw, ks,
                                                             # pow=number_selecting ** 0.5,
                                                             pow=2,
                                                             number_selected=number_selected,
                                                             number_selecting=number_selecting)
-        print("after choose", out_freqs)
+        # print("after choose", out_freqs)
         return out_freqs, wmax
 
     @staticmethod
@@ -170,7 +171,7 @@ class FrequencyProcessor4TimeSeries:
         kw, ks = FrequencyProcessor4TimeSeries.findextrema(w, s)
         # kw, ks = FrequencyProcessor4TimeSeries.findextrema(kw, ks)
         kw, ks = FrequencyProcessor4TimeSeries.sort_by_specter(kw, ks)
-        print("result fft", kw, ks)
+        # print("result fft", kw, ks)
         return FrequencyProcessor4TimeSeries.find_dif_in_freqs(kw, w0) # todo refactor
 
     @staticmethod
@@ -179,17 +180,17 @@ class FrequencyProcessor4TimeSeries:
         # Wmax = np.fft.fftfreq(len(grid), np.mean(grid[1:]-grid[:-1])).max()
         # if wmax == None:
         #     wmax = Wmax
-        choice_freqs, Wmax = FrequencyProcessor4TimeSeries.find_freq_for_summand(grid, x, wmin,
+        choice_freqs,  Wmax = FrequencyProcessor4TimeSeries.find_freq_for_summand(grid, x, wmin,
                                                                            wmax, c=c,
                                                                            number_selecting=number_selecting,
                                                                            number_selected=number_selected)
 
-        print("freqsss", choice_freqs, Wmax)
+        # print("freqsss", choice_freqs, Wmax)
         if choice_freqs is None:
             return None
         ending_freqs = []
         try:
-            print(len(Wmax))
+            # print(len(Wmax))
             Wmax = np.array(Wmax)
         except:
             Wmax = np.array([Wmax]) 

@@ -1,6 +1,7 @@
 """
 Contains default inheritors/implementations of baseline classes for Individual.
 """
+from ast import Pass
 from copy import copy, deepcopy
 from functools import reduce
 from buildingBlocks.baseline.BasicEvolutionaryEntities import Individ, Population
@@ -29,6 +30,7 @@ class Equation(Individ):
         self.forms = forms
 
         self.max_tokens = max_tokens
+        self.type_ = "Equation"
 
     def __getstate__(self):
         # for key in self.__dict__.keys():
@@ -105,6 +107,7 @@ class PopulationOfEquations(Population):
         super().__init__(structure=structure)
 
         self.iterations = iterations
+        self.type_ = "PopulationOfEquations"
         # self.loggers = [Logger(), Logger()]
 
     # helper function
@@ -151,3 +154,79 @@ class PopulationOfEquations(Population):
         self.apply_operator('RestrictPopulation')
 
         self.apply_operator('Elitism')
+
+
+class DEquation(Individ):
+    '''
+        class for displays individ as differncial equation
+    '''
+    def __init__(self, structure: list = None, fixator: dict = None, used_value: str = 'plus', forms=None, type_: str = "DEquation", fitness: float = None, max_tokens: int = None, der_set: list = None):
+        super().__init__(structure, fixator, fitness)
+        
+        if forms is None:
+                forms = []
+        self.elitism = False
+        self.selected = False
+
+        self.intercept = 0.
+
+        # self.kind = kind
+        self.used_value = used_value
+        self.forms = forms
+
+        self.max_tokens = max_tokens
+        if der_set is None:
+            self.der_set = []
+        self.type_ = type_
+    
+    def __getstate__(self):
+        return self.__dict__
+
+    def __setstate__(self, state: dict):
+        self.__dict__ = state
+
+    def copy(self):
+        new_copy = deepcopy(self)
+
+        try:
+            new_copy.forms = deepcopy(new_copy.forms)
+        except:
+            pass
+
+        return new_copy
+
+    def clean_copy(self):
+        new_copy = type(self)()
+        return new_copy
+
+    def formula(self, with_params=False):
+        pass
+
+    def value(self, grid):
+        pass
+
+    def get_norm_of_amplitudes(self):
+        pass
+
+    def get_structure(self, *types):
+        pass
+
+
+
+class PopulationOfDEquations(Population):
+    '''
+        class for displays population of individs-DE
+    '''
+    def __init__(self, structure: list = None, iterations: int = 0, type_: str = "PopulationOfDEquation"):
+        super().__init__(structure)
+
+        self.iterations = iterations
+        self.type_ = type_
+        self.coef_set = PopulationOfEquations(iterations=1)
+
+    
+    def _evolutionary_step(self):
+        pass
+
+    def evolutionary(self):  
+        self.apply_operator('InitPopulation')

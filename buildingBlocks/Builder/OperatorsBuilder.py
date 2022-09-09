@@ -131,7 +131,7 @@ def set_operators(grid, individ, kwargs):
     #                 max_multi_len=maxlen_subtokens))
 
     operatorsMap.PeriodicTokensOptimizerIndivid = PeriodicTokensOptimizerIndivid(
-        params=dict(grid=grid,
+          params=dict(grid=grid,
                     optimize_id=1,
                     optimizer='DE',
                     popsize=10))
