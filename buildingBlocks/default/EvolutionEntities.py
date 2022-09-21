@@ -138,7 +138,7 @@ class PopulationOfEquations(Population):
         self.apply_operator('MutationPopulation')
 
     def evolutionary(self):
-        self.apply_operator('InitPopulation')
+        # self.apply_operator('InitPopulation')
         for n in range(self.iterations):
             print('{}/{}\n'.format(n, self.iterations))
             self._evolutionary_step()
@@ -201,9 +201,18 @@ class DEquation(Individ):
 
     def formula(self, with_params=False):
         pass
+        if self.used_value == "plus":
+            joinWith = '+'
+        else:
+            joinWith = '*'
+        
 
     def value(self, grid):
-        pass
+        fixed_optimized_tokens_in_structure = list(filter(lambda token: token.fixator['self'], self.structure))
+
+        if len(fixed_optimized_tokens_in_structure) != 0:
+            pass
+            
 
     def get_norm_of_amplitudes(self):
         pass
@@ -230,3 +239,8 @@ class PopulationOfDEquations(Population):
 
     def evolutionary(self):  
         self.apply_operator('InitPopulation')
+        for n in range(self.iterations):
+            print('{}/{}\n'.format(n, self.iterations))
+            self.coef_set.evolutionary()
+
+            

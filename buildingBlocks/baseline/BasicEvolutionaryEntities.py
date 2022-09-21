@@ -561,3 +561,160 @@ class GeneticOperatorPopulation(Bs.GeneticOperator):
 class DifferentialToken(Bs.Token):
     def __init__(self, number_params: int = 0, params_description: dict = None, params: np.ndarray = None, name_: str = None):
         super().__init__(number_params, params_description, params, name_)
+
+    
+
+    def __getstate__(self):
+        for key in self.__dict__.keys():
+            if key in ('val',):
+                self.__dict__[key] = None
+            if key in ('forms',):
+                self.__dict__[key] = []
+        return self.__dict__
+
+    def __setstate__(self, state: dict):
+        self.__dict__ = state
+
+    # def __eq__(self, other):
+    #     if type(self) != type(other):
+    #         return False
+    #     are_parameters_eq = True
+    #     are_parameters_compared = False
+    #     for key in range(self._number_params):
+    #         try:
+    #             are_parameters_eq *= (mape(self.param(idx=key), other.param(idx=key))
+    #                                   < self.params_description[key]['eq'])
+    #             are_parameters_compared = True
+    #         # if descriptor eq not exist
+    #         except KeyError:
+    #             continue
+    #         # if descriptor eq = None
+    #         except TypeError:
+    #             continue
+    #     return are_parameters_eq * are_parameters_compared
+
+
+    def copy(self):
+        new_copy = deepcopy(self)
+        return new_copy
+
+    def clean_copy(self):
+        constants = get_full_constant()
+        tmp_val = self.val
+        self.val = None
+        new_copy = deepcopy(self)
+        self.val = tmp_val
+        new_copy.params = np.zeros((len(constants['shape_grid']), new_copy._number_params))
+        new_copy.fixator['self'] = False
+        return new_copy
+
+    def extra_clean_copy(self):
+        new_copy = type(self)()
+        new_copy.mandatory = self.mandatory * np.random.uniform(0.1, 2)
+        new_copy.optimize_id = self.optimize_id
+        return new_copy
+
+    # Methods for work with params and its descriptions
+
+    def check_params_description(self):
+        """
+        Check params_description for requirements for current token.
+        """
+        super().check_params_description()
+        recomendations = "\nUse methods 'params_description.setter' or 'set_descriptor' to change params_descriptions"
+        for key, value in self._params_description.items():
+            assert 'bounds' in value.keys(), "Key 'bounds' must be in the nested " \
+                                             "dictionary for each parameter" + recomendations
+            assert (len(value['bounds']) == 2 and
+                   np.all(value['bounds'][0] <= value['bounds'][1])), "Bounds of each parameter must have" \
+                                                              " length = 2 and contain value" \
+                                                              " boundaries MIN <= MAX." + recomendations
+
+    @property
+    def params(self):
+        return self._params
+
+    @params.setter
+    def params(self, params: np.ndarray):
+        # self._params = np.array(params, dtype=float)
+        self._params = params
+        if len(params.shape) == 1:
+            self._params = np.array([params])
+        # потенциальные неожиданные баги от обрезания параметров
+        self.check_params()
+        self.fixator['val'] = False
+
+    def check_params(self):
+        super().check_params()
+        for key, value in self._params_description.items():
+            try:
+                if self._params_description[key]['check']:
+                    for i in range(self._params.shape[0]):
+                        min_val, max_val = value['bounds']
+                        try:
+                            self._params[i][key] = min(self._params[i][key], min(max_val))
+                        except:
+                            self._params[i][key] = min(self._params[i][key], max_val)
+                        try:
+                            self._params[i][key] = max(self._params[i][key], max(min_val))
+                        except:
+                            self._params[i][key] = max(self._params[i][key], min_val)
+            except KeyError:
+                continue
+            except ZeroDivisionError:
+                continue
+
+    def set_param(self, param, name=None, idx=None):
+        super().set_param(param=param, name=name, idx=idx)
+        self.fixator['val'] = False
+
+    def init_params(self):
+        pass
+
+    def value(self, grid: np.ndarray) -> np.ndarray:
+        """
+        Returns value of the token on the grid.
+        Returns either cache result in self.val or calculated value in self.val by method self.evaluate().
+
+        Parameters
+        ----------
+        grid: np.ndarray
+            Grid for evaluation.
+
+        Returns
+        -------
+        Value of the token.
+        """
+        if not self.fixator['val'] or self.val is None or self.val.shape[0] != grid.shape[-1]:
+            self.val = self.evaluate(self.params, grid)
+            self.fixator['val'] = self.fixator['cache']
+
+            # эта централизация в целом то полезна (для ЛАССО например), но искажает продукт-токен
+            # centralization
+            # self.val -= np.mean(self.val)
+        assert self.val.shape[0] == grid.shape[-1], "Value must be the same shape as grid "
+        return self.val
+
+    @staticmethod
+    def evaluate(params: np.ndarray, grid: np.ndarray) -> np.ndarray:
+        """
+        Calculating token value on the grid depending on parameters.
+        Must be override/implement in each TerminalToken.
+        May be not staticmethod if it is necessary.
+
+        Parameters
+        ----------
+        params: numpy.ndarray
+            Numeric token parameters.
+        grid: numpy.ndarray
+            Grid for evaluation.
+
+        Returns
+        -------
+        numpy.ndarray
+        """
+        return params[0].value * params[1]
+        # return np.zeros(grid.shape)
+
+    def func_params(self, params, grid):
+        pass

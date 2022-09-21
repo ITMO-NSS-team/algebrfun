@@ -458,6 +458,16 @@ class TrendTokensOptimizerIndivid(PeriodicExtraTokensOptimizerIndivid):
 #     def
 
 
+class DifferentialTokensOptimizersIndivid(GeneticOperatorIndivid):
+    def __init__(self, params=None) -> None:
+        super().__init__(params=params)
+
+    @apply_decorator
+    def apply(self, individ, *args, **kwargs):
+        for token in individ.structure:
+            self._optimize_token_params(individ, token)
+    
+
 
 class PeriodicTokensOptimizerPopulation(GeneticOperatorPopulation):
     def __init__(self, params=None):
@@ -488,4 +498,10 @@ class PeriodicTokensOptimizerPopulation(GeneticOperatorPopulation):
 
 
 
+class DifferentialTokensOptimizerPopulation(GeneticOperatorPopulation):
+    def __init__(self, params=None) -> None:
+        super().__init__(params=params)
 
+    def apply(self, population, *args, **kwargs):
+        for individ in population.structure:
+            individ.apply_operator("DifferentialTokensOptimizerIndivid")
