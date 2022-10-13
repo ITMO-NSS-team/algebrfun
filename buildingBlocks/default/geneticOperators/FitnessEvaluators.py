@@ -22,6 +22,10 @@ class VarFitnessIndivid(GeneticOperatorIndivid):
         # vec = reduce(lambda val, token: val + token,
         #              list(map(lambda token: token.value(self.params['grid']), individ.structure)))
         # individ.fitness = np.linalg.norm(vec)
+
+        if individ.type_ == "DEquation":
+            individ.fitness = np.var(individ.value(self.params['grid']))
+            return 
         target_token = list(filter(lambda token: token.mandatory != 0, individ.structure))[0]
         ampl_norm = individ.get_norm_of_amplitudes()
         # lmd = 10

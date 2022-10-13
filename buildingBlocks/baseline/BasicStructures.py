@@ -25,7 +25,7 @@ class Token:
             self.params = np.array([np.zeros(self._number_params)])
         else:
             if type(self).__name__ == "DifferentialToken":
-                self.params = np.array(params, dtype=object)
+                self.params = np.array(params, dtype='object')
             else:       
                 self.params = np.array(params, dtype=float)
         if name_ is None:

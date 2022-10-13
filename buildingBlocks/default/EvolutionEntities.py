@@ -206,13 +206,28 @@ class DEquation(Individ):
         else:
             joinWith = '*'
         
+        return joinWith.join(list(map(lambda x: x.name(with_params), self.structure)))
+        
 
     def value(self, grid):
-        fixed_optimized_tokens_in_structure = list(filter(lambda token: token.fixator['self'], self.structure))
+        # fixed_optimized_tokens_in_structure = list(filter(lambda token: token.fixator['self'], self.structure))
+
+        fixed_optimized_tokens_in_structure = self.structure
 
         if len(fixed_optimized_tokens_in_structure) != 0:
-            pass
+            value = reduce(lambda val, x: val + x, list(map(lambda x: x.value(grid), fixed_optimized_tokens_in_structure)))
+
+            return value
+        
+        return None
             
+    def get_CAF(self):
+        CAFs = []
+        for token in self.structure:
+            CAFs.append(token.params[0])
+
+        return CAFs
+
 
     def get_norm_of_amplitudes(self):
         pass
@@ -235,12 +250,13 @@ class PopulationOfDEquations(Population):
 
     
     def _evolutionary_step(self):
-        pass
+        self.apply_operator("PeriodicCAFTokensOptimizerPopulation")
+        # self.apply_operator("DifferentialTokensOptimizerPopulation")
 
     def evolutionary(self):  
         self.apply_operator('InitPopulation')
         for n in range(self.iterations):
             print('{}/{}\n'.format(n, self.iterations))
-            self.coef_set.evolutionary()
+            self._evolutionary_step()
 
             

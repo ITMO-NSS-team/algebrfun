@@ -44,22 +44,13 @@ class InitIndivid(GeneticOperatorIndivid):
     @apply_decorator
     def apply(self, individ, *args, **kwargs) -> None:
         # individ.apply_operator('MutationIndivid')
-
-        # algorithm for Init Dequation
-        if individ.type_ == "DEquation":
-            constants = get_full_constant()
-            der_set = constants['pul_mtrx']
-            number_of_temps = len(der_set)
-            selected_temps = np.random.choice(np.arange(number_of_temps), number_of_temps)
-            sub = [DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Matrichka")}, params=np.array([Equation(max_tokens=10), der_set[current_temp]], dtype=object), name_="DifferencialToken") for current_temp in selected_temps]
-            individ.add_substructure(sub)
-            return
         
+        CAF = args[1]
         count_mandatory_tokens = 0
         mandatory_tokens = list(filter(lambda token: token.mandatory != 0, self.params['tokens']))
         non_mandatory_tokens_all = list(filter(lambda token: token.mandatory == 0, self.params['tokens']))
         if mandatory_tokens:
-            individ.add_substructure([token.clean_copy() for token in mandatory_tokens])
+            CAF.add_substructure([token.clean_copy() for token in mandatory_tokens])
             count_mandatory_tokens = len(mandatory_tokens)
 
         # print("test randomize individ")
@@ -95,7 +86,15 @@ class InitIndivid(GeneticOperatorIndivid):
             # cur_token.params = np.hstack((res_amplitude[i], non_mandatory_tokens[i].variable_params[self.params['ids'][args[0]][i]]))
             tesyt = np.hstack((res_amplitude.reshape(shp)[i], non_mandatory_tokens_params[i]))
             cur_token.params = tesyt
+            cur_token.owner_id = id(individ)
             sub.append(cur_token)
+        CAF.add_substructure(sub)
+
+        constants = get_full_constant()
+        der_set = constants['pul_mtrx']
+        number_of_temps = len(der_set)
+        selected_temps = np.random.choice(np.arange(number_of_temps), number_of_temps)
+        sub = [DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Matrichka")}, params=[CAF, der_set[current_temp]], name_="DifferencialToken") for current_temp in selected_temps]
         individ.add_substructure(sub)
 
         # для оптимизации в лоб
@@ -126,12 +125,9 @@ class InitPopulation(GeneticOperatorPopulation):
 
     def apply(self, population, *args, **kwargs):
         population.structure = []
-        if population.type_ == "PopulationOfDEquation":
-            population.coef_set.apply_operator("InitPopulation")
         for _ in range(self.params['population_size']):
-            new_individ = self.params['individ'].copy()
-            if population.type_ == "PopulationOfDEquation":
-                new_individ = DEquation(max_tokens=10)
-            new_individ.apply_operator('InitIndivid', _)
+            caf_individ = self.params['individ'].copy()
+            new_individ = DEquation(max_tokens=10)
+            new_individ.apply_operator('InitIndivid', _, caf_individ)
             population.structure.append(new_individ)
         return population

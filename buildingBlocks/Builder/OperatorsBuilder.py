@@ -12,8 +12,8 @@ from buildingBlocks.default.geneticOperators.ComplexOptimizers import ImpComplex
     ImpComplexTokenParamsOptimizer, ImpComplexOptimizerIndivid2
 from buildingBlocks.default.geneticOperators.FitnessEvaluators import TokenFitnessIndivid
 from buildingBlocks.default.geneticOperators.Optimizers import PeriodicTokensOptimizerIndivid, \
-    PeriodicTokensOptimizerPopulation, PeriodicInProductTokensOptimizerIndivid, PeriodicExtraTokensOptimizerIndivid, \
-    TrendTokensOptimizerIndivid, TrendDiscreteTokensOptimizerIndivid
+    PeriodicCAFTokensOptimizerPopulation, PeriodicInProductTokensOptimizerIndivid, PeriodicExtraTokensOptimizerIndivid, \
+    TrendTokensOptimizerIndivid, TrendDiscreteTokensOptimizerIndivid, DifferentialTokensOptimizerPopulation
 
 import buildingBlocks.Globals.GlobalEntities as Bg
 
@@ -162,7 +162,7 @@ def set_operators(grid, individ, kwargs):
                     optimizer='DE',
                     popsize=None))
 
-    operatorsMap.PeriodicTokensOptimizerPopulation = PeriodicTokensOptimizerPopulation(
+    operatorsMap.PeriodicCAFTokensOptimizerPopulation = PeriodicCAFTokensOptimizerPopulation(
         params=dict(parallelise=False))
 
     operatorsMap.UnifierParallelizedPopulation = UnifierParallelizedPopulation(
@@ -192,6 +192,8 @@ def set_operators(grid, individ, kwargs):
     )
 
     operatorsMap.UnifierIndivid = UnifierIndivid()
+
+    operatorsMap.DifferentialTokensOptimizerPopulation = DifferentialTokensOptimizerPopulation()
 
 # Загружаем операторы в глобальную переменную чтобы ими могли пользоваться все индивиды
     Bg.set_operators(operatorsMap)

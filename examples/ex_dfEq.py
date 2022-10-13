@@ -106,7 +106,7 @@ target = np.array([np.sin(el[0] + el[1]) for el in xy])
 grid = np.array([xy[:, 0], xy[:, 1]])
 target -= target.mean()
 # ---- end
-'''
+
 # begin - ЛЕД
 ice_file = pd.read_csv("examples//ice_data//input_data.csv", header=None)
 mask_file = np.loadtxt("examples//ice_data//bathymetry.npy")
@@ -122,15 +122,48 @@ grid = np.array([xy[:, 0], xy[:, 1]])
 target -= target.mean()
 # ------- end
 
+'''
+# begin pde
+grid = np.load("examples//pde//t.npy")
+u = np.load("examples//pde//u.npy")
+du = np.load("examples//pde//du.npy")
+# ----- end
+
 
 shp = (55,55)
-set_constants(target=target, shape_grid=shp, pul_mtrx=[target])
+set_constants(target=u, shape_grid=shp, pul_mtrx=[u, du])
 
 individ = Equation(max_tokens=10)
-Ob.set_operators(grid, individ, build_settings)
+Ob.set_operators(np.array([grid]), individ, build_settings)
 
 population = PopulationOfDEquations(iterations=10)
 
 population.evolutionary()
 
 print("mi")
+
+inds = population.structure
+# idxsort = np.argsort(list(map(lambda x: x.fitness, inds)))
+# inds = [inds[i] for i in idxsort]
+
+print("RESULTING")
+n = 0
+ind = deepcopy(inds[n])
+
+print(ind.formula(), ind.fitness)
+
+residuals = ind.value(grid)
+
+
+f, axs = plt.subplots(1, 2)
+target_draw = u.reshape(shp)
+# target_draw[~mask_data] = np.nan
+model_draw = residuals.reshape(shp)
+# model_draw[~mask_data] = np.nan
+
+pc_test = axs[0].imshow(target_draw)
+axs[0].set_title("Input data")
+axs[1].imshow(model_draw)
+axs[1].set_title("Model")
+ 
+plt.savefig('dftest.png')

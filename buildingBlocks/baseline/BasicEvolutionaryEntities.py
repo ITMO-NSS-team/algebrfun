@@ -89,6 +89,8 @@ class TerminalToken(Bs.Token):
             Unique id for the token. If not zero, the token must be present in the result construct.
         optimize_id: int
             Used for identifications by optimizers which token to optimize.
+        owner_id:
+            Used for identifications by individ which that token is belongs.
         """
         # todo кэш и вал отвечают за кэширование значения токена. Селф служит флагом его оптимизированности.
         if fixator is None:
@@ -107,6 +109,7 @@ class TerminalToken(Bs.Token):
                          params=params, name_=name_)
 
         self.variable_params = None
+        self.owner_id = None
 
 
     def __select_parametrs__(self, in_data, data, population_size, gen=True):
@@ -559,8 +562,17 @@ class GeneticOperatorPopulation(Bs.GeneticOperator):
 
 
 class DifferentialToken(Bs.Token):
-    def __init__(self, number_params: int = 0, params_description: dict = None, params: np.ndarray = None, name_: str = None):
+    def __init__(self, number_params: int = 0, params_description: dict = None, params: np.ndarray = None, name_: str = None, fixator: dict = None):
         super().__init__(number_params, params_description, params, name_)
+
+        if fixator is None:
+            fixator = {}
+        add_fixator = dict(cache=True, val=False, self=False)
+
+        for key, value in add_fixator.items():
+            if key not in fixator.keys():
+                fixator[key] = value
+        self.fixator = fixator
 
     
 
@@ -621,14 +633,14 @@ class DifferentialToken(Bs.Token):
         Check params_description for requirements for current token.
         """
         super().check_params_description()
-        recomendations = "\nUse methods 'params_description.setter' or 'set_descriptor' to change params_descriptions"
-        for key, value in self._params_description.items():
-            assert 'bounds' in value.keys(), "Key 'bounds' must be in the nested " \
-                                             "dictionary for each parameter" + recomendations
-            assert (len(value['bounds']) == 2 and
-                   np.all(value['bounds'][0] <= value['bounds'][1])), "Bounds of each parameter must have" \
-                                                              " length = 2 and contain value" \
-                                                              " boundaries MIN <= MAX." + recomendations
+        # recomendations = "\nUse methods 'params_description.setter' or 'set_descriptor' to change params_descriptions"
+        # for key, value in self._params_description.items():
+        #     assert 'bounds' in value.keys(), "Key 'bounds' must be in the nested " \
+        #                                      "dictionary for each parameter" + recomendations
+        #     assert (len(value['bounds']) == 2 and
+        #            np.all(value['bounds'][0] <= value['bounds'][1])), "Bounds of each parameter must have" \
+        #                                                       " length = 2 and contain value" \
+        #                                                       " boundaries MIN <= MAX." + recomendations
 
     @property
     def params(self):
@@ -638,11 +650,9 @@ class DifferentialToken(Bs.Token):
     def params(self, params: np.ndarray):
         # self._params = np.array(params, dtype=float)
         self._params = params
-        if len(params.shape) == 1:
-            self._params = np.array([params])
         # потенциальные неожиданные баги от обрезания параметров
         self.check_params()
-        self.fixator['val'] = False
+        # self.fixator['val'] = False
 
     def check_params(self):
         super().check_params()
@@ -670,6 +680,13 @@ class DifferentialToken(Bs.Token):
 
     def init_params(self):
         pass
+
+    def get_tokens_of_expression(self):
+        all_tokens = []
+        for dif_token in self.structure:
+            all_tokens.extend(dif_token.params[0].structure)
+        
+        return all_tokens
 
     def value(self, grid: np.ndarray) -> np.ndarray:
         """
@@ -713,8 +730,14 @@ class DifferentialToken(Bs.Token):
         -------
         numpy.ndarray
         """
-        return params[0].value * params[1]
+        return params[0].value(grid) * params[1]
         # return np.zeros(grid.shape)
+
+    def name(self, with_params=False):
+        str_result = '{} du/dt'
+        
+        return str_result.format(self.params[0].formula())
+
 
     def func_params(self, params, grid):
         pass

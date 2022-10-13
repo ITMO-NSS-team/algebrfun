@@ -117,8 +117,9 @@ class PeriodicTokensOptimizerIndivid(GeneticOperatorIndivid):
 
     def _choice_tokens_for_optimize(self, individ):
         optimize_id = self.params['optimize_id']
+        all_tokens = individ.get_tokens_of_expression()
         choiced_tokens = list(filter(lambda token: token.optimize_id == optimize_id and not token.fixator['self'],
-                                     individ.structure))
+                                     all_tokens))
         return choiced_tokens
 
     @apply_decorator
@@ -462,14 +463,37 @@ class DifferentialTokensOptimizersIndivid(GeneticOperatorIndivid):
     def __init__(self, params=None) -> None:
         super().__init__(params=params)
 
+    def _fitness_wrapper(params, *args):
+        individ, grid, expression = args
+
+        tokens = individ.structure
+        for i, token in enumerate(tokens):
+            tokens[i].params[0] = expression[params[i]]
+        
+        temp_individ = individ.copy()
+        temp_individ.structur = tokens
+
+        temp_individ.fitness = None
+        temp_individ.apply_operator(name='VarFitnessIndivid')
+        return temp_individ
+
+    def _optimize_tokens_params(self, individ, token):
+        grid = self.params['grid']
+
+        x0 = np.array([0 for _  in range(len(individ.structure))])
+
+        res = minimize(self._fitness_wrapper, x0, args=(individ, grid))
+
+        for i in range(len(individ.structure)):
+            individ.structure[i].params[0] = res.x[i] # need expression
+
     @apply_decorator
     def apply(self, individ, *args, **kwargs):
-        for token in individ.structure:
-            self._optimize_token_params(individ, token)
+        self._optimize_tokens_params(individ)
     
 
 
-class PeriodicTokensOptimizerPopulation(GeneticOperatorPopulation):
+class PeriodicCAFTokensOptimizerPopulation(GeneticOperatorPopulation):
     def __init__(self, params=None):
         super().__init__(params=params)
 
@@ -502,6 +526,31 @@ class DifferentialTokensOptimizerPopulation(GeneticOperatorPopulation):
     def __init__(self, params=None) -> None:
         super().__init__(params=params)
 
+    @staticmethod
+    def _fitness_wrapper(params, *args):
+        individ, expression = args
+
+        tokens = individ.structure
+        for i, token in enumerate(tokens):
+            tokens[i].params = np.array([expression[int(params[i])], token.params[1]], dtype="object")
+        
+        temp_individ = individ.copy()
+        temp_individ.structure = tokens
+
+        temp_individ.fitness = None
+        temp_individ.apply_operator(name='VarFitnessIndivid')
+        return temp_individ.fitness
+
+    def _optimize_tokens_params(self, individ, expressions):
+
+        x0 = np.zeros(len(individ.structure), dtype=int)
+
+        res = minimize(self._fitness_wrapper, x0, args=(individ, expressions.structure))
+
+        for i in range(len(individ.structure)):
+            individ.structure[i].params = np.array([expressions.structure[int(res.x[i])], individ.structure[i].params[1]], dtype="object")
+
     def apply(self, population, *args, **kwargs):
         for individ in population.structure:
-            individ.apply_operator("DifferentialTokensOptimizerIndivid")
+            self._optimize_tokens_params(individ=individ, expressions=population.coef_set)
+            # individ.apply_operator("DifferentialTokensOptimizerIndivid")
