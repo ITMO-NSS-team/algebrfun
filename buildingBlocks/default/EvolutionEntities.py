@@ -259,4 +259,20 @@ class PopulationOfDEquations(Population):
             print('{}/{}\n'.format(n, self.iterations))
             self._evolutionary_step()
 
-            
+    
+class Subpopulation(Population):
+    def __init__(self, structure: list = None, iterations: int = 0, type_: str = "PopulationOfDEquation") -> None:
+        super().__init__(structure)
+
+        self.iterations = iterations
+        self.type_ = type_
+
+    def _evolutionary_step(self):
+        self.apply_operator("PeriodicCAFTokensOptimizerPopulation")
+        # self.apply_operator("DifferentialTokensOptimizerPopulation")
+
+    def evolutionary(self):  
+        self.apply_operator('InitSubPopulation')
+        for n in range(self.iterations):
+            print('{}/{}\n'.format(n, self.iterations))
+            self._evolutionary_step()

@@ -741,3 +741,17 @@ class DifferentialToken(Bs.Token):
 
     def func_params(self, params, grid):
         pass
+
+class Term:
+    def __init__(self, term_id, data) -> None:
+        """
+        The class that will store the derivatives
+
+        Parameters
+        ----------
+        term_id: to identify a population of algebraic expressions to a derivative
+        data: data matrix
+        """
+
+        self.term_id = term_id
+        self.data = data

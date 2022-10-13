@@ -13,7 +13,8 @@ from buildingBlocks.Synthesis.Synthesizer import Synthesizer
 from buildingBlocks.default.Tokens import Constant, Sin, Product, Imp, Power, ImpComplex
 from buildingBlocks.Globals.GlobalEntities import set_constants, get_full_constant
 from buildingBlocks.default.EvolutionEntities import Equation, DEquation
-from buildingBlocks.default.EvolutionEntities import PopulationOfEquations, PopulationOfDEquations
+from buildingBlocks.default.EvolutionEntities import PopulationOfEquations, PopulationOfDEquations, Subpopulation
+from buildingBlocks.baseline.BasicEvolutionaryEntities import Term
 
 from buildingBlocks.Globals.supplementary.FrequencyProcessor import FrequencyProcessor4TimeSeries as fp
 import buildingBlocks.Globals.GlobalEntities as Bg
@@ -82,6 +83,7 @@ build_settings = {
     'tokens': [token1, token2, token3],
     'population': {
         'size': 10
+
     }
 }
 
@@ -125,8 +127,8 @@ target -= target.mean()
 '''
 # begin pde
 grid = np.load("examples//pde//t.npy")
-u = np.load("examples//pde//u.npy")
-du = np.load("examples//pde//du.npy")
+u = Term(0, np.load("examples//pde//u.npy"))
+du = Term(1, np.load("examples//pde//du.npy"))
 # ----- end
 
 
@@ -136,7 +138,9 @@ set_constants(target=u, shape_grid=shp, pul_mtrx=[u, du])
 individ = Equation(max_tokens=10)
 Ob.set_operators(np.array([grid]), individ, build_settings)
 
-population = PopulationOfDEquations(iterations=10)
+population = Subpopulation(iterations=10)
+
+# population = PopulationOfDEquations(iterations=10)
 
 population.evolutionary()
 
