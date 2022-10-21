@@ -26,7 +26,7 @@ class UnifierParallelizedPopulation(GeneticOperatorPopulation):
         super().__init__(params=params)
 
     def apply(self, population, *args, **kwargs):
-        population.apply_operator('PeriodicTokensOptimizerPopulation')
+        population.apply_operator('PeriodicCAFTokensOptimizerPopulation')
         population.apply_operator('RegularisationPopulation')
         population.apply_operator('FitnessPopulation')
         return population

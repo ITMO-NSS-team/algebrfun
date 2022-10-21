@@ -115,7 +115,10 @@ class FrequencyProcessor4TimeSeries:
         # probabilities = list(map(lambda x: x ** pow / spec_sum, spec))
         probabilities = (spec**pow)/spec_sum
         idxs = np.arange(len(w[0]))
-        # print(idxs.shape, number_selected)
+        print(idxs.shape, number_selected)
+        if idxs.shape[0] < number_selected:
+            return []
+
         choice_i = np.random.choice(idxs, size=number_selected, replace=False, p=probabilities)
         choice = np.array(w)[:, choice_i]
 
@@ -163,6 +166,8 @@ class FrequencyProcessor4TimeSeries:
                                                             number_selected=number_selected,
                                                             number_selecting=number_selecting)
         # print("after choose", out_freqs)
+        if len(out_freqs) == 0:
+            return None
         return out_freqs, wmax
 
     @staticmethod

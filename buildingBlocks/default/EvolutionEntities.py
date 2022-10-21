@@ -3,6 +3,7 @@ Contains default inheritors/implementations of baseline classes for Individual.
 """
 from ast import Pass
 from copy import copy, deepcopy
+from ctypes import Structure
 from functools import reduce
 from buildingBlocks.baseline.BasicEvolutionaryEntities import Individ, Population
 import numpy as np
@@ -31,6 +32,7 @@ class Equation(Individ):
 
         self.max_tokens = max_tokens
         self.type_ = "Equation"
+        self.owner_id = None
 
     def __getstate__(self):
         # for key in self.__dict__.keys():
@@ -108,19 +110,18 @@ class PopulationOfEquations(Population):
 
         self.iterations = iterations
         self.type_ = "PopulationOfEquations"
+        self._owner_id = None
         # self.loggers = [Logger(), Logger()]
 
-    # helper function
-    def text_indiv_param(self):
-        print('checing poulation')
-        for iter, individ in enumerate(self.structure):
-            print(iter)
+    @property
+    def owner_id(self):
+        return self._owner_id
 
-            for token in individ.structure:
-                try:
-                    print(token, token.param(name='Frequency'))
-                except:
-                    print(token, token.params.shape)
+    @owner_id.setter
+    def owner_id(self, value: int):
+        self._owner_id = value
+        for ind in self.structure:
+            ind.owner_id = value
 
     def _evolutionary_step(self):
         # self.apply_operator('RegularisationPopulation')
@@ -185,6 +186,27 @@ class DEquation(Individ):
     def __setstate__(self, state: dict):
         self.__dict__ = state
 
+    def check_duplicate_of_term(self, new_structure):
+        uses = []
+        structure = []
+        for tkn in new_structure:
+            if tkn.params[1].term_id in uses:
+                continue
+            uses.append(tkn.params[1].term_id)
+            structure.append(tkn)
+        return structure
+
+    def add_substructure(self, substructure, idx: int = -1) -> None:
+        substructure = self.check_duplicate_of_term(substructure)
+        super().add_substructure(substructure, idx)
+
+
+    def set_CAF(self, CAF):
+        for tkn in self.structure:
+            if tkn.params[1].term_id == CAF.owner_id:
+                tkn.params = np.array([CAF, tkn.params[1]])
+                return
+
     def copy(self):
         new_copy = deepcopy(self)
 
@@ -246,7 +268,7 @@ class PopulationOfDEquations(Population):
 
         self.iterations = iterations
         self.type_ = type_
-        self.coef_set = PopulationOfEquations(iterations=1)
+        # self.coef_set = PopulationOfEquations(iterations=1)
 
     
     def _evolutionary_step(self):
@@ -261,14 +283,15 @@ class PopulationOfDEquations(Population):
 
     
 class Subpopulation(Population):
-    def __init__(self, structure: list = None, iterations: int = 0, type_: str = "PopulationOfDEquation") -> None:
+    def __init__(self, structure: list = None, iterations: int = 0, type_: str = "Subpopulation") -> None:
         super().__init__(structure)
 
         self.iterations = iterations
         self.type_ = type_
 
     def _evolutionary_step(self):
-        self.apply_operator("PeriodicCAFTokensOptimizerPopulation")
+        for sub_population in self.structure:
+            sub_population.evolutionary()
         # self.apply_operator("DifferentialTokensOptimizerPopulation")
 
     def evolutionary(self):  

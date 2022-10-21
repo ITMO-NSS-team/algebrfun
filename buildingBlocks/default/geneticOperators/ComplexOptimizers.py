@@ -333,9 +333,9 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
 
     def _choice_tokens_for_optimize(self, individ):
         optimize_id = self.params['optimize_id']
-        all_tokens = individ.get_tokens_of_expression()
+        # all_tokens = individ.get_tokens_of_expression()
         choiced_tokens = list(filter(lambda token: token.optimize_id == optimize_id and not token.fixator['self'],
-                                     all_tokens))
+                                     individ.structure))
         if len(choiced_tokens) == 0:
             return choiced_tokens
 

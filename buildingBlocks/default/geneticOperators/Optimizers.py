@@ -2,6 +2,7 @@
 Contains optimizers of image.pngers of tokens which are need to optimize.
 Лучше сюда не заглядывать, тут есть и будут еще сложные логики оптимизации токенов.
 """
+from asyncio import constants
 from functools import reduce
 from secrets import token_bytes
 
@@ -15,6 +16,7 @@ from multiprocessing import current_process
 
 from buildingBlocks.default.geneticOperators.supplementary.Other import check_or_create_fixator_item, \
     create_tmp_individ, apply_decorator
+from buildingBlocks.Globals.GlobalEntities import set_constants, get_full_constant
 
 
 class PeriodicTokensOptimizerIndivid(GeneticOperatorIndivid):
@@ -43,13 +45,15 @@ class PeriodicTokensOptimizerIndivid(GeneticOperatorIndivid):
     #  оптимизируется, но на самом деле можно и для всех). Создать у индивида клин-копи через инит и __дикт__
     @staticmethod
     def _fitness_wrapper(params, *args):
-        individ, grid, token = args
+        individ, base_individ,grid, token = args
         # print("breaking token", token)
         # print(params, grid.shape[0], len(params)//grid.shape[0])
         token.params = params.reshape(grid.shape[0], len(params)//grid.shape[0])
-        individ.fitness = None
+        base_individ.set_CAF(individ)
+        base_individ.fitness = None
         # individ.fixator['VarFitnessIndivid'] = False
-        individ.apply_operator(name='VarFitnessIndivid')
+        base_individ.apply_operator(name='VarFitnessIndivid')
+        individ.fitness = base_individ.fitness
         return individ.fitness
 
     @staticmethod
@@ -60,7 +64,10 @@ class PeriodicTokensOptimizerIndivid(GeneticOperatorIndivid):
 
     def _optimize_token_params(self, individ, token):
         grid = self.params['grid'] #!!!!!
+        constants = get_full_constant()
+        b_individ = constants['best_individ'].copy()
         # неоптимизированные токены в валуе не считаются
+        for i, tk in enumerate(individ.structure): individ.structure[i].fixator['self'] = True
         target = -individ.value(grid)
         # print("indiv struct", individ.structure)
         # print("grid", grid)
@@ -106,20 +113,20 @@ class PeriodicTokensOptimizerIndivid(GeneticOperatorIndivid):
             # x0[0] = 1.
             if self.params['optimizer'] == 'DE':
                 res = differential_evolution(self._fitness_wrapper, new_bounds,
-                                             args=(tmp_individ, grid, token),
+                                             args=(individ, b_individ, grid, token),
                                              popsize=self.params['popsize'])
             else:
                 res = minimize(self._fitness_wrapper,  x0.reshape(-1),
-                               args=(tmp_individ, grid, token)) # либо переделать функцию _fitness_wrapper, чтобы x0 не был одномерным массивом
+                               args=(individ, b_individ, grid, token)) # либо переделать функцию _fitness_wrapper, чтобы x0 не был одномерным массивом
             token.params = res.x.reshape(grid.shape[0], len(res.x)//grid.shape[0])
         # individ.change_all_fixes(False)
         individ.structure = individ.structure
 
     def _choice_tokens_for_optimize(self, individ):
         optimize_id = self.params['optimize_id']
-        all_tokens = individ.get_tokens_of_expression()
+        # all_tokens = individ.get_tokens_of_expression()
         choiced_tokens = list(filter(lambda token: token.optimize_id == optimize_id and not token.fixator['self'],
-                                     all_tokens))
+                                     individ.structure))
         return choiced_tokens
 
     @apply_decorator
@@ -372,6 +379,7 @@ class PeriodicInProductTokensOptimizerIndivid(GeneticOperatorIndivid): # todo и
                         complex_tokens_with_choiced_subtokens.append(token)
             # complex_tokens_with_choiced_subtokens = list(filter(lambda token:
             #                                                     not set(token.subtokens).isdisjoint(
+                
             #                                                         set(choiced_subtokens)),
             #                                                     complex_tokens_in_chromo))
             return choiced_subtokens, complex_tokens_with_choiced_subtokens
@@ -507,7 +515,11 @@ class PeriodicCAFTokensOptimizerPopulation(GeneticOperatorPopulation):
                 print(token)
 
     def apply(self, population, *args, **kwargs):
+        constants = get_full_constant()
+        exist_ids = [tkn.params[1].term_id for tkn in constants['best_individ'].structure]
         for individ in population.structure:
+            if not individ.owner_id in exist_ids:
+                continue
             # individ.apply_operator('TrendTokensOptimizerIndivid')
             individ.apply_operator('TrendDiscreteTokensOptimizerIndivid')
             print('TrendDiscreteTokensOptimizerIndivid is completed')

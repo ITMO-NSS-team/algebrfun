@@ -14,6 +14,7 @@ from buildingBlocks.default.EvolutionEntities import PopulationOfEquations, Popu
 import numpy as np
 from scipy.optimize import minimize
 from itertools import product
+import random
 
 
 class InitIndivid(GeneticOperatorIndivid):
@@ -50,7 +51,7 @@ class InitIndivid(GeneticOperatorIndivid):
             der_set = constants['pul_mtrx']
             number_of_temps = len(der_set)
             selected_temps = np.random.choice(np.arange(number_of_temps), number_of_temps)
-            sub = [DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([Equation(max_tokens=10), der_set[current_temp]], dtype=object), name_="DifferencialToken") for current_temp in selected_temps]
+            sub = [DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([random.choice(args[1].structure[current_temp].structure), der_set[current_temp]], dtype=object), name_="DifferencialToken") for current_temp in selected_temps]
             individ.add_substructure(sub)
             return
 
@@ -67,22 +68,26 @@ class InitIndivid(GeneticOperatorIndivid):
         # print("number of tokens", number_of_tokens, non_mandatory_tokens)
         
         # non_mandatory_tokens_params = np.array([np.array(token.variable_params)[:, args[0], :] for token in non_mandatory_tokens])
-        non_mandatory_tokens_params = [np.array(token.variable_params)[:, args[0]] for token in non_mandatory_tokens]
+        selectors = np.random.choice(np.arange(10), number_of_tokens)
+        non_mandatory_tokens_params = [np.array(token.variable_params)[:, int(selectors[iter])] for iter, token in enumerate(non_mandatory_tokens)]
+        # non_mandatory_tokens_params = [np.array(token.variable_params)[:, args[0]] for iter, token in enumerate(non_mandatory_tokens)]
         # non_mandatory_tokens_params = [np.array(token.variable_params)[args[0]] for token in non_mandatory_tokens]
         # non_mandatory_tokens_params = np.array(non_mandatory_tokens_params)
 
-        A = np.array([np.linspace(-10, 10, len(non_mandatory_tokens)) for _ in range(len(non_mandatory_tokens[0].variable_params))])
+        # A = np.array([np.linspace(-10, 10, len(non_mandatory_tokens)) for _ in range(len(non_mandatory_tokens[0].variable_params))])
+        A = np.array([np.random.choice(np.arange(-10, 10), len(non_mandatory_tokens)) for _ in range(len(non_mandatory_tokens[0].variable_params))])
         A = A.reshape(-1)
 
         shp = (len(non_mandatory_tokens), len(non_mandatory_tokens[0].variable_params), 1)
-        func_podbor = lambda A: np.average((np.sum([non_mandatory_tokens[token_i].evaluate(np.hstack((A.reshape(shp)[token_i], non_mandatory_tokens_params[token_i])), self.params['grid']) for token_i in np.arange(shp[0])], axis=0) - Bg.constants['target']) ** 2)
-        res_amplitude = minimize(func_podbor, A).x
-        res_amplitude = res_amplitude.reshape(shp)
+        # func_podbor = lambda A: np.average((np.sum([non_mandatory_tokens[token_i].evaluate(np.hstack((A.reshape(shp)[token_i], non_mandatory_tokens_params[token_i])), self.params['grid']) for token_i in np.arange(shp[0])], axis=0) - Bg.constants['target']) ** 2) # ? нужно переписать под уравнения ? 
+        # res_amplitude = minimize(func_podbor, A).x
+        # res_amplitude = res_amplitude.reshape(shp)
         sub = []
         for i in range(len(non_mandatory_tokens)):
             cur_token = non_mandatory_tokens[i].clean_copy()
             # cur_token.params = np.hstack((res_amplitude[i], non_mandatory_tokens[i].variable_params[self.params['ids'][args[0]][i]]))
-            tesyt = np.hstack((res_amplitude.reshape(shp)[i], non_mandatory_tokens_params[i]))
+            # tesyt = np.hstack((res_amplitude.reshape(shp)[i], non_mandatory_tokens_params[i]))
+            tesyt = np.hstack((A.reshape(shp)[i], non_mandatory_tokens_params[i]))
             cur_token.params = tesyt
             sub.append(cur_token)
         individ.add_substructure(sub)
@@ -99,24 +104,26 @@ class InitPopulation(GeneticOperatorPopulation):
             new_individ = self.params['individ'].copy()
             if population.type_ == "PopulationOfDEquation":
                 new_individ = DEquation(max_tokens=10)
-            new_individ.apply_operator('InitIndivid', _)
+            new_individ.apply_operator('InitIndivid', _, args[0])
             population.structure.append(new_individ)
         return population
 
-class InitSubPopulations():
+class InitSubPopulations(GeneticOperatorPopulation):
     def __init__(self, params):
         super().__init__(params=params)
-        self._check_params('population_size', 'individ')
+        # self._check_params('population_size')
 
     def apply(self, population, *args, **kwargs):
         constants = get_full_constant()
         der_set = constants['pul_mtrx']
         population.structure = []
-        for i, elem in der_set:
+        for i, elem in enumerate(der_set):
             tmp_population = PopulationOfEquations(iterations=population.iterations)
-            tmp_population.apply_operator("InitPopulation")
+            tmp_population.apply_operator("InitPopulation", population)
+            tmp_population.owner_id = i
             population.structure.append(tmp_population)
         tmp_population = PopulationOfDEquations(iterations=population.iterations)
-        tmp_population.apply_operator("InitPopulation")
+        tmp_population.apply_operator("InitPopulation", population)
+        constants['best_individ'] = tmp_population.structure[0]
         population.structure.append(tmp_population)
         return population

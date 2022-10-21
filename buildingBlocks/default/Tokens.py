@@ -45,7 +45,8 @@ class Constant(TerminalToken):
     def evaluate(self, params, grid):
         constants = get_full_constant()
         # !!! очень важный минус, который инвертирует таргет для его компенсации суммой других токенов
-        return -params[0] * constants[self.name_]
+        # return -params[0] * constants[self.name_]
+        return np.zeros_like(constants[self.name_])
 
     def name(self, with_params=False):
         return '{}{}'.format(round(self.params[0][0], 3), self.name_)

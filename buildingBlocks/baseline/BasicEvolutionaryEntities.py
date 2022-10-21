@@ -730,7 +730,7 @@ class DifferentialToken(Bs.Token):
         -------
         numpy.ndarray
         """
-        return params[0].value(grid) * params[1]
+        return params[0].value(grid) * params[1].data
         # return np.zeros(grid.shape)
 
     def name(self, with_params=False):
@@ -743,7 +743,7 @@ class DifferentialToken(Bs.Token):
         pass
 
 class Term:
-    def __init__(self, term_id, data) -> None:
+    def __init__(self, term_id, data, name) -> None:
         """
         The class that will store the derivatives
 
@@ -755,3 +755,4 @@ class Term:
 
         self.term_id = term_id
         self.data = data
+        self._name = name
