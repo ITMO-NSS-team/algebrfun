@@ -11,6 +11,8 @@ import numpy as np
 from buildingBlocks.default.geneticOperators.supplementary.Other import check_or_create_fixator_item, \
     check_operators_from_kwargs, apply_decorator
 
+from buildingBlocks.Globals.GlobalEntities import set_constants, get_full_constant
+
 
 class VarFitnessIndivid(GeneticOperatorIndivid):
     def __init__(self, params):
@@ -19,13 +21,14 @@ class VarFitnessIndivid(GeneticOperatorIndivid):
 
     # @apply_decorator
     def apply(self, individ, *args, **kwargs) -> None:
-        # vec = reduce(lambda val, token: val + token,
-        #              list(map(lambda token: token.value(self.params['grid']), individ.structure)))
-        # individ.fitness = np.linalg.norm(vec)
-
         if individ.type_ == "DEquation":
             individ.fitness = np.var(individ.value(self.params['grid']))
-            return 
+            return
+        constants = get_full_constant()
+        b_individ = constants['best_individ'].copy()
+        b_individ.set_CAF(individ)
+        individ.fitness = np.var(b_individ.value(self.params['grid']))
+        '''
         target_token = list(filter(lambda token: token.mandatory != 0, individ.structure))[0]
         ampl_norm = individ.get_norm_of_amplitudes()
         # lmd = 10
@@ -36,6 +39,7 @@ class VarFitnessIndivid(GeneticOperatorIndivid):
         print("testing fitness value:", vec, lmd * ampl_norm)
         individ.fitness = np.var(vec)/np.var(target_token.value(self.params['grid'])) + lmd * ampl_norm
         # individ.fitness = np.abs(vec - vec.mean()).mean() 
+        '''
 
 
 class TokenFitnessIndivid(GeneticOperatorIndivid):

@@ -21,8 +21,8 @@ from buildingBlocks.supplementary.Other import mape
 class Constant(TerminalToken):
     def __init__(self, number_params=1,
                  params_description=None,
-                 params=np.array([1.]), val=None,
-                 name_=None, mandatory=0):
+                 params=np.array([0.]), val=None,
+                 name_=None, mandatory=1):
         if params_description is None:
             params_description = {
                 0: dict(name='Amplitude', bounds=(-1., 1.)),
@@ -46,7 +46,8 @@ class Constant(TerminalToken):
         constants = get_full_constant()
         # !!! очень важный минус, который инвертирует таргет для его компенсации суммой других токенов
         # return -params[0] * constants[self.name_]
-        return np.zeros_like(constants[self.name_])
+        
+        return self.params[0] * np.ones_like(constants[self.name_].data)
 
     def name(self, with_params=False):
         return '{}{}'.format(round(self.params[0][0], 3), self.name_)
@@ -116,7 +117,6 @@ class Power(TerminalToken):
                 return True
             return False
         return False
-
 
 class Sin(TerminalToken):
     def __init__(self, number_params=3, params_description=None,
@@ -578,7 +578,7 @@ class ImpComplex(ComplexToken):
         #                                                   self.structure))
         fixed_optimized_tokens_in_structure = self.structure
         if len(fixed_optimized_tokens_in_structure) == 0:
-            return np.zeros(grid.shape)
+            return np.zeros((grid.shape[-1],))
         ampl = self.param(name='Amplitude') #!!! может быть очень опасным багом если параметр связан с паттерном
         res = reduce(lambda x, y: x + y,
                      list(map(lambda token: token.value(grid),

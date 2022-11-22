@@ -43,10 +43,10 @@ class CrossoverIndivid(GeneticOperatorIndivid):
         if np.random.uniform() < increase_prob:
             for token in add_tokens1:
                 token_copy = token.copy()
-                ind2.add_substructure(token_copy)
+                ind2.add_substructure([token_copy])
             for token in add_tokens2:
                 token_copy = token.copy()
-                ind1.add_substructure(token_copy)
+                ind1.add_substructure([token_copy])
         else:
             for token1, token2 in np.transpose([add_tokens1, add_tokens2]):
                 tmp_token1, tmp_token2 = token1.copy(), token2.copy()

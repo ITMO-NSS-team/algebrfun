@@ -13,7 +13,7 @@ from buildingBlocks.default.geneticOperators.ComplexOptimizers import ImpComplex
 from buildingBlocks.default.geneticOperators.FitnessEvaluators import TokenFitnessIndivid
 from buildingBlocks.default.geneticOperators.Optimizers import PeriodicTokensOptimizerIndivid, \
     PeriodicCAFTokensOptimizerPopulation, PeriodicInProductTokensOptimizerIndivid, PeriodicExtraTokensOptimizerIndivid, \
-    TrendTokensOptimizerIndivid, TrendDiscreteTokensOptimizerIndivid, DifferentialTokensOptimizerPopulation
+    TrendTokensOptimizerIndivid, TrendDiscreteTokensOptimizerIndivid, DifferentialTokensOptimizerPopulation, ParamsOfEquationOptimizerIndivid
 
 import buildingBlocks.Globals.GlobalEntities as Bg
 
@@ -25,7 +25,7 @@ from scipy.optimize import minimize
 # from moea_dd.forMoeadd.loadTS import ts
 
 # Определим число процессов
-from buildingBlocks.default.geneticOperators.Regularizations import RestrictTokensIndivid
+from buildingBlocks.default.geneticOperators.Regularizations import RestrictTokensIndivid, LassoIndivid
 from buildingBlocks.default.geneticOperators.Unifiers import UnifierParallelizedPopulation, UnifierIndivid
 
 
@@ -53,6 +53,7 @@ def set_operators(grid, individ, kwargs):
     crossover = kwargs['crossover']
     population_size = kwargs['population']['size']
     tokens = kwargs['tokens']
+    lasso = kwargs['lasso']
 
     for token in tokens:
         token.__select_parametrs__(grid, Bg.constants['target'], population_size, gen=False)
@@ -70,6 +71,9 @@ def set_operators(grid, individ, kwargs):
 
     operatorsMap.InitPopulation = Initializers.InitPopulation(
         params=dict(population_size=population_size,
+                    individ=individ))
+    
+    operatorsMap.InitSubPopulation = Initializers.InitSubPopulations(params=dict(population_size=population_size,
                     individ=individ))
 
     operatorsMap.MutationIndivid = Mutations.MutationIndivid(
@@ -150,6 +154,10 @@ def set_operators(grid, individ, kwargs):
                     optimizer='DE',
                     popsize=10))
 
+    operatorsMap.ParamsOfEquationOptimizerIndivid = ParamsOfEquationOptimizerIndivid(
+        params=dict(grid=grid, popsize=10)
+    )
+
     # operatorsMap.PeriodicInProductTokensOptimizerIndivid = PeriodicInProductTokensOptimizerIndivid(
     #     params=dict(grid=grid,
     #                 optimize_id=1,
@@ -171,6 +179,11 @@ def set_operators(grid, individ, kwargs):
     operatorsMap.TokenFitnessIndivid = TokenFitnessIndivid()
 
     operatorsMap.RestrictTokensIndivid = RestrictTokensIndivid()
+
+    operatorsMap.LassoIndivid = LassoIndivid(
+        params=dict(grid=grid,
+                    regularisation_coef=lasso['regularisation_coef'])
+    )
 
     operatorsMap.AllImpComplexOptimizerIndivid = AllImpComplexOptimizerIndivid(
         params=dict(grid=grid,

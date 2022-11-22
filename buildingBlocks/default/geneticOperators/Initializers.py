@@ -4,7 +4,7 @@ from email import iterators
 from re import L
 
 from sklearn.utils import resample
-from buildingBlocks.baseline.BasicEvolutionaryEntities import DifferentialToken, GeneticOperatorIndivid, GeneticOperatorPopulation
+from buildingBlocks.baseline.BasicEvolutionaryEntities import DifferentialToken, DifferentialTokenConstant, GeneticOperatorIndivid, GeneticOperatorPopulation
 from buildingBlocks.default.EvolutionEntities import DEquation, Equation
 from buildingBlocks.default.geneticOperators.supplementary.Other import check_operators_from_kwargs, apply_decorator
 import buildingBlocks.Globals.GlobalEntities as Bg
@@ -51,7 +51,10 @@ class InitIndivid(GeneticOperatorIndivid):
             der_set = constants['pul_mtrx']
             number_of_temps = len(der_set)
             selected_temps = np.random.choice(np.arange(number_of_temps), number_of_temps)
+            const_term = DifferentialTokenConstant(number_params=2, params_description={0: dict(name='const param'), 1: dict(name="Term")}, params=np.array([args[1].structure[0].structure[0], constants['target']], dtype=object), name_="DifferentialToken")
+            # selected_temps.append(constants['target'].term_id)
             sub = [DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([random.choice(args[1].structure[current_temp].structure), der_set[current_temp]], dtype=object), name_="DifferencialToken") for current_temp in selected_temps]
+            sub.append(const_term)
             individ.add_substructure(sub)
             return
 
@@ -117,13 +120,14 @@ class InitSubPopulations(GeneticOperatorPopulation):
         constants = get_full_constant()
         der_set = constants['pul_mtrx']
         population.structure = []
-        for i, elem in enumerate(der_set):
+        for elem in der_set:
             tmp_population = PopulationOfEquations(iterations=population.iterations)
             tmp_population.apply_operator("InitPopulation", population)
-            tmp_population.owner_id = i
+            tmp_population.owner_id = elem.term_id
             population.structure.append(tmp_population)
         tmp_population = PopulationOfDEquations(iterations=population.iterations)
         tmp_population.apply_operator("InitPopulation", population)
-        constants['best_individ'] = tmp_population.structure[0]
+        # constants['best_individ'] = tmp_population.structure[0]
+        set_constants(best_individ=tmp_population.structure[0])
         population.structure.append(tmp_population)
         return population

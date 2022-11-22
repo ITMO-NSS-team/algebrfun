@@ -103,7 +103,7 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
         if len(single_pattern_value) == 0:
             return []
 
-        print("len single pattern value testing", len(single_pattern_value), pattern, pattern.param(name='Frequency'), pattern.param(name='Zero part of period'), fi, T, T1, T2)
+        # print("len single pattern value testing", len(single_pattern_value), pattern, pattern.param(name='Frequency'), pattern.param(name='Zero part of period'), fi, T, T1, T2)
         # len single pattern value testing 0 <buildingBlocks.default.Tokens.Imp object at 0x00000225414F86A0> [0.00994741 0.00985536] [0.89174925 0.87892041] [0.99931619 0.94239965] [100.52863214 101.4676441 ] [89.64633232 89.18198361] [10.88229982 12.28566049]
         try:
             single_pattern_value = single_pattern_value[single_pattern_value > 0]

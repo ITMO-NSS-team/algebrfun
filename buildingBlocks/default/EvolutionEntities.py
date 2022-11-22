@@ -7,6 +7,8 @@ from ctypes import Structure
 from functools import reduce
 from buildingBlocks.baseline.BasicEvolutionaryEntities import Individ, Population
 import numpy as np
+from buildingBlocks.Globals.GlobalEntities import set_constants, get_full_constant
+from buildingBlocks.baseline.BasicEvolutionaryEntities import DifferentialToken
 
 
 class Equation(Individ):
@@ -67,8 +69,7 @@ class Equation(Individ):
         return joinWith.join(list(map(lambda x: x.name(with_params), self.structure)))
 
     def value(self, grid):
-        fixed_optimized_tokens_in_structure = list(filter(lambda token: token.fixator['self'],
-                                                          self.structure))
+        fixed_optimized_tokens_in_structure = list(filter(lambda token: token.fixator['self'], self.structure))
         # print("checking value in equation", fixed_optimized_tokens_in_structure)
         if len(fixed_optimized_tokens_in_structure) != 0:
             # if self.used_value == 'plus':
@@ -82,7 +83,7 @@ class Equation(Individ):
             return val
         #     elif self.used_value == 'product':
         #         return reduce(lambda val, x: val * x, list(map(lambda x: x.value(t), self.chromo)))
-        return np.zeros(grid.shape)
+        return np.zeros((grid.shape[-1],))
 
     def get_norm_of_amplitudes(self):
         fixed_optimized_tokens_in_structure = list(filter(lambda token: token.fixator['self'], self.structure))
@@ -138,15 +139,19 @@ class PopulationOfEquations(Population):
         self.apply_operator('CrossoverPopulation')
         self.apply_operator('MutationPopulation')
 
-    def evolutionary(self):
+    def evolutionary(self, *args):
         # self.apply_operator('InitPopulation')
+        constants = get_full_constant()
+        exist_ids = [tkn.params[1].term_id for tkn in constants['best_individ'].structure]
+        if not self.owner_id in exist_ids:
+            return
         for n in range(self.iterations):
-            print('{}/{}\n'.format(n, self.iterations))
+            # print('{}/{}\n'.format(n, self.iterations))
             self._evolutionary_step()
             idxsort = np.argsort(list(map(lambda x: x.fitness, self.structure)))
             inds = [self.structure[i] for i in idxsort]
-            print("structure of population", [cur_eq.fitness for cur_eq in inds])
-            print("no sort", [cur_eq.fitness for cur_eq in self.structure])
+            # print("structure of population", [cur_eq.fitness for cur_eq in inds])
+            # print("no sort", [cur_eq.fitness for cur_eq in self.structure])
         # self.apply_operator('RegularisationPopulation')
         # self.apply_operator('PeriodicTokensOptimizerPopulation')
         # self.apply_operator('LassoPopulation')
@@ -186,14 +191,37 @@ class DEquation(Individ):
     def __setstate__(self, state: dict):
         self.__dict__ = state
 
+    def set_structure(self, structure):
+        self.change_all_fixes(False)
+        assert type(structure) == list, "structure must be a list"
+        term_ids = np.unique([token.params[1].term_id for token in structure])
+        correct_form_structure = []
+        for term_id in term_ids:
+            tokens_of_caf = list(filter(lambda x: x.params[1].term_id == term_id, structure))
+            if len(tokens_of_caf) > 1:
+                correct_form_structure.append(type(tokens_of_caf[0])(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([Equation(structure=[x.params[0].structure[0] for x in tokens_of_caf], fixator=tokens_of_caf[0].params[0].fixator), tokens_of_caf[0].params[1]], dtype=object), name_="DifferencialToken"))
+            else:
+                correct_form_structure.append(tokens_of_caf[0])
+        self.structure = correct_form_structure
+
+
+
+
     def check_duplicate_of_term(self, new_structure):
-        uses = []
+        uses = [item.params[1].term_id for item in self.structure]
         structure = []
-        for tkn in new_structure:
-            if tkn.params[1].term_id in uses:
-                continue
-            uses.append(tkn.params[1].term_id)
-            structure.append(tkn)
+
+        try:
+            for tkn in new_structure:
+                if tkn.params[1].term_id in uses:
+                    continue
+                uses.append(tkn.params[1].term_id)
+                structure.append(tkn)
+        except:
+            if new_structure.params[1].term_id in uses:
+                return structure
+            else:
+                structure.append(new_structure)
         return structure
 
     def add_substructure(self, substructure, idx: int = -1) -> None:
@@ -255,7 +283,17 @@ class DEquation(Individ):
         pass
 
     def get_structure(self, *types):
-        pass
+        # if not types:
+        #     return copy(self.structure)
+        # return list(filter(lambda x: x.type in types, self.structure))
+        structure_without_brackets = []
+        for dif_token in self.structure:
+            for token in dif_token.params[0].structure:
+                new_part_token = type(dif_token)(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([Equation(structure=[token]), dif_token.params[1]], dtype=object), name_="DifferencialToken")
+                new_part_token.mandatory = dif_token.mandatory
+                structure_without_brackets.append(new_part_token)
+        
+        return structure_without_brackets
 
 
 
@@ -271,15 +309,31 @@ class PopulationOfDEquations(Population):
         # self.coef_set = PopulationOfEquations(iterations=1)
 
     
-    def _evolutionary_step(self):
-        self.apply_operator("PeriodicCAFTokensOptimizerPopulation")
-        # self.apply_operator("DifferentialTokensOptimizerPopulation")
+    def _evolutionary_step(self, *args):
+        self.apply_operator("DifferentialTokensOptimizerPopulation", args[0])
+        for individ in self.structure:
+            individ.apply_operator("LassoIndivid")
+            individ.apply_operator("VarFitnessIndivid")
+        self.apply_operator("RouletteWheelSelection")
+        self.apply_operator("CrossoverPopulation")
+        self.apply_operator("FitnessPopulation")
+        self.apply_operator("Elitism")
 
-    def evolutionary(self):  
-        self.apply_operator('InitPopulation')
+        # Optimizer for structure differencial Tokens (\/)
+        # Lasso + Linear Regression for search amplitudes (\/)
+        # Selection (\/)
+        # Crossover (\/)
+        # FitnessEvaluation
+        # Elitism
+        # Mutation
+        # FitnessEvaluation
+        # Restrict population
+
+    def evolutionary(self, *args):  
+        # self.apply_operator('InitPopulation')
         for n in range(self.iterations):
-            print('{}/{}\n'.format(n, self.iterations))
-            self._evolutionary_step()
+            # print('{}/{}\n'.format(n, self.iterations))
+            self._evolutionary_step(args[0])
 
     
 class Subpopulation(Population):
@@ -291,7 +345,7 @@ class Subpopulation(Population):
 
     def _evolutionary_step(self):
         for sub_population in self.structure:
-            sub_population.evolutionary()
+            sub_population.evolutionary(self.structure)
         # self.apply_operator("DifferentialTokensOptimizerPopulation")
 
     def evolutionary(self):  

@@ -87,13 +87,14 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
         return features, target, target_idx
 
     def _regression_cascade(self, individ, lasso=True):
-        features = np.array(list(map(lambda token: token.value(self.params['grid']), individ.structure)))
+        chromo = individ.get_structure()
+        features = np.array(list(map(lambda token: token.value(self.params['grid']), chromo)))
         features -= np.mean(features, axis=1, keepdims=True)
-        features, norms = normalize(features, norm='l2', axis=1, return_norm=True) #TOdo изменить на norm=max
+        features, norms = normalize(features, norm='max', axis=1, return_norm=True) #TOdo изменить на norm=max
 
         models = []
         for idx in range(len(features)):
-            if individ.structure[idx].mandatory == 0:
+            if chromo[idx].mandatory == 0:
                 continue
             target = features[idx]
             X = features[[i for i in range(len(features)) if i != idx]].T
@@ -112,28 +113,31 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
         chromo = individ.get_structure()
         chromo.pop(target_idx)
         for idx, token in enumerate(chromo):
-            token.set_param(token.param(name='Amplitude') * coefs[idx], name='Amplitude')  # /norms[idx])
+            token.params[0].structure[0].set_param(token.params[0].structure[0].param(name='Amplitude') * coefs[idx], name='Amplitude')  # /norms[idx])
+        individ.set_structure(chromo)
 
     @staticmethod
     def _del_tokens_with_zero_coef(individ, coefs, target_idx):
         print(individ.formula())
-        print('lasso target idx--->', target_idx, ' ', individ.structure[target_idx].name(), coefs)
-        new_chromo = [individ.structure.pop(target_idx)]
+        chromo = individ.get_structure()
+        print('lasso target idx--->', target_idx, ' ', chromo[target_idx].name(), coefs)
+        new_chromo = [chromo.pop(target_idx)]
         # if (coefs == 0).all():
         #     individ.structure.reverse()
         #     individ.structure.extend(new_chromo)
         #     individ.structure.reverse()
         #     return
         for idx, coef in enumerate(coefs):
-            if coef != 0 or individ.structure[idx].mandatory != 0: #or (individ.structure[idx].mandatory == 0
+            if coef != 0 or chromo[idx].mandatory != 0: #or (individ.structure[idx].mandatory == 0
                                                                  #  and not individ.structure[idx].fix):
-                new_chromo.append(individ.structure[idx])
+                new_chromo.append(chromo[idx])
         # idxs = [i for i in range(len(coefs))]
         # random.shuffle(idxs)
         # for idx in idxs:
         #     if coefs[idx] == 0 and len(new_chromo) < 2 and individ.structure[idx] not in new_chromo:
         #         new_chromo.append(individ.structure[idx])
-        individ.structure = new_chromo
+        # individ.structure = new_chromo # ???
+        individ.set_structure(new_chromo)
 
     def linear_regression(self, individ):
         if len(individ.structure) <= 1:
@@ -272,7 +276,7 @@ class LRIndivid1Target(GeneticOperatorIndivid):
         target = -data[target_idx]
         features = data[[idx for idx in range(data.shape[0]) if idx != target_idx]]
 
-        print("features & target", features, target)
+        # print("features & target", features, target)
 
         model = LinearRegression(fit_intercept=True)
         model.fit(features.T, target)
@@ -331,7 +335,6 @@ class DelDuplicateTokensIndivid(GeneticOperatorIndivid):
                 flag = True
         if flag:
             individ.structure = new_chromo
-
 
 class CheckMandatoryTokensIndivid(GeneticOperatorIndivid):
     """
@@ -419,11 +422,14 @@ class RegularisationPopulation(GeneticOperatorPopulation):
 
     def apply(self, population, *args, **kwargs):
         for individ in population.structure:
+            if len(individ.structure) <= 1: # удаление индивида если помимо его константы нет других токенов
+                population.del_substructure(individ)
+                continue
             individ.apply_operator('CheckMandatoryTokensIndivid')
             individ.apply_operator('TokenFitnessIndivid')
             individ.apply_operator('DelDuplicateTokensIndivid')
             individ.apply_operator('RestrictTokensIndivid')
-            individ.apply_operator('LRIndivid1Target')
+            # individ.apply_operator('LRIndivid1Target')
 
         return population
 

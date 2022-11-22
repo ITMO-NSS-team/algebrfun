@@ -46,6 +46,7 @@ class PeriodicTokensOptimizerIndivid(GeneticOperatorIndivid):
     @staticmethod
     def _fitness_wrapper(params, *args):
         individ, base_individ,grid, token = args
+
         # print("breaking token", token)
         # print(params, grid.shape[0], len(params)//grid.shape[0])
         token.params = params.reshape(grid.shape[0], len(params)//grid.shape[0])
@@ -66,8 +67,11 @@ class PeriodicTokensOptimizerIndivid(GeneticOperatorIndivid):
         grid = self.params['grid'] #!!!!!
         constants = get_full_constant()
         b_individ = constants['best_individ'].copy()
-        # неоптимизированные токены в валуе не считаются
         for i, tk in enumerate(individ.structure): individ.structure[i].fixator['self'] = True
+        b_individ.set_CAF(individ)
+        # test_res = fp.choice_freq_for_summand_de(grid, b_individ, individ.owner_id, number_selecting=5, number_selected=5, token_type='seasonal')
+        # неоптимизированные токены в валуе не считаются
+        # for i, tk in enumerate(individ.structure): individ.structure[i].fixator['self'] = True
         target = -individ.value(grid)
         # print("indiv struct", individ.structure)
         # print("grid", grid)
@@ -83,8 +87,9 @@ class PeriodicTokensOptimizerIndivid(GeneticOperatorIndivid):
         token.fixator['self'] = True
 
         # print("last token", token, target)
-        freq = fp.choice_freq_for_summand(grid, target-target.mean(),
-                                          number_selecting=5, number_selected=5, token_type='seasonal')
+        # freq = fp.choice_freq_for_summand(grid, target-target.mean(),
+        #                                   number_selecting=5, number_selected=5, token_type='seasonal')
+        freq = fp.choice_freq_for_summand_de(grid, b_individ, individ.owner_id, number_selecting=5, number_selected=5, token_type='seasonal')                                
         # print("getting frequency in optimizer", freq)
         if freq is None: #TODO: сделать проверку присутствия нужного токена в неком пуле, чтобы избежать повторной оптимизаци
             individ.structure.remove(token) # del hopeless token and out
@@ -106,6 +111,7 @@ class PeriodicTokensOptimizerIndivid(GeneticOperatorIndivid):
             for i in range(x0.shape[0]):
                 # print("x0 frequency prev", i, token, x0[i][token.get_key_use_params_description(descriptor_name='name',
                 #                                     descriptor_value='Frequency')])
+                # print(f"after fft freqs {i} and {freq[0]}")
                 x0[i][token.get_key_use_params_description(descriptor_name='name',
                                                     descriptor_value='Frequency')] = freq[0][i]
                 # print("x0 frequency new", i, token, x0[i][token.get_key_use_params_description(descriptor_name='name',
@@ -522,17 +528,50 @@ class PeriodicCAFTokensOptimizerPopulation(GeneticOperatorPopulation):
                 continue
             # individ.apply_operator('TrendTokensOptimizerIndivid')
             individ.apply_operator('TrendDiscreteTokensOptimizerIndivid')
-            print('TrendDiscreteTokensOptimizerIndivid is completed')
+            # print('TrendDiscreteTokensOptimizerIndivid is completed')
             # individ.apply_operator('ImpComplexOptimizerIndivid2')
             individ.apply_operator('ImpComplexDiscreteTokenParamsOptimizer')
-            print('ImpComplexDiscreteTokenParamsOptimizer is completed')
+            # print('ImpComplexDiscreteTokenParamsOptimizer is completed')
             # individ.apply_operator('AllImpComplexOptimizerIndivid')
             individ.apply_operator('PeriodicTokensOptimizerIndivid')
-            print('PeriodicTokensOptimizerIndivid is completed')
+            # print('PeriodicTokensOptimizerIndivid is completed')
             # individ.apply_operator('PeriodicExtraTokensOptimizerIndivid')
         return population
 
 
+class ParamsOfEquationOptimizerIndivid(GeneticOperatorIndivid):
+    def __init__(self, params=None) -> None:
+        super().__init__(params=params)
+    
+    @staticmethod
+    def _fitness_wrapper(params, *args):
+        individ, pops = args
+        # individ = []
+        # pops = []
+        individ.set_CAF(pops[round(params[0])])
+        individ.fitness = None
+
+        individ.apply_operator(name='VarFitnessIndivid')
+        return individ.fitness
+
+    def _optimize_token_params(self, individ, token, populationOfEq):
+        x0 = np.array([0])
+        res = minimize(self._fitness_wrapper, x0=x0, args=(individ, populationOfEq))
+        # res = minimize(self._fitness_wrapper,  x0=x0, )
+
+        individ.set_CAF(populationOfEq[round(res.x[0])])
+
+    def apply(self, individ, *args, **kwargs):
+        subpopulations = args[0]
+        for dftoken in individ.structure:
+            current_index_term = dftoken.params[1].term_id
+            current_population = list(filter(lambda pp: pp.owner_id == current_index_term, subpopulations[:-1]))
+
+            if len(current_population) == 0: # пропускаем константный дифференциальный токен
+                continue
+
+            assert len(current_population) == 1, "For each Term must exist only one PopulatinOfequation"
+            self._optimize_token_params(individ, dftoken, current_population[0].structure)
 
 class DifferentialTokensOptimizerPopulation(GeneticOperatorPopulation):
     def __init__(self, params=None) -> None:
@@ -564,5 +603,4 @@ class DifferentialTokensOptimizerPopulation(GeneticOperatorPopulation):
 
     def apply(self, population, *args, **kwargs):
         for individ in population.structure:
-            self._optimize_tokens_params(individ=individ, expressions=population.coef_set)
-            # individ.apply_operator("DifferentialTokensOptimizerIndivid")
+            individ.apply_operator("ParamsOfEquationOptimizerIndivid", args[0])

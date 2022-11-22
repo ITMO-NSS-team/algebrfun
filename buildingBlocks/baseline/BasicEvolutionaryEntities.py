@@ -130,7 +130,7 @@ class TerminalToken(Bs.Token):
 
             amplitudes = []
             for k, exp_indata_iter in enumerate(all_combin):
-                amplitudes.append(np.tensordot(exp_indata_iter, data, data.ndim))
+                amplitudes.append(np.tensordot(exp_indata_iter, data.data, data.data.ndim))
             shp = tuple([sz for _ in range(in_data.shape[0])])
             my_idxs = [ix for ix in np.ndindex(shp)]
             sort_ampls = np.array(sorted(list(zip(my_idxs, amplitudes)), key=lambda x: x[1], reverse=True))[:, 0]
@@ -190,7 +190,7 @@ class TerminalToken(Bs.Token):
         self.val = None
         new_copy = deepcopy(self)
         self.val = tmp_val
-        new_copy.params = np.zeros((len(constants['shape_grid']), new_copy._number_params))
+        new_copy.params = np.zeros((constants['shape_grid'][0], new_copy._number_params))
         new_copy.fixator['self'] = False
         return new_copy
 
@@ -561,20 +561,92 @@ class GeneticOperatorPopulation(Bs.GeneticOperator):
         return self.apply(population, *args, **kwargs)
 
 
-class DifferentialToken(Bs.Token):
-    def __init__(self, number_params: int = 0, params_description: dict = None, params: np.ndarray = None, name_: str = None, fixator: dict = None):
+class DifferentialTokenConstant(Bs.Token):
+    def __init__(self, number_params: int = 0, params_description: dict = None, params: np.ndarray = None, name_: str = None, fixator: dict = None, type_: str = "DifferentialTokenConstant") -> None:
         super().__init__(number_params, params_description, params, name_)
-
         if fixator is None:
             fixator = {}
         add_fixator = dict(cache=True, val=False, self=False)
+        self.mandatory = 1
 
         for key, value in add_fixator.items():
             if key not in fixator.keys():
                 fixator[key] = value
         self.fixator = fixator
+        self.type_ = type_
+
+    def name(self, with_params=False):
+        str_result = '{} {}'
+        
+        return str_result.format(self.params[0].formula(), self.params[1]._name)
+
+    def value(self, grid: np.ndarray) -> np.ndarray:
+        """
+        Returns value of the token on the grid.
+        Returns either cache result in self.val or calculated value in self.val by method self.evaluate().
+
+        Parameters
+        ----------
+        grid: np.ndarray
+            Grid for evaluation.
+
+        Returns
+        -------
+        Value of the token.
+        """
+        if not self.fixator['val'] or self.val is None or self.val.shape[0] != grid.shape[-1]:
+            self.val = self.evaluate(self.params, grid)
+            self.fixator['val'] = self.fixator['cache']
+
+            # эта централизация в целом то полезна (для ЛАССО например), но искажает продукт-токен
+            # centralization
+            # self.val -= np.mean(self.val)
+        if self.val.shape[0] != grid.shape[-1]:
+            print(self)
+            self.val = self.evaluate(self.params, grid)
+        assert self.val.shape[0] == grid.shape[-1], "Value must be the same shape as grid "
+        return self.val
+
+    @staticmethod
+    def evaluate(params: np.ndarray, grid: np.ndarray) -> np.ndarray:
+        constants = get_full_constant()
+        """
+        Calculating token value on the grid depending on parameters.
+        Must be override/implement in each TerminalToken.
+        May be not staticmethod if it is necessary.
+
+        Parameters
+        ----------
+        params: numpy.ndarray
+            Numeric token parameters.
+        grid: numpy.ndarray
+            Grid for evaluation.
+
+        Returns
+        -------
+        numpy.ndarray
+        """
+        # print(f"check shapes {params[0].value(grid).shape}, {constants['target'].data.shape}")
+        return -params[0].value(grid) * constants['target'].data
 
     
+
+
+
+class DifferentialToken(Bs.Token):
+    def __init__(self, number_params: int = 0, params_description: dict = None, params: np.ndarray = None, name_: str = None, fixator: dict = None, type_: str = "DifferentialToken"):
+        super().__init__(number_params, params_description, params, name_)
+
+        if fixator is None:
+            fixator = {}
+        add_fixator = dict(cache=True, val=False, self=False)
+        self.mandatory = 0
+
+        for key, value in add_fixator.items():
+            if key not in fixator.keys():
+                fixator[key] = value
+        self.fixator = fixator
+        self.type_ = type_
 
     def __getstate__(self):
         for key in self.__dict__.keys():
@@ -734,9 +806,11 @@ class DifferentialToken(Bs.Token):
         # return np.zeros(grid.shape)
 
     def name(self, with_params=False):
-        str_result = '{} du/dt'
+        str_result = '{} {}'
+
+        deq  = self.params[0].formula()
         
-        return str_result.format(self.params[0].formula())
+        return str_result.format(deq, self.params[1]._name)
 
 
     def func_params(self, params, grid):

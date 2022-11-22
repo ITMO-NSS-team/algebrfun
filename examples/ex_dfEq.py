@@ -1,39 +1,38 @@
-import sys, os
+import os
 import random
+import sys
+
 root_dir = '/'.join(os.getcwd().split('/')[:-1])
 sys.path.append(root_dir)
 
 from copy import deepcopy
 from functools import reduce
-import seaborn as sns
+from itertools import product
+from time import perf_counter
+
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
-
-from buildingBlocks.Synthesis import Chain
-from buildingBlocks.Synthesis.Synthesizer import Synthesizer
-from buildingBlocks.default.Tokens import Constant, Sin, Product, Imp, Power, ImpComplex
-from buildingBlocks.Globals.GlobalEntities import set_constants, get_full_constant
-from buildingBlocks.default.EvolutionEntities import Equation, DEquation
-from buildingBlocks.default.EvolutionEntities import PopulationOfEquations, PopulationOfDEquations, Subpopulation
-from buildingBlocks.baseline.BasicEvolutionaryEntities import Term
-
-from buildingBlocks.Globals.supplementary.FrequencyProcessor import FrequencyProcessor4TimeSeries as fp
-import buildingBlocks.Globals.GlobalEntities as Bg
-import buildingBlocks.Builder.OperatorsBuilder as Ob
+import seaborn as sns
 from load_data import get_data
 
-from moea_dd.src.moeadd import *
-from moea_dd.src.moeadd_supplementary import *
-from copy import deepcopy
-
-
+import buildingBlocks.Builder.OperatorsBuilder as Ob
+import buildingBlocks.Globals.GlobalEntities as Bg
 import moea_dd.forMoeadd.entities.EvolutionaryEntities as Ee
 import moea_dd.forMoeadd.entities.Objectives as Objs
-
-import numpy as np
-import matplotlib.pyplot as plt
-from time import perf_counter
-from itertools import product
-
+from buildingBlocks.baseline.BasicEvolutionaryEntities import Term
+from buildingBlocks.default.EvolutionEntities import (DEquation, Equation,
+                                                      Subpopulation)
+from buildingBlocks.default.Tokens import (Constant, Imp, ImpComplex, Power,
+                                           Product, Sin)
+from buildingBlocks.Globals.GlobalEntities import (get_full_constant,
+                                                   set_constants)
+from buildingBlocks.Globals.supplementary.FrequencyProcessor import \
+    FrequencyProcessor4TimeSeries as fp
+from buildingBlocks.Synthesis import Chain
+from buildingBlocks.Synthesis.Synthesizer import Synthesizer
+from moea_dd.src.moeadd import *
+from moea_dd.src.moeadd_supplementary import *
 
 ## Set tokens from which algorithm will be built model-expression
 # Constant token is the target that will be approximated by other tokens
@@ -83,7 +82,9 @@ build_settings = {
     'tokens': [token1, token2, token3],
     'population': {
         'size': 10
-
+    },
+    'lasso':{
+        'regularisation_coef': 10**(-6)
     }
 }
 
@@ -127,16 +128,19 @@ target -= target.mean()
 '''
 # begin pde
 grid = np.load("examples//pde//t.npy")
-u = Term(0, np.load("examples//pde//u.npy"))
-du = Term(1, np.load("examples//pde//du.npy"))
+u = Term(0, np.load("examples//pde//u.npy"), 'u')
+du = Term(1, np.load("examples//pde//du.npy").reshape(-1), 'du/dt')
+noize_one = Term(2, np.random.uniform(-1, 0, 960).reshape(-1), 'noise_one')
+noize_two = Term(3, np.random.uniform(-1, 1, 960).reshape(-1), 'noise_two')
 # ----- end
 
 
-shp = (55,55)
-set_constants(target=u, shape_grid=shp, pul_mtrx=[u, du])
+shp = (1,960)
+set_constants(target=u, shape_grid=shp, pul_mtrx=[du, noize_one])
 
 individ = Equation(max_tokens=10)
 Ob.set_operators(np.array([grid]), individ, build_settings)
+
 
 population = Subpopulation(iterations=10)
 
@@ -152,9 +156,11 @@ inds = population.structure
 
 print("RESULTING")
 n = 0
-ind = deepcopy(inds[n])
+ind = deepcopy(inds[-1].structure[n])
+for i, ind in enumerate(inds[-1].structure):
+    print(i, ind.formula(), ind.fitness)
 
-print(ind.formula(), ind.fitness)
+# print(ind.formula(), ind.fitness)
 
 residuals = ind.value(grid)
 

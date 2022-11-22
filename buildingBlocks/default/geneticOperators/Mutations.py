@@ -46,12 +46,15 @@ class MutationIndivid(GeneticOperatorIndivid):
         # Тут возможен бесконечный цикл в случае набора необязательных токенов в виде разных констант или нет
         # (например если будут подаваться синусы и у них будет срабатывать __eq__
         # когда mut_intensive > чем их количества
-        for _ in range(mut_intensive):
-            while True:
-                new_token = np.random.choice(non_mandatory_tokens).clean_copy()
-                if new_token not in add_tokens:
-                    add_tokens.append(new_token)
-                    break
+        if mut_intensive > len(non_mandatory_tokens):
+            add_tokens.extend(non_mandatory_tokens)
+        else:
+            for _ in range(mut_intensive):
+                while True:
+                    new_token = np.random.choice(non_mandatory_tokens).clean_copy()
+                    if new_token not in add_tokens:
+                        add_tokens.append(new_token)
+                        break
 
         #TODO: добавить выборщик токена в зависимости от текущего вида индивида
 

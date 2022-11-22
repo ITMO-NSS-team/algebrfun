@@ -16,7 +16,7 @@ class Token:
 
     def __init__(self, number_params: int = 0, params_description: dict = None,
                  params: np.ndarray = None, name_: str = None):
-        print()
+        # print()
         self._number_params = number_params
         if params_description is None:
             params_description = {}
@@ -24,7 +24,7 @@ class Token:
         if params is None:
             self.params = np.array([np.zeros(self._number_params)])
         else:
-            if type(self).__name__ == "DifferentialToken":
+            if "DifferentialToken" in type(self).__name__:
                 self.params = np.array(params, dtype='object')
             else:       
                 self.params = np.array(params, dtype=float)
