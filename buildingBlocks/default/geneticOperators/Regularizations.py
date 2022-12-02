@@ -90,20 +90,26 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
         chromo = individ.get_structure()
         features = np.array(list(map(lambda token: token.value(self.params['grid']), chromo)))
         features -= np.mean(features, axis=1, keepdims=True)
+        big_features = np.array(list(map(lambda token: token.value(self.params['grid']), individ.structure)))
+        big_features -= np.mean(big_features, axis=1, keepdims=True)
         features, norms = normalize(features, norm='max', axis=1, return_norm=True) #TOdo изменить на norm=max
+        big_features, norms = normalize(big_features, norm='max', axis=1, return_norm=True)
 
         models = []
-        for idx in range(len(features)):
-            if chromo[idx].mandatory == 0:
+        for idx in range(len(big_features)):
+            if individ.structure[idx].mandatory == 0:
                 continue
-            target = features[idx]
-            X = features[[i for i in range(len(features)) if i != idx]].T
+            target = big_features[idx]
+            idxs = [i for i in range(len(features)) if chromo[i].params[1]._name == individ.structure[idx].params[1]._name]
+            X = features[[i for i in range(len(features)) if i not in idxs]].T
             if lasso:
                 model = Lasso(self.params['regularisation_coef'])
             else:
                 model = LinearRegression()
             model.fit(X, target)
             models.append((idx, model, model.score(X, target)))
+        if len(models) == 0:
+            print("pizda")
         print([model[2] for model in models])
         models.sort(key=lambda model: -model[2])
         return models[0]
@@ -119,9 +125,15 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
     @staticmethod
     def _del_tokens_with_zero_coef(individ, coefs, target_idx):
         print(individ.formula())
+        name_of_target_term = individ.structure[target_idx].params[1]._name
         chromo = individ.get_structure()
-        print('lasso target idx--->', target_idx, ' ', chromo[target_idx].name(), coefs)
-        new_chromo = [chromo.pop(target_idx)]
+        print('lasso target idx--->', target_idx, ' ', individ.structure[target_idx].name(), coefs)
+        # new_chromo = [chromo.pop(target_idx)]
+        new_chromo = []
+        for idx, term_of_chromo in enumerate(chromo):
+            if term_of_chromo.params[1]._name == name_of_target_term:
+                new_chromo.append(chromo.pop(idx))
+
         # if (coefs == 0).all():
         #     individ.structure.reverse()
         #     individ.structure.extend(new_chromo)
@@ -137,6 +149,7 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
         #     if coefs[idx] == 0 and len(new_chromo) < 2 and individ.structure[idx] not in new_chromo:
         #         new_chromo.append(individ.structure[idx])
         # individ.structure = new_chromo # ???
+        print("chromo:", [elem.name() for elem in new_chromo])
         individ.set_structure(new_chromo)
 
     def linear_regression(self, individ):

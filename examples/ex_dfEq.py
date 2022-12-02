@@ -134,7 +134,6 @@ noize_one = Term(2, np.random.uniform(-1, 0, 960).reshape(-1), 'noise_one')
 noize_two = Term(3, np.random.uniform(-1, 1, 960).reshape(-1), 'noise_two')
 # ----- end
 
-
 shp = (1,960)
 set_constants(target=u, shape_grid=shp, pul_mtrx=[du, noize_one])
 
@@ -160,20 +159,26 @@ ind = deepcopy(inds[-1].structure[n])
 for i, ind in enumerate(inds[-1].structure):
     print(i, ind.formula(), ind.fitness)
 
+constants = get_full_constant()
+best_individ = constants['best_individ']
+
+print("-----B - I------")
+print(best_individ.formula(), best_individ.fitness)
+
 # print(ind.formula(), ind.fitness)
 
-residuals = ind.value(grid)
+# residuals = ind.value(grid)
 
 
-f, axs = plt.subplots(1, 2)
-target_draw = u.reshape(shp)
-# target_draw[~mask_data] = np.nan
-model_draw = residuals.reshape(shp)
-# model_draw[~mask_data] = np.nan
+# f, axs = plt.subplots(1, 2)
+# target_draw = u.reshape(shp)
+# # target_draw[~mask_data] = np.nan
+# model_draw = residuals.reshape(shp)
+# # model_draw[~mask_data] = np.nan
 
-pc_test = axs[0].imshow(target_draw)
-axs[0].set_title("Input data")
-axs[1].imshow(model_draw)
-axs[1].set_title("Model")
+# pc_test = axs[0].imshow(target_draw)
+# axs[0].set_title("Input data")
+# axs[1].imshow(model_draw)
+# axs[1].set_title("Model")
  
-plt.savefig('dftest.png')
+# plt.savefig('dftest.png')

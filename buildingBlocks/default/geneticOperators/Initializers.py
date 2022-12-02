@@ -49,13 +49,15 @@ class InitIndivid(GeneticOperatorIndivid):
         if individ.type_ == "DEquation":
             constants = get_full_constant()
             der_set = constants['pul_mtrx']
-            number_of_temps = len(der_set)
-            selected_temps = np.random.choice(np.arange(number_of_temps), number_of_temps)
+            number_of_temps = np.random.randint(len(der_set))
+            selected_temps = np.random.choice(np.arange(number_of_temps), number_of_temps, replace=False)
             const_term = DifferentialTokenConstant(number_params=2, params_description={0: dict(name='const param'), 1: dict(name="Term")}, params=np.array([args[1].structure[0].structure[0], constants['target']], dtype=object), name_="DifferentialToken")
             # selected_temps.append(constants['target'].term_id)
             sub = [DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([random.choice(args[1].structure[current_temp].structure), der_set[current_temp]], dtype=object), name_="DifferencialToken") for current_temp in selected_temps]
             sub.append(const_term)
             individ.add_substructure(sub)
+            all_tokens = [DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([random.choice(args[1].structure[current_temp].structure), der_set[current_temp]], dtype=object), name_="DifferencialToken") for current_temp in np.arange(len(der_set))]
+            set_constants(tokens=all_tokens)
             return
 
         count_mandatory_tokens = 0

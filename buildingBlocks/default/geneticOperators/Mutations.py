@@ -3,6 +3,7 @@ from multiprocessing import current_process
 # from buildingBlocks.baseline.GeneticOperators import GeneticOperatorIndivid, GeneticOperatorPopulation
 from buildingBlocks.baseline.BasicEvolutionaryEntities import GeneticOperatorIndivid, GeneticOperatorPopulation
 from buildingBlocks.baseline.BasicEvolutionaryEntities import ComplexToken
+from buildingBlocks.Globals.GlobalEntities import get_full_constant
 import numpy as np
 
 from buildingBlocks.default.geneticOperators.supplementary.Other import check_operators_from_kwargs, apply_decorator
@@ -88,6 +89,62 @@ class MutationIndivid(GeneticOperatorIndivid):
         #     individ.forms.append(type(self).__name__ + individ.formula() + '<---' + current_process().name)
         # except:
         #     pass
+
+class MutationIndividTerms(GeneticOperatorIndivid):
+    def __init__(self, params) -> None:
+        super().__init__(params=params)
+        self._check_params('mut_intensive', 'increase_prob', 'tokens')
+
+    @apply_decorator
+    def apply(self, individ, *args, **kwargs) -> None:
+        constants = get_full_constant()
+        name_of_terms = list(map(lambda x: x.params[1]._name, individ.structure))
+        # name_of_terms = np.array(name_of_terms)
+        tokens = []
+        for dftoken in constants['tokens']:
+            if dftoken.params[1]._name in name_of_terms:
+                continue
+            tokens.append(dftoken)
+        
+        if len(tokens) == 0:
+            return
+
+        mut_intensive = self.params['mut_intensive']
+        add_tokens = []
+        add_tokens_names = []
+
+        if mut_intensive > len(tokens):
+            add_tokens.extend(tokens)
+        else:
+            for _ in range(mut_intensive):
+                while True:
+                    new_token = np.random.choice(tokens).copy()
+                    if new_token.params[1]._name not in add_tokens_names:
+                        add_tokens.append(new_token)
+                        add_tokens_names.append(new_token.params[1]._name)
+                        break
+        
+        random.shuffle(add_tokens)
+
+        if individ.max_tokens > len(individ.structure) and np.random.uniform() <= self.params['increase_prob']:
+            individ.add_substructure(add_tokens)
+        elif individ.structure:
+            idxs_to_choice = list(filter(lambda idx: individ.structure[idx].mandatory == 0, # and individ.structure no is CImp
+                                         range(len(individ.structure))))
+            if not idxs_to_choice:
+                return
+            probabilities = np.array(list(map(lambda idx: individ.structure[idx].fitness, idxs_to_choice)))
+            probabilities /= probabilities.sum()
+            for idx in np.random.choice(idxs_to_choice,
+                                        size=min(len(idxs_to_choice), len(add_tokens)),
+                                        replace=False,
+                                        p=probabilities):
+                individ.set_substructure(add_tokens.pop(), idx)
+            # if len(add_functions) > len(chromo) we add token to the chromo
+            if add_tokens:
+                individ.add_substructure(add_tokens)
+
+
 
 
 class ProductTokenMutationIndivid(GeneticOperatorIndivid):
@@ -196,10 +253,10 @@ class MutationPopulation(GeneticOperatorPopulation):
     def apply(self, population, *args, **kwargs):
         selected_population = list(filter(lambda individ: individ.selected, population.structure))
         mutation_size = self.params['mutation_size']
-        if mutation_size is None:
+        if mutation_size is None or mutation_size > len(selected_population):
             selected_individs = selected_population
         else:
-            assert mutation_size <= len(selected_population), "Mutations size must be less than population size"
+            # assert mutation_size <= len(selected_population), "Mutations size must be less than population size"
             selected_individs = np.random.choice(selected_population, replace=False, size=mutation_size)
 
         for individ in selected_individs:
@@ -208,8 +265,11 @@ class MutationPopulation(GeneticOperatorPopulation):
                 new_individ = individ.copy()
                 new_individ.selected = False
                 population.structure.append(new_individ)
-            individ.apply_operator('MutationIndivid')
-            individ.apply_operator('ImpComplexMutationIndivid')
+            if individ.type_ == "DEquation":
+                individ.apply_operator('MutationIndividTerms')
+            else:
+                individ.apply_operator('MutationIndivid')
+                individ.apply_operator('ImpComplexMutationIndivid')
             # individ.apply_operator('ProductTokenMutationIndivid')
         return population
 

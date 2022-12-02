@@ -86,8 +86,18 @@ class FrequencyProcessor4TimeSeries:
 
         return kw, kspec
 
-        
+    @staticmethod
+    def find_intersection(lst_of_ampl):
+        ss = [x[0][0] for x in lst_of_ampl]
+        general_w = list(reduce(lambda a, b: set(a) & set(b), ss))
+        current_elem = list(filter(lambda x: x[2] == 1, lst_of_ampl))[0]
+        s = []
+        for i, elem in enumerate(current_elem[0][0]):
+            if elem in general_w:
+                s.append(current_elem[1][i])
+        # w = list(filter(lambda x: x!= None, map(lambda x: x[0] if x[1] in general_s else None, current_elem)))
 
+        return np.array([general_w]), np.array(s)
 
     @staticmethod
     def sort_by_specter(w, spec):
@@ -115,9 +125,10 @@ class FrequencyProcessor4TimeSeries:
         # probabilities = list(map(lambda x: x ** pow / spec_sum, spec))
         probabilities = (spec**pow)/spec_sum
         idxs = np.arange(len(w[0]))
-        print(idxs.shape, number_selected)
+        # print(idxs.shape, number_selected)
         if idxs.shape[0] < number_selected:
-            return []
+            choice = np.array(w)[:, idxs]
+            return choice.T
 
         choice_i = np.random.choice(idxs, size=number_selected, replace=False, p=probabilities)
         choice = np.array(w)[:, choice_i]
@@ -167,7 +178,7 @@ class FrequencyProcessor4TimeSeries:
                                                             number_selecting=number_selecting)
         # print("after choose", out_freqs)
         if len(out_freqs) == 0:
-            return None
+            return (None, None)
         return out_freqs, wmax
 
     @staticmethod
@@ -214,3 +225,67 @@ class FrequencyProcessor4TimeSeries:
         if len(ending_freqs) == 0:
             return None
         return ending_freqs
+
+
+    @staticmethod
+    def choice_freq_for_summand_de(grid, bst_individ, term_id, wmin=0, wmax=None, c=10, number_selecting=1, number_selected=1, token_type='seasonal', threshold=0.001):
+        ff = []
+        for tkn in bst_individ.structure:
+            for i, tk in enumerate(tkn.params[0].structure): tkn.params[0].structure[i].fixator['self'] = True
+            x = -tkn.value(grid)
+            x -= x.min()
+            w, s, wmx = FrequencyProcessor4TimeSeries.fft(grid, x, wmin, wmax, c)
+            kw, ks = FrequencyProcessor4TimeSeries.findextrema(w, s, number_selecting)
+            if tkn.params[1].term_id == term_id:
+                ff.append((kw, ks, 1))
+                Wmax = wmx
+            else:
+                
+                ff.append((kw, ks, 0))
+        kw, ks = FrequencyProcessor4TimeSeries.find_intersection(ff)
+
+        if kw.shape[-1] < number_selecting:
+            kw = []
+            ks = []
+            for iter_ff in ff:
+                if len(kw) == 0:
+                    kw.extend(iter_ff[0])
+                else:
+                    for i, elem in enumerate(iter_ff[0]):
+                        kw[i] = np.hstack((kw[i], elem))
+                ks.extend(iter_ff[1])
+            kw = np.array(kw)
+            ks = np.array(ks)
+        # kw, ks = FrequencyProcessor4TimeSeries.sort_by_specter(kw, ks)
+
+        choice_freqs = FrequencyProcessor4TimeSeries.choice_freqs(kw, ks,
+                                                            # pow=number_selecting ** 0.5,
+                                                            pow=2,
+                                                            number_selected=number_selected,
+                                                            number_selecting=number_selecting)
+
+        ending_freqs = []
+        try:
+            # print(len(Wmax))
+            Wmax = np.array(Wmax)
+        except:
+            Wmax = np.array([Wmax]) 
+        for choice_freq in choice_freqs:
+            # if len(choice_freq[choice_freq < threshold*Wmax]) == len(choice_freq):
+            if np.all(choice_freq < threshold*Wmax):
+                if token_type == 'seasonal':
+                    continue
+                ending_freqs.append(choice_freq)
+                break
+            else:
+                if token_type == 'trend':
+                    continue
+            ending_freqs.append(choice_freq)
+            break
+        if len(ending_freqs) == 0:
+            return None
+        return ending_freqs
+
+
+        
+        

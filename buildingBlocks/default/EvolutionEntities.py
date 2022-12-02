@@ -192,16 +192,20 @@ class DEquation(Individ):
         self.__dict__ = state
 
     def set_structure(self, structure):
+        print("START", structure)
         self.change_all_fixes(False)
         assert type(structure) == list, "structure must be a list"
         term_ids = np.unique([token.params[1].term_id for token in structure])
+        print("terms unique", term_ids)
         correct_form_structure = []
         for term_id in term_ids:
             tokens_of_caf = list(filter(lambda x: x.params[1].term_id == term_id, structure))
+            print(term_id, [elem.name() for elem in tokens_of_caf])
             if len(tokens_of_caf) > 1:
                 correct_form_structure.append(type(tokens_of_caf[0])(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([Equation(structure=[x.params[0].structure[0] for x in tokens_of_caf], fixator=tokens_of_caf[0].params[0].fixator), tokens_of_caf[0].params[1]], dtype=object), name_="DifferencialToken"))
             else:
                 correct_form_structure.append(tokens_of_caf[0])
+        print([elem.name() for elem in correct_form_structure])
         self.structure = correct_form_structure
 
 
@@ -308,25 +312,70 @@ class PopulationOfDEquations(Population):
         self.type_ = type_
         # self.coef_set = PopulationOfEquations(iterations=1)
 
+    def check(self):
+        for ind in self.structure:
+            if len(list(filter(lambda token: token.mandatory == 1, ind.structure))) == 0:
+                return False
+        return True
+
     
     def _evolutionary_step(self, *args):
         self.apply_operator("DifferentialTokensOptimizerPopulation", args[0])
+        if not self.check():
+                print("DifferentialTokensOptimizerPopulation")
+                exit(1)
         for individ in self.structure:
             individ.apply_operator("LassoIndivid")
+            if not self.check():
+                print("LassoIndivid")
+                print(individ.formula())
+                exit(1)
             individ.apply_operator("VarFitnessIndivid")
+            if not self.check():
+                print("VarFitnessIndivid")
+                exit(1)
         self.apply_operator("RouletteWheelSelection")
+        if not self.check():
+                print("RouletteWheelSelection")
+                exit(1)
         self.apply_operator("CrossoverPopulation")
+        if not self.check():
+                print("CrossoverPopulation")
+                exit(1)
         self.apply_operator("FitnessPopulation")
+        if not self.check():
+                print("FitnessPopulation")
+                exit(1)
         self.apply_operator("Elitism")
+        if not self.check():
+                print("Elitism")
+                exit(1)
+        self.apply_operator('MutationPopulation')
+        if not self.check():
+                print('MutationPopulation')
+                exit(1)
+        self.apply_operator("FitnessPopulation")
+        if not self.check():
+                print("FitnessPopulation")
+                exit(1)
+        self.apply_operator("Elitism")
+        if not self.check():
+                print("Elitism")
+                exit(1)
+        self.apply_operator('RestrictPopulation')
+        if not self.check():
+                print('RestrictPopulation')
+                exit(1)
+
 
         # Optimizer for structure differencial Tokens (\/)
         # Lasso + Linear Regression for search amplitudes (\/)
         # Selection (\/)
         # Crossover (\/)
-        # FitnessEvaluation
-        # Elitism
-        # Mutation
-        # FitnessEvaluation
+        # FitnessEvaluation (\/)
+        # Elitism (\/)
+        # Mutation (\/)
+        # FitnessEvaluation (\/)
         # Restrict population
 
     def evolutionary(self, *args):  
@@ -334,6 +383,7 @@ class PopulationOfDEquations(Population):
         for n in range(self.iterations):
             # print('{}/{}\n'.format(n, self.iterations))
             self._evolutionary_step(args[0])
+        set_constants(best_individ=list(filter(lambda ind: ind.elitism, self.structure))[0])
 
     
 class Subpopulation(Population):

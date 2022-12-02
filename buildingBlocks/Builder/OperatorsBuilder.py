@@ -89,6 +89,11 @@ def set_operators(grid, individ, kwargs):
 
     operatorsMap.MutationPopulation = Mutations.MutationPopulation(
         params=dict(mutation_size=int(0.3*population_size)+1))
+    
+    operatorsMap.MutationIndividTerms = Mutations.MutationIndividTerms(
+        params=dict(mut_intensive=mutation['simple']['intensive'],
+                    increase_prob=mutation['simple']['increase_prob'],
+                    tokens=tokens))
 
     operatorsMap.CrossoverIndivid = Crossovers.CrossoverIndivid(
         params=dict(cross_intensive=crossover['simple']['intensive'],
