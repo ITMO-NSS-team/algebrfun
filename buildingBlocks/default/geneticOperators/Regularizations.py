@@ -45,6 +45,7 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
         """
         chromo = individ.get_structure()
         features = np.transpose(np.array(list(map(lambda token: token.value(self.params['grid']), chromo))))
+        global_features = np.transpose(np.array(list(map(lambda token: token.value(self.params['grid']), individ.structure))))
         if normalize_:
             # features -= np.mean(features, axis=0, keepdims=True)
             # features, norms = normalize(features, norm='l2', axis=0, return_norm=True)
@@ -76,17 +77,19 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
             # target_idx = np.argmax(np.var(features, axis=0))
             # target_idx = np.random.randint(features.shape[1])
             if features.T.shape[0] >= 3:
-                target_idx = 0
+                mandatory_idxs = [idx for idx in range(len(individ.structure)) if individ.structure[idx].mandatory != 0]
+                target_idx = mandatory_idxs[0]
             else:
                 cov = np.cov(features.T)
                 target_idx = np.argmax([cov[i][i] for i in range(2)])
             # print('LR target idx--->', target_idx, ' ', individ.structure[target_idx].name())
-        target = -features[:, target_idx]
-        idxs = [i for i in range(features.shape[1]) if i != target_idx]
+        target = -global_features[:, target_idx]
+        idxs = [i for i in range(features.shape[1]) if chromo[i].params[1]._name != individ.structure[target_idx].params[1]._name]
         features = features[:, idxs]
         return features, target, target_idx
 
     def _regression_cascade(self, individ, lasso=True):
+        print("REGRESSION CASCADE")
         chromo = individ.get_structure()
         features = np.array(list(map(lambda token: token.value(self.params['grid']), chromo)))
         features -= np.mean(features, axis=1, keepdims=True)
@@ -116,14 +119,23 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
 
     @staticmethod
     def _set_amplitudes_after_regression(individ, coefs, target_idx):  # , norms):
+        print("SET AMPLITUDES>>>")
         chromo = individ.get_structure()
-        chromo.pop(target_idx)
+        l = len(chromo)
+        new_chromo = []
+        name_of_target = individ.structure[target_idx].params[1]._name
+        for idx in range(l-1, -1, -1):
+            if chromo[idx].params[1]._name == name_of_target:
+                new_chromo.append(chromo.pop(idx))
+        # chromo.pop(target_idx)
         for idx, token in enumerate(chromo):
             token.params[0].structure[0].set_param(token.params[0].structure[0].param(name='Amplitude') * coefs[idx], name='Amplitude')  # /norms[idx])
-        individ.set_structure(chromo)
+        new_chromo.extend(chromo)
+        individ.set_structure(new_chromo)
 
     @staticmethod
     def _del_tokens_with_zero_coef(individ, coefs, target_idx):
+        print("DEL TOKENS WITH>>>")
         print(individ.formula())
         name_of_target_term = individ.structure[target_idx].params[1]._name
         chromo = individ.get_structure()
@@ -151,8 +163,10 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
         # individ.structure = new_chromo # ???
         print("chromo:", [elem.name() for elem in new_chromo])
         individ.set_structure(new_chromo)
+        print("CHROMO END")
 
     def linear_regression(self, individ):
+        print("LINEAR REGRESSION")
         if len(individ.structure) <= 1:
             return
         model = LinearRegression(fit_intercept=True)
@@ -166,6 +180,7 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
             pass
 
     def lasso(self, individ, lasso=True):
+        print("LASSO")
         if len(individ.structure) <= 2:
             return
         # model = Lasso(self.params['regularisation_coef'])
@@ -182,6 +197,7 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
 
     @apply_decorator
     def apply(self, individ, *args, **kwargs):
+        print("APPLY", individ.formula())
         try:
             lasso = kwargs['use_lasso']
         except KeyError:

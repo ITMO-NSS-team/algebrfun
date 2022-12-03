@@ -192,7 +192,7 @@ class DEquation(Individ):
         self.__dict__ = state
 
     def set_structure(self, structure):
-        print("START", structure)
+        print("START", [elem.name() for elem in structure])
         self.change_all_fixes(False)
         assert type(structure) == list, "structure must be a list"
         term_ids = np.unique([token.params[1].term_id for token in structure])
@@ -207,6 +207,7 @@ class DEquation(Individ):
                 correct_form_structure.append(tokens_of_caf[0])
         print([elem.name() for elem in correct_form_structure])
         self.structure = correct_form_structure
+        print("END")
 
 
 
