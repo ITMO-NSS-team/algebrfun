@@ -161,6 +161,12 @@ class PopulationOfEquations(Population):
 
         self.apply_operator('Elitism')
 
+def _methods_decorator(method):
+    def wrapper(*args, **kwargs):
+        self = args[0]
+        self.change_all_fixes(False)
+        return method(*args, **kwargs)
+    return wrapper
 
 class DEquation(Individ):
     '''
@@ -191,26 +197,28 @@ class DEquation(Individ):
     def __setstate__(self, state: dict):
         self.__dict__ = state
 
+    @_methods_decorator
     def set_structure(self, structure):
-        print("START", [elem.name() for elem in structure])
         self.change_all_fixes(False)
         assert type(structure) == list, "structure must be a list"
         term_ids = np.unique([token.params[1].term_id for token in structure])
-        print("terms unique", term_ids)
         correct_form_structure = []
         for term_id in term_ids:
             tokens_of_caf = list(filter(lambda x: x.params[1].term_id == term_id, structure))
-            print(term_id, [elem.name() for elem in tokens_of_caf])
             if len(tokens_of_caf) > 1:
                 correct_form_structure.append(type(tokens_of_caf[0])(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([Equation(structure=[x.params[0].structure[0] for x in tokens_of_caf], fixator=tokens_of_caf[0].params[0].fixator), tokens_of_caf[0].params[1]], dtype=object), name_="DifferencialToken"))
             else:
                 correct_form_structure.append(tokens_of_caf[0])
-        print([elem.name() for elem in correct_form_structure])
+
+        target_tokens = list(filter(lambda token: token.mandatory != 0, correct_form_structure))
+        if len(target_tokens) == 0:
+            str_target_token = list(filter(lambda token: token.mandatory != 0, self.structure))
+            correct_form_structure.append(str_target_token[0])
         self.structure = correct_form_structure
-        print("END")
 
 
-
+    # def set_substructure(self, substructure, idx: int) -> None:
+    #     self.structure[idx] = substructure
 
     def check_duplicate_of_term(self, new_structure):
         uses = [item.params[1].term_id for item in self.structure]
@@ -322,51 +330,17 @@ class PopulationOfDEquations(Population):
     
     def _evolutionary_step(self, *args):
         self.apply_operator("DifferentialTokensOptimizerPopulation", args[0])
-        if not self.check():
-                print("DifferentialTokensOptimizerPopulation")
-                exit(1)
         for individ in self.structure:
             individ.apply_operator("LassoIndivid")
-            if not self.check():
-                print("LassoIndivid")
-                print(individ.formula())
-                exit(1)
             individ.apply_operator("VarFitnessIndivid")
-            if not self.check():
-                print("VarFitnessIndivid")
-                exit(1)
         self.apply_operator("RouletteWheelSelection")
-        if not self.check():
-                print("RouletteWheelSelection")
-                exit(1)
         self.apply_operator("CrossoverPopulation")
-        if not self.check():
-                print("CrossoverPopulation")
-                exit(1)
         self.apply_operator("FitnessPopulation")
-        if not self.check():
-                print("FitnessPopulation")
-                exit(1)
         self.apply_operator("Elitism")
-        if not self.check():
-                print("Elitism")
-                exit(1)
         self.apply_operator('MutationPopulation')
-        if not self.check():
-                print('MutationPopulation')
-                exit(1)
         self.apply_operator("FitnessPopulation")
-        if not self.check():
-                print("FitnessPopulation")
-                exit(1)
         self.apply_operator("Elitism")
-        if not self.check():
-                print("Elitism")
-                exit(1)
         self.apply_operator('RestrictPopulation')
-        if not self.check():
-                print('RestrictPopulation')
-                exit(1)
 
 
         # Optimizer for structure differencial Tokens (\/)

@@ -22,10 +22,10 @@ class Constant(TerminalToken):
     def __init__(self, number_params=1,
                  params_description=None,
                  params=np.array([0.]), val=None,
-                 name_=None, mandatory=1):
+                 name_=None, mandatory=0):
         if params_description is None:
             params_description = {
-                0: dict(name='Amplitude', bounds=(-1., 1.)),
+                0: dict(name='Amplitude', bounds=(-100, 100)),
             }
         super().__init__(number_params=number_params, params_description=params_description,
                          params=params, val=val, name_=name_, mandatory=mandatory)

@@ -53,7 +53,15 @@ class InitIndivid(GeneticOperatorIndivid):
             selected_temps = np.random.choice(np.arange(number_of_temps), number_of_temps, replace=False)
             const_term = DifferentialTokenConstant(number_params=2, params_description={0: dict(name='const param'), 1: dict(name="Term")}, params=np.array([args[1].structure[0].structure[0], constants['target']], dtype=object), name_="DifferentialToken")
             # selected_temps.append(constants['target'].term_id)
-            sub = [DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([random.choice(args[1].structure[current_temp].structure), der_set[current_temp]], dtype=object), name_="DifferencialToken") for current_temp in selected_temps]
+            # sub = [DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([random.choice(args[1].structure[current_temp].structure), der_set[current_temp]], dtype=object), name_="DifferencialToken") for current_temp in selected_temps]
+            sub = []
+            description = {0: dict(name='Close algebr equation'), 1: dict(name="Term")}
+            for current_temp in selected_temps:
+                target_eq = args[1].structure[current_temp].structure[0].copy()
+                target_eq.structure = [target_eq.structure[0]]
+                current_token = DifferentialToken(number_params=2, params_description=description, params=np.array([target_eq, der_set[current_temp]], dtype=object), name_="DifferencialToken")
+                sub.append(current_token)
+            # sub = [DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([random.choice(args[1].structure[current_temp].structure), der_set[current_temp]], dtype=object), name_="DifferencialToken") ]
             sub.append(const_term)
             individ.add_substructure(sub)
             all_tokens = [DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([random.choice(args[1].structure[current_temp].structure), der_set[current_temp]], dtype=object), name_="DifferencialToken") for current_temp in np.arange(len(der_set))]
@@ -61,11 +69,7 @@ class InitIndivid(GeneticOperatorIndivid):
             return
 
         count_mandatory_tokens = 0
-        mandatory_tokens = list(filter(lambda token: token.mandatory != 0, self.params['tokens']))
-        non_mandatory_tokens_all = list(filter(lambda token: token.mandatory == 0, self.params['tokens']))
-        if mandatory_tokens:
-            individ.add_substructure([token.clean_copy() for token in mandatory_tokens])
-            count_mandatory_tokens = len(mandatory_tokens)
+        non_mandatory_tokens_all = self.params['tokens']
 
         # print("test randomize individ")
         number_of_tokens = np.random.choice(np.arange(1, len(non_mandatory_tokens_all) + 1), 1)[0]
@@ -92,7 +96,10 @@ class InitIndivid(GeneticOperatorIndivid):
             cur_token = non_mandatory_tokens[i].clean_copy()
             # cur_token.params = np.hstack((res_amplitude[i], non_mandatory_tokens[i].variable_params[self.params['ids'][args[0]][i]]))
             # tesyt = np.hstack((res_amplitude.reshape(shp)[i], non_mandatory_tokens_params[i]))
-            tesyt = np.hstack((A.reshape(shp)[i], non_mandatory_tokens_params[i]))
+            if cur_token.type == "Constant":
+                tesyt = non_mandatory_tokens_params[i]
+            else:
+                tesyt = np.hstack((A.reshape(shp)[i], non_mandatory_tokens_params[i]))
             cur_token.params = tesyt
             sub.append(cur_token)
         individ.add_substructure(sub)
@@ -121,6 +128,7 @@ class InitSubPopulations(GeneticOperatorPopulation):
     def apply(self, population, *args, **kwargs):
         constants = get_full_constant()
         der_set = constants['pul_mtrx']
+
         population.structure = []
         for elem in der_set:
             tmp_population = PopulationOfEquations(iterations=population.iterations)

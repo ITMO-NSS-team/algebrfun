@@ -49,15 +49,17 @@ class TokenFitnessIndivid(GeneticOperatorIndivid):
 
     @staticmethod
     def _label_tokens(individ):
-        target_tokens = list(filter(lambda token: token.mandatory != 0, individ.structure))
-        assert len(target_tokens) == 1, 'Individ must have only one target token'
+        if individ.type_ == "DEquation":
+            target_tokens = list(filter(lambda token: token.mandatory != 0, individ.structure))
+            assert len(target_tokens) == 1, 'Individ must have only one target token'
 
         other_tokens = list(filter(lambda token: token.mandatory == 0 and token.fixator['self'], individ.structure))
         if not other_tokens:
             return
 
         tmp_individ = individ.clean_copy()
-        tmp_individ.structure = copy(target_tokens)
+        if individ.type_ == "DEquation":
+            tmp_individ.structure = copy(target_tokens)
 
         for token in other_tokens:
             # assert token.fixator['self'], 'token must be optimized'
@@ -74,7 +76,8 @@ class TokenFitnessIndivid(GeneticOperatorIndivid):
 
         other_tokens = [other_tokens[i] for i in sorted_idxs]
 
-        individ.structure = target_tokens
+        if individ.type_ == "DEquation":
+            individ.structure = target_tokens
         individ.add_substructure(other_tokens)
         individ.fixator = tmp_fixator
 

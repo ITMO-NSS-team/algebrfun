@@ -55,14 +55,15 @@ count = 0
 
 def create_tmp_individ(individ, optimizing_tokens: list, target, name: str = 'tmp_target'):
     global count
+    
 
-    target_tokens = list(filter(lambda token: token.mandatory != 0, individ.structure))
-    assert len(target_tokens) == 1, 'There must be only one target token'
-    target_token = target_tokens[0]
+    # target_tokens = list(filter(lambda token: token.mandatory != 0, individ.structure))
+    # assert len(target_tokens) == 1, 'There must be only one target token'
+    # target_token = target_tokens[0]
 
-    tmp_token = target_token.extra_clean_copy()
-    tmp_token.name_ = name
-    count += 1
+    # tmp_token = target_token.extra_clean_copy()
+    # tmp_token.name_ = name
+    # count += 1
     # set_constants(tmp2_target=target)
     constants = get_full_constant()
     constants[name] = target
@@ -72,5 +73,13 @@ def create_tmp_individ(individ, optimizing_tokens: list, target, name: str = 'tm
 
     tmp_individ = individ.clean_copy()
     tmp_individ.structure = optimizing_tokens
-    tmp_individ.add_substructure(tmp_token)
+    if individ.type_ == "DEquation":
+        target_tokens = list(filter(lambda token: token.mandatory != 0, individ.structure))
+        assert len(target_tokens) == 1, 'There must be only one target token'
+        target_token = target_tokens[0]
+        tmp_token = target_token.extra_clean_copy()
+        tmp_token.name_ = name
+        tmp_individ.add_substructure(tmp_token)
+
+    # tmp_individ.add_substructure(tmp_token)
     return tmp_individ

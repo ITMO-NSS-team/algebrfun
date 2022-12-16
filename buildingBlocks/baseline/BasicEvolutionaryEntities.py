@@ -114,6 +114,8 @@ class TerminalToken(Bs.Token):
 
     def __select_parametrs__(self, in_data, data, population_size, gen=True):
         if self._number_params == 1:
+            bounds = list(self.params_description[0]['bounds'])
+            self.variable_params = np.arange(bounds[0], bounds[1], 1).reshape(1, -1)
             return
         sz = population_size
         answer = []

@@ -89,7 +89,7 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
         return features, target, target_idx
 
     def _regression_cascade(self, individ, lasso=True):
-        print("REGRESSION CASCADE")
+        # print("REGRESSION CASCADE")
         chromo = individ.get_structure()
         features = np.array(list(map(lambda token: token.value(self.params['grid']), chromo)))
         features -= np.mean(features, axis=1, keepdims=True)
@@ -111,15 +111,15 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
                 model = LinearRegression()
             model.fit(X, target)
             models.append((idx, model, model.score(X, target)))
-        if len(models) == 0:
-            print("pizda")
-        print([model[2] for model in models])
+        # if len(models) == 0:
+            # print("pizda")
+        # print([model[2] for model in models])
         models.sort(key=lambda model: -model[2])
         return models[0]
 
     @staticmethod
     def _set_amplitudes_after_regression(individ, coefs, target_idx):  # , norms):
-        print("SET AMPLITUDES>>>")
+        # print("SET AMPLITUDES>>>")
         chromo = individ.get_structure()
         l = len(chromo)
         new_chromo = []
@@ -135,8 +135,8 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
 
     @staticmethod
     def _del_tokens_with_zero_coef(individ, coefs, target_idx):
-        print("DEL TOKENS WITH>>>")
-        print(individ.formula())
+        # print("DEL TOKENS WITH>>>")
+        # print(individ.formula())
         name_of_target_term = individ.structure[target_idx].params[1]._name
         chromo = individ.get_structure()
         print('lasso target idx--->', target_idx, ' ', individ.structure[target_idx].name(), coefs)
@@ -161,12 +161,12 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
         #     if coefs[idx] == 0 and len(new_chromo) < 2 and individ.structure[idx] not in new_chromo:
         #         new_chromo.append(individ.structure[idx])
         # individ.structure = new_chromo # ???
-        print("chromo:", [elem.name() for elem in new_chromo])
+        # print("chromo:", [elem.name() for elem in new_chromo])
         individ.set_structure(new_chromo)
-        print("CHROMO END")
+        # print("CHROMO END")
 
     def linear_regression(self, individ):
-        print("LINEAR REGRESSION")
+        # print("LINEAR REGRESSION")
         if len(individ.structure) <= 1:
             return
         model = LinearRegression(fit_intercept=True)
@@ -180,7 +180,7 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
             pass
 
     def lasso(self, individ, lasso=True):
-        print("LASSO")
+        # print("LASSO")
         if len(individ.structure) <= 2:
             return
         # model = Lasso(self.params['regularisation_coef'])
@@ -197,7 +197,7 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
 
     @apply_decorator
     def apply(self, individ, *args, **kwargs):
-        print("APPLY", individ.formula())
+        # print("APPLY", individ.formula())
         try:
             lasso = kwargs['use_lasso']
         except KeyError:

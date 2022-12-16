@@ -28,8 +28,8 @@ class CrossoverIndivid(GeneticOperatorIndivid):
         # ind1.kind += '->crossover'
         # ind2.kind += '->crossover'
 
-        tokens1 = list(filter(lambda token: token.mandatory == 0, ind1.structure))
-        tokens2 = list(filter(lambda token: token.mandatory == 0, ind2.structure))
+        tokens1 = ind1.structure
+        tokens2 = ind2.structure
 
         # inds change tokens or add them to each other depending on increase prob
         # tokens remain fixed!

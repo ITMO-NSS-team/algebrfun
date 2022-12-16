@@ -543,7 +543,7 @@ class ParamsOfEquationOptimizerIndivid(GeneticOperatorIndivid):
     def __init__(self, params=None) -> None:
         super().__init__(params=params)
     
-    @staticmethod
+    @staticmethod  
     def _fitness_wrapper(params, *args):
         individ, pops = args
         # individ = []

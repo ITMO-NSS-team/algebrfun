@@ -130,11 +130,11 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
 
     @staticmethod
     def _get_tmp_individ_with_target_token(individ, complex_token):
-        target_tokens = list(filter(lambda token: token.mandatory != 0, individ.structure))
-        assert len(target_tokens) == 1, 'There must be only one target token'
+        # target_tokens = list(filter(lambda token: token.mandatory != 0, individ.structure))
+        # assert len(target_tokens) == 1, 'There must be only one target token'
 
         tmp_individ = individ.clean_copy()
-        tmp_individ.structure = copy(target_tokens)
+        # tmp_individ.structure = copy(target_tokens)
 
         fixed_optimized_tokens_in_structure = list(filter(lambda token: token.fixator['self'] and token.mandatory == 0,
                                                           individ.structure))
@@ -339,11 +339,11 @@ class ImpComplexTokenParamsOptimizer(GeneticOperatorIndivid):
         if len(choiced_tokens) == 0:
             return choiced_tokens
 
-        target_tokens = list(filter(lambda token: token.mandatory != 0, individ.structure))
-        assert len(target_tokens) == 1, 'There must be only one target token'
+        # target_tokens = list(filter(lambda token: token.mandatory != 0, individ.structure))
+        # assert len(target_tokens) == 1, 'There must be only one target token'
 
         tmp_individ = individ.clean_copy()
-        tmp_individ.structure = copy(target_tokens)
+        # tmp_individ.structure = copy(target_tokens)
         fitnesses = self._tokens_fitnesses(tmp_individ,
                                            list(map(lambda token: token.pattern, choiced_tokens)))
 
@@ -409,10 +409,10 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
         # return np.abs(val - val.mean()).mean()
 
     def _optimize_complex_token_params(self, individ):
-        target_tokens = list(filter(lambda token: token.mandatory != 0, individ.structure))
+        # target_tokens = list(filter(lambda token: token.mandatory != 0, individ.structure))
         tokens_to_optimize = list(filter(lambda token: token.mandatory == 0, individ.structure))
-        assert len(target_tokens) == 1, 'There must be only one target token'
-        target_token = target_tokens[0]
+        # assert len(target_tokens) == 1, 'There must be only one target token'
+        # target_token = target_tokens[0]
 
         pulse_starts = list(map(lambda imp: imp.param(name='Pulse start'), tokens_to_optimize))
         idxs = np.argsort(pulse_starts)
@@ -507,15 +507,15 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
             new_target_idxs = new_target_idxs[msk]
             new_target_idxs = new_target_idxs[np.apply_along_axis(np.any, 1, grid_optimize >= left_grid_bound)]
             grid_optimize = grid_optimize[np.apply_along_axis(np.any, 1, grid_optimize >= left_grid_bound), :]
-            new_target_value = deepcopy(constants[target_token.name_])[new_target_idxs]
+            # new_target_value = deepcopy(constants[target_token.name_])[new_target_idxs]
 
-            token.set_param([new_target_value.max()], name='Amplitude')
+            # token.set_param([new_target_value.max()], name='Amplitude')
 
-            target_token = target_tokens[0]
-            tmp_target_name = deepcopy(target_token.name_)
+            # target_token = target_tokens[0]
+            # tmp_target_name = deepcopy(target_token.name_)
             new_target_name = 'ntm'
-            set_constants(ntm=new_target_value)
-            target_token.name_ = new_target_name
+            # set_constants(ntm=new_target_value)
+            # target_token.name_ = new_target_name
 
             grid_optimize = grid_optimize.T
             inv_idx = token_idx-1
@@ -534,7 +534,7 @@ class ImpComplexDiscreteTokenParamsOptimizer(ImpComplexTokenParamsOptimizer):
             # res = differential_evolution(self._fitness_wrapper, deepcopy(bounds),
             #                              args=(individ, grid_optimize, token), popsize=2)
 
-            target_token.name_ = tmp_target_name
+            # target_token.name_ = tmp_target_name
 
             # bounds = deepcopy(token.get_descriptor_foreach_param(descriptor_name='bounds'))
             # try:

@@ -38,7 +38,7 @@ from moea_dd.src.moeadd_supplementary import *
 # Constant token is the target that will be approximated by other tokens
 # ImpComplex is a set of splitted single pulses obtained from periodic impulse
 
-token1 = Constant(val=None, name_='target', mandatory=1)
+token1 = Constant(val=None, name_='target', mandatory=0)
 token2 = Sin(optimize_id=1, name_='Sin')
 token3 = Imp(optimize_id=1, name_='Imp')
 token4 = Power(optimize_id=2, name_='Power')
@@ -132,16 +132,17 @@ u = Term(0, np.load("examples//pde//u.npy"), 'u')
 du = Term(1, np.load("examples//pde//du.npy").reshape(-1), 'du/dt')
 noize_one = Term(2, np.random.uniform(-1, 0, 960).reshape(-1), 'noise_one')
 noize_two = Term(3, np.random.uniform(-1, 1, 960).reshape(-1), 'noise_two')
+constant_matr = Term(4, np.ones(960), 'constante')
 # ----- end
 
 shp = (1,960)
-set_constants(target=u, shape_grid=shp, pul_mtrx=[du, noize_one])
+set_constants(target=u, shape_grid=shp, pul_mtrx=[du, constant_matr])
 
 individ = Equation(max_tokens=10)
 Ob.set_operators(np.array([grid]), individ, build_settings)
 
 
-population = Subpopulation(iterations=10)
+population = Subpopulation(iterations=15)
 
 # population = PopulationOfDEquations(iterations=10)
 
