@@ -139,7 +139,8 @@ class Sin(TerminalToken):
         #     return np.zeros(t.shape)
         # return params[0] * np.sin(1 * np.pi * (2 * params[1] * t + abs(math.modf(params[2])[0])))
         # return np.sin(2 * np.pi * (params[1] * t + params[2]))
-        return 2 * np.pi * (params[1] * t + params[2])
+        # return 2 * np.pi * (params[1] * t + params[2])
+        return (params[1] * t + params[2] * np.pi)
 
     def evaluate(self, params, t):
         result = np.nan

@@ -76,12 +76,14 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
         else:
             # target_idx = np.argmax(np.var(features, axis=0))
             # target_idx = np.random.randint(features.shape[1])
-            if features.T.shape[0] >= 3:
-                mandatory_idxs = [idx for idx in range(len(individ.structure)) if individ.structure[idx].mandatory != 0]
-                target_idx = mandatory_idxs[0]
-            else:
-                cov = np.cov(features.T)
-                target_idx = np.argmax([cov[i][i] for i in range(2)])
+            mandatory_idxs = [idx for idx in range(len(individ.structure)) if individ.structure[idx].mandatory != 0]
+            target_idx = mandatory_idxs[0]
+            # if features.T.shape[0] >= 3:
+            #     mandatory_idxs = [idx for idx in range(len(individ.structure)) if individ.structure[idx].mandatory != 0]
+            #     target_idx = mandatory_idxs[0]
+            # else:
+            #     cov = np.cov(features.T)
+            #     target_idx = np.argmax([cov[i][i] for i in range(2)])
             # print('LR target idx--->', target_idx, ' ', individ.structure[target_idx].name())
         target = -global_features[:, target_idx]
         idxs = [i for i in range(features.shape[1]) if chromo[i].params[1]._name != individ.structure[target_idx].params[1]._name]
@@ -171,7 +173,10 @@ class LassoIndivid(GeneticOperatorIndivid): #TODO не удалять токен
             return
         model = LinearRegression(fit_intercept=True)
         features, target, target_idx = self._preprocessing_data(individ, normalize_=False)
-        model.fit(features, target)
+        try:
+            model.fit(features, target)
+        except:
+            self._preprocessing_data(individ, normalize_=False)
         self._set_amplitudes_after_regression(individ, model.coef_, target_idx)
 
         try:

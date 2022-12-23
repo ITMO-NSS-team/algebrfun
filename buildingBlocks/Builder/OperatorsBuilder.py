@@ -121,6 +121,11 @@ def set_operators(grid, individ, kwargs):
     operatorsMap.RestrictPopulation = Selectors.RestrictPopulation(
         params=dict(population_size=population_size))
 
+    
+    operatorsMap.FiltersPopulationOfDEquation = Selectors.FiltersPopulationOfDEquation(
+        params=dict(population_size=population_size)
+    )
+
     operatorsMap.LassoIndivid1Target = Regularizations.LassoIndivid1Target(
         params=dict(grid=grid,
                     regularisation_coef=0.01))

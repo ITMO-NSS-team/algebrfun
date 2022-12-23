@@ -89,3 +89,22 @@ class RestrictPopulation(GeneticOperatorPopulation):
             population.structure.extend(elite)
         return population
 
+
+class FiltersPopulationOfDEquation(GeneticOperatorPopulation):
+    def __init__(self, params):
+        super().__init__(params=params)
+    
+    def apply(self, population, *args, **kwargs):
+        new_population_structure = []
+        for individ in population.structure:
+            mandatory_tokens = list(filter(lambda token: token.mandatory != 0, individ.structure))
+            if len(mandatory_tokens) != 0:
+                current_structure = individ.structure
+                individ.structure = []
+                individ.set_structure(current_structure)
+                new_population_structure.append(individ)
+        
+        population.structure = new_population_structure
+
+        return population
+

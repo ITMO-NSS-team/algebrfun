@@ -136,7 +136,7 @@ constant_matr = Term(4, np.ones(960), 'constante')
 # ----- end
 
 shp = (1,960)
-set_constants(target=u, shape_grid=shp, pul_mtrx=[du, constant_matr])
+set_constants(target=u, shape_grid=shp, pul_mtrx=[du, constant_matr], all_fitness=dict(CAF=[], de=[], a=[]))
 
 individ = Equation(max_tokens=10)
 Ob.set_operators(np.array([grid]), individ, build_settings)
@@ -162,10 +162,36 @@ for i, ind in enumerate(inds[-1].structure):
 
 constants = get_full_constant()
 best_individ = constants['best_individ']
+# print(constants['all_fitness'])
 
 print("-----B - I------")
 print(best_individ.formula(), best_individ.fitness)
 
+print(best_individ)
+data_for_graph = best_individ.value(np.array([grid]))
+print(data_for_graph.shape)
+
+plt.plot(data_for_graph)
+plt.show()
+
+plt.title("CAF")
+plt.plot(constants['all_fitness']['CAF'])
+plt.show()
+
+plt.title("DEQ")
+plt.plot(constants['all_fitness']['de'])
+plt.show()
+
+plt.title("GEN")
+plt.plot(constants['all_fitness']['a'])
+plt.show()
+
+
+for tkn in best_individ.structure:
+    eq = tkn.params[0].value(np.array([grid]))
+    plt.title(tkn.name())
+    plt.plot(eq)
+    plt.show()
 # print(ind.formula(), ind.fitness)
 
 # residuals = ind.value(grid)

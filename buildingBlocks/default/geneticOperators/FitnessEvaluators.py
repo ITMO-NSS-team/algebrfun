@@ -21,13 +21,18 @@ class VarFitnessIndivid(GeneticOperatorIndivid):
 
     # @apply_decorator
     def apply(self, individ, *args, **kwargs) -> None:
+        constants = get_full_constant()
+        ftnss = constants['all_fitness']
         if individ.type_ == "DEquation":
             individ.fitness = np.var(individ.value(self.params['grid']))
+            ftnss['de'].append(individ.fitness)
+            set_constants(all_fitness=ftnss)
             return
-        constants = get_full_constant()
         b_individ = constants['best_individ'].copy()
         b_individ.set_CAF(individ)
         individ.fitness = np.var(b_individ.value(self.params['grid']))
+        ftnss['CAF'].append(individ.fitness)
+        set_constants(all_fitness=ftnss)
         '''
         target_token = list(filter(lambda token: token.mandatory != 0, individ.structure))[0]
         ampl_norm = individ.get_norm_of_amplitudes()

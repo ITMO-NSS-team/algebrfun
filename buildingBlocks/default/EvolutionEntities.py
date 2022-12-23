@@ -150,6 +150,16 @@ class PopulationOfEquations(Population):
             self._evolutionary_step()
             idxsort = np.argsort(list(map(lambda x: x.fitness, self.structure)))
             inds = [self.structure[i] for i in idxsort]
+            # constants_t = get_full_constant()
+            self.apply_operator('Elitism')
+            tekind = list(filter(lambda ind: ind.elitism, self.structure))[0]
+            constants_t = get_full_constant()
+            ftnss = constants_t['all_fitness']
+            ftnss['a'].append(tekind.fitness)
+            set_constants(all_fitness=ftnss)
+            # ftnss = constants_t['all_fitness']
+            # ftnss.append(constants_t['best_individ'].fitness)
+            # set_constants(all_fitness=ftnss)
             # print("structure of population", [cur_eq.fitness for cur_eq in inds])
             # print("no sort", [cur_eq.fitness for cur_eq in self.structure])
         # self.apply_operator('RegularisationPopulation')
@@ -244,6 +254,7 @@ class DEquation(Individ):
 
     def set_CAF(self, CAF):
         for tkn in self.structure:
+            assert CAF.owner_id != 0, "Попался, который кусался"
             if tkn.params[1].term_id == CAF.owner_id:
                 tkn.params = np.array([CAF, tkn.params[1]])
                 return
@@ -329,18 +340,19 @@ class PopulationOfDEquations(Population):
 
     
     def _evolutionary_step(self, *args):
-        self.apply_operator("DifferentialTokensOptimizerPopulation", args[0])
         for individ in self.structure:
             individ.apply_operator("LassoIndivid")
             individ.apply_operator("VarFitnessIndivid")
         self.apply_operator("RouletteWheelSelection")
         self.apply_operator("CrossoverPopulation")
-        self.apply_operator("FitnessPopulation")
-        self.apply_operator("Elitism")
         self.apply_operator('MutationPopulation')
+        self.apply_operator('FiltersPopulationOfDEquation')
+        for individ in self.structure:
+            individ.apply_operator("LassoIndivid")
         self.apply_operator("FitnessPopulation")
+        # self.apply_operator('RestrictPopulation')
+        self.apply_operator("RegularisationPopulation")
         self.apply_operator("Elitism")
-        self.apply_operator('RestrictPopulation')
 
 
         # Optimizer for structure differencial Tokens (\/)
@@ -355,9 +367,16 @@ class PopulationOfDEquations(Population):
 
     def evolutionary(self, *args):  
         # self.apply_operator('InitPopulation')
+        # self.apply_operator('FiltersPopulationOfDEquation')
         for n in range(self.iterations):
             # print('{}/{}\n'.format(n, self.iterations))
             self._evolutionary_step(args[0])
+            tekind = list(filter(lambda ind: ind.elitism, self.structure))[0]
+            constants_t = get_full_constant()
+            ftnss = constants_t['all_fitness']
+            ftnss['a'].append(tekind.fitness)
+            set_constants(all_fitness=ftnss)
+        # self.apply_operator("Elitism")
         set_constants(best_individ=list(filter(lambda ind: ind.elitism, self.structure))[0])
 
     
@@ -369,12 +388,17 @@ class Subpopulation(Population):
         self.type_ = type_
 
     def _evolutionary_step(self):
-        for sub_population in self.structure:
+        self.structure[-1].evolutionary(self.structure)
+        for sub_population in self.structure[:-1]:
+            print("cafpop", sub_population)
             sub_population.evolutionary(self.structure)
+        self.structure[-1].apply_operator("DifferentialTokensOptimizerPopulation", self.structure)
+        self.structure[-1].apply_operator("Elitism")
+        set_constants(best_individ=list(filter(lambda ind: ind.elitism, self.structure[-1].structure))[0])
         # self.apply_operator("DifferentialTokensOptimizerPopulation")
 
     def evolutionary(self):  
         self.apply_operator('InitSubPopulation')
-        for n in range(self.iterations):
-            print('{}/{}\n'.format(n, self.iterations))
-            self._evolutionary_step()
+        # for n in range(self.iterations):
+        #     print('{}/{}\n'.format(n, self.iterations))
+        self._evolutionary_step()

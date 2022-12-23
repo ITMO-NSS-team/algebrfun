@@ -70,17 +70,22 @@ class MutationIndivid(GeneticOperatorIndivid):
         if individ.max_tokens > len(individ.structure) and np.random.uniform() <= self.params['increase_prob']:
             individ.add_substructure(add_tokens)
         elif individ.structure:
+            individ.apply_operator('TokenFitnessIndivid')
             idxs_to_choice = list(filter(lambda idx: individ.structure[idx].mandatory == 0, # and individ.structure no is CImp
                                          range(len(individ.structure))))
             if not idxs_to_choice:
                 return
-            probabilities = np.array(list(map(lambda idx: individ.structure[idx].fitness, idxs_to_choice)))
-            probabilities /= probabilities.sum()
-            for idx in np.random.choice(idxs_to_choice,
-                                        size=min(len(idxs_to_choice), len(add_tokens)),
-                                        replace=False,
-                                        p=probabilities):
-                individ.set_substructure(add_tokens.pop(), idx)
+            try:
+                test_prob = np.array(list(map(lambda idx: individ.structure[idx].fitness, idxs_to_choice)))
+                probabilities = np.array(list(map(lambda idx: individ.structure[idx].fitness, idxs_to_choice)))
+                probabilities /= probabilities.sum()
+                for idx in np.random.choice(idxs_to_choice,
+                                            size=min(len(idxs_to_choice), len(add_tokens)),
+                                            replace=False,
+                                            p=probabilities):
+                    individ.set_substructure(add_tokens.pop(), idx)
+            except:
+                individ.apply_operator('TokenFitnessIndivid')
             # if len(add_functions) > len(chromo) we add token to the chromo
             if add_tokens:
                 individ.add_substructure(add_tokens)
