@@ -277,9 +277,9 @@ class TerminalToken(Bs.Token):
         -------
         Value of the token.
         """
-        if not self.fixator['val'] or self.val is None or self.val.shape[0] != grid.shape[-1]:
-            self.val = self.evaluate(self.params, grid)
-            self.fixator['val'] = self.fixator['cache']
+        # if not self.fixator['val'] or self.val is None or self.val.shape[0] != grid.shape[-1]:
+        self.val = self.evaluate(self.params, grid)
+        self.fixator['val'] = self.fixator['cache']
 
             # эта централизация в целом то полезна (для ЛАССО например), но искажает продукт-токен
             # centralization
@@ -629,10 +629,7 @@ class DifferentialTokenConstant(Bs.Token):
         numpy.ndarray
         """
         # print(f"check shapes {params[0].value(grid).shape}, {constants['target'].data.shape}")
-        return -params[0].value(grid) * constants['target'].data
-
-    
-
+        return params[0].value(grid) * constants['target'].data
 
 
 class DifferentialToken(Bs.Token):

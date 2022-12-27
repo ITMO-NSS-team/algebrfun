@@ -9,6 +9,7 @@ from buildingBlocks.baseline.BasicEvolutionaryEntities import Individ, Populatio
 import numpy as np
 from buildingBlocks.Globals.GlobalEntities import set_constants, get_full_constant
 from buildingBlocks.baseline.BasicEvolutionaryEntities import DifferentialToken
+import matplotlib.pyplot as plt
 
 
 class Equation(Individ):
@@ -254,7 +255,7 @@ class DEquation(Individ):
 
     def set_CAF(self, CAF):
         for tkn in self.structure:
-            assert CAF.owner_id != 0, "Попался, который кусался"
+            # assert CAF.owner_id != 0, "Попался, который кусался"
             if tkn.params[1].term_id == CAF.owner_id:
                 tkn.params = np.array([CAF, tkn.params[1]])
                 return
@@ -340,6 +341,7 @@ class PopulationOfDEquations(Population):
 
     
     def _evolutionary_step(self, *args):
+        # self.apply_operator("DifferentialTokensOptimizerPopulation", args[0])
         for individ in self.structure:
             individ.apply_operator("LassoIndivid")
             individ.apply_operator("VarFitnessIndivid")
@@ -389,13 +391,22 @@ class Subpopulation(Population):
 
     def _evolutionary_step(self):
         self.structure[-1].evolutionary(self.structure)
+        test_individ = list(filter(lambda ind: ind.elitism, self.structure[-1].structure))[0]
+        print("find structure", test_individ.formula())
+        set_constants(test=test_individ)
         for sub_population in self.structure[:-1]:
             print("cafpop", sub_population)
             sub_population.evolutionary(self.structure)
+            # tekind = list(filter(lambda ind: ind.elitism, self.structure[-1].structure))[0]
+            # constants_t = get_full_constant()
+            # ftnss = constants_t['all_fitness']
+            # ftnss['a'].append(tekind.fitness)
+            # set_constants(all_fitness=ftnss)
         self.structure[-1].apply_operator("DifferentialTokensOptimizerPopulation", self.structure)
         self.structure[-1].apply_operator("Elitism")
         set_constants(best_individ=list(filter(lambda ind: ind.elitism, self.structure[-1].structure))[0])
         # self.apply_operator("DifferentialTokensOptimizerPopulation")
+        
 
     def evolutionary(self):  
         self.apply_operator('InitSubPopulation')

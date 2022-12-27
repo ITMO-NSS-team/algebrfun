@@ -70,11 +70,14 @@ class CrossoverPopulation(GeneticOperatorPopulation):
         selected_individs = np.random.choice(selected_population, replace=False, size=(crossover_size, 2))
 
         for individ1, individ2 in selected_individs:
-            for individ in individ1, individ2:
-                if individ.elitism:
-                    individ.elitism = False
-                    new_individ = individ.copy()
-                    new_individ.selected = False
-                    population.structure.append(new_individ)
-            individ1.apply_operator('CrossoverIndivid', other_individ=individ2)  # Параметры мутации заключены в операторе мутации с которым
+            # for individ in individ1, individ2:
+            #     if individ.elitism:
+            #         individ.elitism = False
+            #         new_individ = individ.copy()
+            #         new_individ.selected = False
+            #         population.structure.append(new_individ)
+            n_ind_1 = individ1.copy()
+            n_ind_2 = individ2.copy()
+            population.structure.extend([n_ind_1, n_ind_2])
+            n_ind_1.apply_operator('CrossoverIndivid', other_individ=n_ind_2)  # Параметры мутации заключены в операторе мутации с которым
         return population

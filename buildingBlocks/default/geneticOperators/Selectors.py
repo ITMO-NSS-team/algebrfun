@@ -60,7 +60,10 @@ class RouletteWheelSelection(GeneticOperatorPopulation):
             winners = selected_individs
         else:
             assert tournament_size >= winners_size, "Winners size must be less than tornament size"
-            winners = np.random.choice(selected_individs, size=winners_size, p=probabilities, replace=False)
+            try:
+                winners = np.random.choice(selected_individs, size=winners_size, p=probabilities, replace=False)
+            except:
+                winners = np.random.choice(selected_individs, size=winners_size, replace=False)
         # return list(winners)
         for individ in winners:
             individ.selected = True

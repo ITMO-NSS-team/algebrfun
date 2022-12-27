@@ -56,7 +56,8 @@ class InitIndivid(GeneticOperatorIndivid):
             target_eq = args[1].structure[0].structure[0]
             # constant_token[0].params[0] = np.array([np.random.choice(constant_token[0].variable_params[0])])
             constant_token[0].params[0] = np.array([1.0])
-            sin_token[0].params = np.array([[1, 1, 0]])
+            sin_token[0].params = np.array([[1.0, 1.0, 0.0]])
+            sin_token[0].fixator['self'] = True
             # target_eq.structure = [constant_token[0].copy()]
             target_eq.structure = [sin_token[0].copy()]
             const_term = DifferentialTokenConstant(number_params=2, params_description={0: dict(name='const param'), 1: dict(name="Term")}, params=np.array([target_eq, constants['target']], dtype=object), name_="DifferentialToken")

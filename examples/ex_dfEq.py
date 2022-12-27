@@ -130,18 +130,18 @@ target -= target.mean()
 grid = np.load("examples//pde//t.npy")
 u = Term(0, np.load("examples//pde//u.npy"), 'u')
 du = Term(1, np.load("examples//pde//du.npy").reshape(-1), 'du/dt')
-noize_one = Term(2, np.random.uniform(-1, 0, 960).reshape(-1), 'noise_one')
-noize_two = Term(3, np.random.uniform(-1, 1, 960).reshape(-1), 'noise_two')
+noize_one = Term(2, np.random.uniform(-100, 100, 960).reshape(-1), 'noise_one')
+noize_two = Term(3, np.random.uniform(-100, 100, 960).reshape(-1), 'noise_two')
 constant_matr = Term(4, np.ones(960), 'constante')
 # ----- end
 
 shp = (1,960)
-set_constants(target=u, shape_grid=shp, pul_mtrx=[du, constant_matr], all_fitness=dict(CAF=[], de=[], a=[]))
+set_constants(target=u, shape_grid=shp, pul_mtrx=[du, constant_matr, noize_one, noize_two], all_fitness=dict(CAF=[], de=[], a=[]))
 
 individ = Equation(max_tokens=10)
 Ob.set_operators(np.array([grid]), individ, build_settings)
-
-
+d = []
+# for trien in range(10):
 population = Subpopulation(iterations=15)
 
 # population = PopulationOfDEquations(iterations=10)
@@ -169,6 +169,11 @@ print(best_individ.formula(), best_individ.fitness)
 
 print(best_individ)
 data_for_graph = best_individ.value(np.array([grid]))
+
+
+# d.append(constants['all_fitness']['a'])
+
+# set_constants(all_fitness=dict(CAF=[], de=[], a=[]))
 print(data_for_graph.shape)
 
 plt.plot(data_for_graph)
@@ -182,15 +187,25 @@ plt.title("DEQ")
 plt.plot(constants['all_fitness']['de'])
 plt.show()
 
+d = np.array(d)
 plt.title("GEN")
 plt.plot(constants['all_fitness']['a'])
+# plt.plot(d)
+# plt.boxplot(d)
 plt.show()
+# plt.plot(d[-1])
+# plt.show()
+
+func = [np.sin(grid) * u.data, np.cos(grid) * du.data, constant_matr.data]
 
 
-for tkn in best_individ.structure:
+for iter, tkn in enumerate(best_individ.structure):
     eq = tkn.params[0].value(np.array([grid]))
-    plt.title(tkn.name())
-    plt.plot(eq)
+    eq_a = tkn.value(np.array([grid]))
+    plt.title(tkn.params[1]._name)
+    plt.plot(grid, eq_a, label="Received data")
+    plt.plot(grid, func[iter], label="Original data")
+    plt.legend()
     plt.show()
 # print(ind.formula(), ind.fitness)
 
