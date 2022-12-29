@@ -106,6 +106,10 @@ def set_operators(grid, individ, kwargs):
         params=dict(tournament_size=population_size,
                     winners_size=int(0.5*population_size)+1))
 
+    operatorsMap.DelDublicateIndivid = Selectors.DelDublicateIndivid(
+        params=dict(population_size=population_size)
+    )
+
     operatorsMap.DelDuplicateTokensIndivid = Regularizations.DelDuplicateTokensIndivid()
 
     operatorsMap.CheckMandatoryTokensIndivid = Regularizations.CheckMandatoryTokensIndivid(

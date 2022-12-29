@@ -70,6 +70,23 @@ class RouletteWheelSelection(GeneticOperatorPopulation):
         return population
 
 
+class DelDublicateIndivid(GeneticOperatorPopulation):
+    def __init__(self, params):
+        super().__init__(params=params)
+
+    def apply(self, population, *args, **kwargs):
+        new_structure = []
+        use_comb = []
+        old_structure = population.structure
+        old_structure = sorted(old_structure, key=lambda ind: ind.fitness)
+        for ind in old_structure:
+            frm = ','.join(list(map(lambda tkn: tkn.params[1]._name, ind.structure)))
+            if not frm in use_comb:
+                new_structure.append(ind)
+                use_comb.append(frm)
+        population.structure = new_structure
+
+
 class RestrictPopulation(GeneticOperatorPopulation):
     """
     Restrict the size of the population to the given population_size according to the fitness-dependent probability.

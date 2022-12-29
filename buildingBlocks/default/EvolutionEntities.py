@@ -354,7 +354,8 @@ class PopulationOfDEquations(Population):
         for individ in self.structure:
             individ.apply_operator("LassoIndivid")
         self.apply_operator("FitnessPopulation")
-        # self.apply_operator('RestrictPopulation')
+        self.apply_operator("DelDublicateIndivid")
+        self.apply_operator('RestrictPopulation')
         self.apply_operator("RegularisationPopulation")
         self.apply_operator("Elitism")
 

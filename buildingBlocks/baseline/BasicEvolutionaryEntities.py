@@ -596,9 +596,9 @@ class DifferentialTokenConstant(Bs.Token):
         -------
         Value of the token.
         """
-        if not self.fixator['val'] or self.val is None or self.val.shape[0] != grid.shape[-1]:
-            self.val = self.evaluate(self.params, grid)
-            self.fixator['val'] = self.fixator['cache']
+        # if not self.fixator['val'] or self.val is None or self.val.shape[0] != grid.shape[-1]:
+        self.val = self.evaluate(self.params, grid)
+        self.fixator['val'] = self.fixator['cache']
 
             # эта централизация в целом то полезна (для ЛАССО например), но искажает продукт-токен
             # centralization
@@ -773,9 +773,9 @@ class DifferentialToken(Bs.Token):
         -------
         Value of the token.
         """
-        if not self.fixator['val'] or self.val is None or self.val.shape[0] != grid.shape[-1]:
-            self.val = self.evaluate(self.params, grid)
-            self.fixator['val'] = self.fixator['cache']
+        # if not self.fixator['val'] or self.val is None or self.val.shape[0] != grid.shape[-1]:
+        self.val = self.evaluate(self.params, grid)
+        self.fixator['val'] = self.fixator['cache']
 
             # эта централизация в целом то полезна (для ЛАССО например), но искажает продукт-токен
             # centralization
