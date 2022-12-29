@@ -24,6 +24,7 @@ from buildingBlocks.baseline.BasicEvolutionaryEntities import GeneticOperatorInd
 from buildingBlocks.baseline.BasicEvolutionaryEntities import ComplexToken
 import numpy as np
 from multiprocessing import current_process
+from buildingBlocks.Globals.GlobalEntities import set_constants, get_full_constant
 
 from buildingBlocks.default.geneticOperators.supplementary.Other import check_or_create_fixator_item, \
     check_operators_from_kwargs, apply_decorator
@@ -267,6 +268,69 @@ class LassoIndivid1Target(GeneticOperatorIndivid):
     def apply(self, individ, *args, **kwargs) -> None:
         self._lasso(individ)
 
+class LRIndivid1TargetDE(GeneticOperatorIndivid):
+    def __init__(self, params):
+        super().__init__(params=params)
+        self._check_params('grid')
+
+    @staticmethod
+    def _find_target_idx(tokens):
+        target_idxs = list(filter(lambda idx: tokens[idx].mandatory != 0,
+                                  range(len(tokens))))
+        assert len(target_idxs) == 1, 'Individ has no one or more than one target'
+        return target_idxs[0], tokens[target_idxs].params[1]._name
+
+    def _prepare_data(self, tokens):
+        grid = self.params['grid']
+        data = np.array(list(map(lambda token: token.value(grid), tokens)))
+        return data
+
+    @staticmethod
+    def _set_amplitudes(individ, tokens, coefs, target_idx):
+        new_structure = []
+        coefs = list(coefs)
+        # coefs.insert(target_idx, 1.)
+        for idx, token in enumerate(tokens):
+            new_amplitude = token.params[0].param(name='Amplitude') * coefs[idx]
+            if np.abs(new_amplitude[0]) < 2:
+                continue
+            token.params[0].set_param(new_amplitude, name='Amplitude')
+            new_structure.append(token)
+
+        # individ.strucutre = new_structure
+
+    def _lr(self, individ):
+        fixed_optimized_tokens_in_structure = list(filter(lambda token: token.fixator['self'],
+                                                          individ.structure))
+        if len(fixed_optimized_tokens_in_structure) <= 1:
+            return
+        chromo = individ.get_structure()
+        target_idx, target_name = self._find_target_idx(fixed_optimized_tokens_in_structure)
+        chromo = list(filter(lambda term: term.params[1]._name != target_name, chromo))
+        data = self._prepare_data(fixed_optimized_tokens_in_structure)
+
+        target = -data[target_idx]
+        # features = data[[idx for idx in range(data.shape[0]) if idx != target_idx]]
+        features = self._prepare_data(chromo)
+
+        # print("features & target", features, target)
+
+        model = LinearRegression(fit_intercept=True)
+        model.fit(features.T, target)
+
+        self._set_amplitudes(individ, chromo, model.coef_, target_idx)
+        individ.intercept = model.intercept_
+
+    @apply_decorator
+    def apply(self, individ, *args, **kwargs) -> None:
+        if individ.type_ == "DEquation":
+            self._lr(individ)
+        else:
+            constants = get_full_constant()
+            b_individ = constants['best_individ'].copy()
+            b_individ.set_CAF(individ)
+            self._lr(b_individ)
+
 
 class LRIndivid1Target(GeneticOperatorIndivid):
     def __init__(self, params):
@@ -463,7 +527,7 @@ class RegularisationPopulation(GeneticOperatorPopulation):
             individ.apply_operator('TokenFitnessIndivid')
             individ.apply_operator('DelDuplicateTokensIndivid')
             individ.apply_operator('RestrictTokensIndivid')
-            # individ.apply_operator('LRIndivid1Target')
+            individ.apply_operator('LRIndivid1TargetDE')
 
         return population
 

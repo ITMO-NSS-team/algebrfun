@@ -132,6 +132,8 @@ def set_operators(grid, individ, kwargs):
 
     operatorsMap.LRIndivid1Target = Regularizations.LRIndivid1Target(
         params=dict(grid=grid))
+    
+    operatorsMap.LRIndivid1TargetDE = Regularizations.LRIndivid1TargetDE(params=dict(grid=grid))
 
     # operatorsMap.lassoIndivid = Regularizations.DEOptIndivid(params=dict(grid=grid))
 

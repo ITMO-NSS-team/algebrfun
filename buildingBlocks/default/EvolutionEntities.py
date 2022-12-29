@@ -50,6 +50,7 @@ class Equation(Individ):
 
     def copy(self):
         new_copy = deepcopy(self)
+        new_copy.owner_id = self.owner_id
 
         try:
             new_copy.forms = deepcopy(new_copy.forms)
@@ -60,6 +61,7 @@ class Equation(Individ):
 
     def clean_copy(self):
         new_copy = type(self)()
+        new_copy.owner_id = self.owner_id
         return new_copy
 
     def formula(self, with_params=False):

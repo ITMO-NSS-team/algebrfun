@@ -28,5 +28,7 @@ class UnifierParallelizedPopulation(GeneticOperatorPopulation):
     def apply(self, population, *args, **kwargs):
         population.apply_operator('PeriodicCAFTokensOptimizerPopulation')
         population.apply_operator('RegularisationPopulation')
+        # for individ in population.structure:
+        #     individ.apply_operator("LRIndivid1TargetDE")
         population.apply_operator('FitnessPopulation')
         return population
