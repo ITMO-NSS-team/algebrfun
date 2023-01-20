@@ -30,5 +30,5 @@ class UnifierParallelizedPopulation(GeneticOperatorPopulation):
         population.apply_operator('RegularisationPopulation')
         # for individ in population.structure:
         #     individ.apply_operator("LRIndivid1TargetDE")
-        population.apply_operator('FitnessPopulation')
+        population.apply_operator('FitnessPopulation', args)
         return population

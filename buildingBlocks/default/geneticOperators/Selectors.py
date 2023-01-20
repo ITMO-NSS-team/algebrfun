@@ -51,6 +51,9 @@ class RouletteWheelSelection(GeneticOperatorPopulation):
         if tournament_size > len(pops):
             tournament_size = len(pops)
             winners_size = round(tournament_size / 100 * 60)
+        
+        if winners_size == 0:
+            winners_size = len(pops)
         assert tournament_size <= len(pops), "Tournament size must be less than population size"
         selected_individs = list(np.random.choice(pops, replace=False, size=tournament_size))
         population_fitnesses = list(map(lambda ind: 1/(ind.fitness + 0.01), selected_individs))

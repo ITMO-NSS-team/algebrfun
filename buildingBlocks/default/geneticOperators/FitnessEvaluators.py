@@ -30,9 +30,22 @@ class VarFitnessIndivid(GeneticOperatorIndivid):
             return
         b_individ = constants['best_individ'].copy()
         b_individ.set_CAF(individ)
-        individ.fitness = np.linalg.norm(b_individ.value(self.params['grid']))
+        other_individs = constants['all_structures']
+        other_individ = np.random.choice(other_individs)
+        other_individ.set_CAF(individ)
+        # for dtoken in b_individ:
+        #     other_individ.set_CAF(dtoken.params[0])
+        fts_0 = np.linalg.norm(b_individ.value(self.params['grid']))
+        fts_1 = np.linalg.norm(other_individ.value(self.params['grid']))
+
+        if fts_1 < fts_0:
+            set_constants(best_individ=other_individ)
+            fts_0 = fts_1
+
         # ftnss['CAF'].append(individ.fitness)
         # set_constants(all_fitness=ftnss)
+
+        individ.fitness = fts_0 
         '''
         target_token = list(filter(lambda token: token.mandatory != 0, individ.structure))[0]
         ampl_norm = individ.get_norm_of_amplitudes()
@@ -97,6 +110,6 @@ class FitnessPopulation(GeneticOperatorPopulation):
 
     def apply(self, population, *args, **kwargs):
         for individ in population.structure:
-            individ.apply_operator('VarFitnessIndivid')
+            individ.apply_operator('VarFitnessIndivid', args[0])
         return population
 

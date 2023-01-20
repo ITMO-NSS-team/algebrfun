@@ -51,7 +51,7 @@ class InitIndivid(GeneticOperatorIndivid):
             der_set = constants['pul_mtrx']
             constant_token = list(filter(lambda curtoken: curtoken.type == "Constant", self.params['tokens']))
             sin_token = list(filter(lambda curtoken: curtoken.name_ == "Sin", self.params['tokens']))
-            number_of_temps = np.random.randint(1, len(der_set))
+            number_of_temps = np.random.randint(1, len(der_set) + 1)
             selected_temps = np.random.choice(np.arange(number_of_temps), number_of_temps, replace=False)
             target_eq = args[1].structure[0].structure[0]
             # constant_token[0].params[0] = np.array([np.random.choice(constant_token[0].variable_params[0])])

@@ -127,13 +127,13 @@ class PopulationOfEquations(Population):
         for ind in self.structure:
             ind.owner_id = value
 
-    def _evolutionary_step(self):
+    def _evolutionary_step(self, *args):
         # self.apply_operator('RegularisationPopulation')
         # self.apply_operator('PeriodicTokensOptimizerPopulation')
         # self.apply_operator('LassoPopulation')
         # self.apply_operator('FitnessPopulation')
         # self.text_indiv_param()
-        self.apply_operator('UnifierParallelizedPopulation')
+        self.apply_operator('UnifierParallelizedPopulation', args[0])
         # self.text_indiv_param()
 
         self.apply_operator('RestrictPopulation')
@@ -150,7 +150,7 @@ class PopulationOfEquations(Population):
             return
         for n in range(self.iterations):
             # print('{}/{}\n'.format(n, self.iterations))
-            self._evolutionary_step()
+            self._evolutionary_step(args[0])
             idxsort = np.argsort(list(map(lambda x: x.fitness, self.structure)))
             inds = [self.structure[i] for i in idxsort]
             # constants_t = get_full_constant()
@@ -347,13 +347,14 @@ class PopulationOfDEquations(Population):
         for individ in self.structure:
             individ.apply_operator("LassoIndivid")
             individ.apply_operator("VarFitnessIndivid")
+        self.apply_operator("DelDublicateIndivid")
         self.apply_operator("RouletteWheelSelection")
         self.apply_operator("CrossoverPopulation")
         self.apply_operator('MutationPopulation')
         self.apply_operator('FiltersPopulationOfDEquation')
         for individ in self.structure:
             individ.apply_operator("LassoIndivid")
-        self.apply_operator("FitnessPopulation")
+        self.apply_operator("FitnessPopulation", args)
         self.apply_operator("DelDublicateIndivid")
         self.apply_operator('RestrictPopulation')
         self.apply_operator("RegularisationPopulation")
@@ -376,6 +377,9 @@ class PopulationOfDEquations(Population):
         for n in range(self.iterations):
             # print('{}/{}\n'.format(n, self.iterations))
             self._evolutionary_step(args[0])
+            for i, ind in enumerate(self.structure):
+                print(i, ind.formula(), ind.fitness)
+
             tekind = list(filter(lambda ind: ind.elitism, self.structure))[0]
             constants_t = get_full_constant()
             ftnss = constants_t['all_fitness']
@@ -397,8 +401,10 @@ class Subpopulation(Population):
         test_individ = list(filter(lambda ind: ind.elitism, self.structure[-1].structure))[0]
         print("find structure", test_individ.formula())
         set_constants(test=test_individ)
+        set_constants(all_structures=self.structure[-1].structure)
         for sub_population in self.structure[:-1]:
-            print("cafpop", sub_population)
+        #     print("cafpop", sub_population)
+            self.structure[-1].apply_operator("DifferentialTokensOptimizerPopulation", self.structure)
             sub_population.evolutionary(self.structure)
             # tekind = list(filter(lambda ind: ind.elitism, self.structure[-1].structure))[0]
             # constants_t = get_full_constant()

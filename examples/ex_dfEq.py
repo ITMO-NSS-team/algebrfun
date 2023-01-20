@@ -136,45 +136,45 @@ constant_matr = Term(4, np.ones(960), 'constante')
 # ----- end
 
 shp = (1,960)
-set_constants(target=u, shape_grid=shp, pul_mtrx=[du, constant_matr], all_fitness=dict(CAF=[], de=[], a=[]))
+set_constants(target=u, shape_grid=shp, pul_mtrx=[du, constant_matr, noize_one, noize_two], all_fitness=dict(CAF=[], de=[], a=[]))
 
 individ = Equation(max_tokens=10)
 Ob.set_operators(np.array([grid]), individ, build_settings)
 d = []
-for trien in range(10):
-    population = Subpopulation(iterations=50)
+# for trien in range(10):
+population = Subpopulation(iterations=30)
 
-    # population = PopulationOfDEquations(iterations=10)
+# population = PopulationOfDEquations(iterations=10)
 
-    population.evolutionary()
+population.evolutionary()
 
-    print("mi")
+print("mi")
 
-    inds = population.structure
-    # idxsort = np.argsort(list(map(lambda x: x.fitness, inds)))
-    # inds = [inds[i] for i in idxsort]
+inds = population.structure
+# idxsort = np.argsort(list(map(lambda x: x.fitness, inds)))
+# inds = [inds[i] for i in idxsort]
 
-    print("RESULTING")
-    n = 0
-    ind = deepcopy(inds[-1].structure[n])
-    for i, ind in enumerate(inds[-1].structure):
-        print(i, ind.formula(), ind.fitness)
+print("RESULTING")
+n = 0
+ind = deepcopy(inds[-1].structure[n])
+for i, ind in enumerate(inds[-1].structure):
+    print(i, ind.formula(), ind.fitness)
 
-    constants = get_full_constant()
-    best_individ = constants['best_individ']
-    # print(constants['all_fitness'])
+constants = get_full_constant()
+best_individ = constants['best_individ']
+# print(constants['all_fitness'])
 
-    print("-----B - I------")
-    print(best_individ.formula(), best_individ.fitness)
+print("-----B - I------")
+print(best_individ.formula(), best_individ.fitness)
 
-    print(best_individ)
-    data_for_graph = best_individ.value(np.array([grid]))
+print(best_individ)
+data_for_graph = best_individ.value(np.array([grid]))
 
 
-    d.append(constants['all_fitness']['a'])
-    print(np.array(constants['all_fitness']['a']).shape)
+    # d.append(constants['all_fitness']['a'])
+    # print(np.array(constants['all_fitness']['a']).shape)
 
-    set_constants(all_fitness=dict(CAF=[], de=[], a=[]))
+    # set_constants(all_fitness=dict(CAF=[], de=[], a=[]))
 print(data_for_graph.shape)
 
 
@@ -192,14 +192,14 @@ plt.show()
 d = np.array(d)
 print(d.shape)
 plt.title("GEN")
-# plt.plot(constants['all_fitness']['a'])
+plt.plot(constants['all_fitness']['a'])
 # plt.plot(d)
-plt.boxplot(d)
+# plt.boxplot(d)
 plt.show()
-plt.boxplot(d.T)
-plt.show()
-plt.scatter(np.arange(len(d[-1])), d[-1])
-plt.show()
+# plt.boxplot(d.T)
+# plt.show()
+# plt.scatter(np.arange(len(d[-1])), d[-1])
+# plt.show()
 
 func = [np.sin(grid) * u.data, np.cos(grid) * du.data, constant_matr.data]
 
