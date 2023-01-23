@@ -46,36 +46,50 @@ class InitIndivid(GeneticOperatorIndivid):
 
     @apply_decorator
     def apply(self, individ, *args, **kwargs) -> None:
+        # инициализация рандомных структур диф.уравнений
+        # if individ.type_ == "DEquation":
+        #     constants = get_full_constant()
+        #     der_set = constants['pul_mtrx']
+        #     constant_token = list(filter(lambda curtoken: curtoken.type == "Constant", self.params['tokens']))
+        #     sin_token = list(filter(lambda curtoken: curtoken.name_ == "Sin", self.params['tokens']))
+        #     number_of_temps = np.random.randint(1, len(der_set) + 1)
+        #     selected_temps = np.random.choice(np.arange(number_of_temps), number_of_temps, replace=False)
+        #     target_eq = args[1].structure[0].structure[0]
+        #     # constant_token[0].params[0] = np.array([np.random.choice(constant_token[0].variable_params[0])])
+        #     constant_token[0].params[0] = np.array([1.0])
+        #     sin_token[0].params = np.array([[1.0, 1.0, 0.0]])
+        #     sin_token[0].fixator['self'] = True
+        #     # target_eq.structure = [constant_token[0].copy()]
+        #     target_eq.structure = [sin_token[0].copy()]
+        #     const_term = DifferentialTokenConstant(number_params=2, params_description={0: dict(name='const param'), 1: dict(name="Term")}, params=np.array([target_eq, constants['target']], dtype=object), name_="DifferentialToken")
+        #     # selected_temps.append(constants['target'].term_id)
+        #     # sub = [DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([random.choice(args[1].structure[current_temp].structure), der_set[current_temp]], dtype=object), name_="DifferencialToken") for current_temp in selected_temps]
+        #     sub = []
+        #     description = {0: dict(name='Close algebr equation'), 1: dict(name="Term")}
+        #     for current_temp in selected_temps:
+        #         target_eq = args[1].structure[current_temp].structure[0].copy()
+        #         # target_eq.structure = [target_eq.structure[0]]
+        #         target_eq.structure = [constant_token[0].copy()]
+        #         current_token = DifferentialToken(number_params=2, params_description=description, params=np.array([target_eq, der_set[current_temp]], dtype=object), name_="DifferencialToken")
+        #         sub.append(current_token)
+        #     # sub = [DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([random.choice(args[1].structure[current_temp].structure), der_set[current_temp]], dtype=object), name_="DifferencialToken") ]
+        #     sub.append(const_term)
+        #     individ.add_substructure(sub)
+        #     all_tokens = [DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([random.choice(args[1].structure[current_temp].structure), der_set[current_temp]], dtype=object), name_="DifferencialToken") for current_temp in np.arange(len(der_set))]
+        #     set_constants(tokens=all_tokens)
+        #     return
+
         if individ.type_ == "DEquation":
             constants = get_full_constant()
             der_set = constants['pul_mtrx']
             constant_token = list(filter(lambda curtoken: curtoken.type == "Constant", self.params['tokens']))
-            sin_token = list(filter(lambda curtoken: curtoken.name_ == "Sin", self.params['tokens']))
-            number_of_temps = np.random.randint(1, len(der_set) + 1)
-            selected_temps = np.random.choice(np.arange(number_of_temps), number_of_temps, replace=False)
-            target_eq = args[1].structure[0].structure[0]
-            # constant_token[0].params[0] = np.array([np.random.choice(constant_token[0].variable_params[0])])
-            constant_token[0].params[0] = np.array([1.0])
-            sin_token[0].params = np.array([[1.0, 1.0, 0.0]])
-            sin_token[0].fixator['self'] = True
-            # target_eq.structure = [constant_token[0].copy()]
-            target_eq.structure = [sin_token[0].copy()]
-            const_term = DifferentialTokenConstant(number_params=2, params_description={0: dict(name='const param'), 1: dict(name="Term")}, params=np.array([target_eq, constants['target']], dtype=object), name_="DifferentialToken")
-            # selected_temps.append(constants['target'].term_id)
-            # sub = [DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([random.choice(args[1].structure[current_temp].structure), der_set[current_temp]], dtype=object), name_="DifferencialToken") for current_temp in selected_temps]
             sub = []
-            description = {0: dict(name='Close algebr equation'), 1: dict(name="Term")}
-            for current_temp in selected_temps:
-                target_eq = args[1].structure[current_temp].structure[0].copy()
-                # target_eq.structure = [target_eq.structure[0]]
+            for trm in der_set:
+                target_eq = args[1].structure[0].structure[0].copy()
                 target_eq.structure = [constant_token[0].copy()]
-                current_token = DifferentialToken(number_params=2, params_description=description, params=np.array([target_eq, der_set[current_temp]], dtype=object), name_="DifferencialToken")
-                sub.append(current_token)
-            # sub = [DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([random.choice(args[1].structure[current_temp].structure), der_set[current_temp]], dtype=object), name_="DifferencialToken") ]
-            sub.append(const_term)
+                current_tkn = DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([target_eq, trm], dtype=object), name_="DifferencialToken")
+                sub.append(current_tkn)
             individ.add_substructure(sub)
-            all_tokens = [DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([random.choice(args[1].structure[current_temp].structure), der_set[current_temp]], dtype=object), name_="DifferencialToken") for current_temp in np.arange(len(der_set))]
-            set_constants(tokens=all_tokens)
             return
 
         count_mandatory_tokens = 0

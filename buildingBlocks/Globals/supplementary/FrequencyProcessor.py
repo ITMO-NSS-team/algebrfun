@@ -242,7 +242,11 @@ class FrequencyProcessor4TimeSeries:
             else:
                 
                 ff.append((kw, ks, 0))
-        kw, ks = FrequencyProcessor4TimeSeries.find_intersection(ff)
+        try:
+            kw, ks = FrequencyProcessor4TimeSeries.find_intersection(ff)
+        except:
+            print("mur")
+            FrequencyProcessor4TimeSeries.find_intersection(ff)
 
         if kw.shape[-1] < number_selecting:
             kw = []

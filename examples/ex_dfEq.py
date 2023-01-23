@@ -46,6 +46,7 @@ token4 = Power(optimize_id=2, name_='Power')
 pattern = Imp(optimize_id=1)
 impComplex_token = ImpComplex(pattern=pattern, optimize_id=3)
 
+open('examples\logeq.txt', 'w').close()
 
 ## Choose dataset
 # There are 3 datasets 
@@ -136,13 +137,13 @@ constant_matr = Term(4, np.ones(960), 'constante')
 # ----- end
 
 shp = (1,960)
-set_constants(target=u, shape_grid=shp, pul_mtrx=[du, constant_matr, noize_one, noize_two], all_fitness=dict(CAF=[], de=[], a=[]))
+set_constants(target=u, shape_grid=shp, pul_mtrx=[u, du, constant_matr], all_fitness=dict(CAF=[], de=[], a=[]))
 
 individ = Equation(max_tokens=10)
 Ob.set_operators(np.array([grid]), individ, build_settings)
 d = []
 # for trien in range(10):
-population = Subpopulation(iterations=30)
+population = Subpopulation(iterations=15)
 
 # population = PopulationOfDEquations(iterations=10)
 
@@ -209,7 +210,8 @@ for iter, tkn in enumerate(best_individ.structure):
     eq_a = tkn.value(np.array([grid]))
     plt.title(tkn.params[1]._name)
     plt.plot(grid, eq_a, label="Received data")
-    plt.plot(grid, func[iter], label="Original data")
+    if iter < len(func): 
+        plt.plot(grid, func[iter], label="Original data")
     plt.legend()
     plt.show()
 # print(ind.formula(), ind.fitness)

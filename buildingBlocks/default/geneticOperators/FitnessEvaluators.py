@@ -30,17 +30,17 @@ class VarFitnessIndivid(GeneticOperatorIndivid):
             return
         b_individ = constants['best_individ'].copy()
         b_individ.set_CAF(individ)
-        other_individs = constants['all_structures']
-        other_individ = np.random.choice(other_individs)
-        other_individ.set_CAF(individ)
+        # other_individs = constants['all_structures']
+        # other_individ = np.random.choice(other_individs)
+        # other_individ.set_CAF(individ)
         # for dtoken in b_individ:
         #     other_individ.set_CAF(dtoken.params[0])
         fts_0 = np.linalg.norm(b_individ.value(self.params['grid']))
-        fts_1 = np.linalg.norm(other_individ.value(self.params['grid']))
+        # fts_1 = np.linalg.norm(other_individ.value(self.params['grid']))
 
-        if fts_1 < fts_0:
-            set_constants(best_individ=other_individ)
-            fts_0 = fts_1
+        # if fts_1 < fts_0:
+        #     set_constants(best_individ=other_individ)
+        #     fts_0 = fts_1
 
         # ftnss['CAF'].append(individ.fitness)
         # set_constants(all_fitness=ftnss)

@@ -148,18 +148,20 @@ class PopulationOfEquations(Population):
         exist_ids = [tkn.params[1].term_id for tkn in constants['best_individ'].structure]
         if not self.owner_id in exist_ids:
             return
-        for n in range(self.iterations):
+        for n in range(1):
             # print('{}/{}\n'.format(n, self.iterations))
             self._evolutionary_step(args[0])
             idxsort = np.argsort(list(map(lambda x: x.fitness, self.structure)))
             inds = [self.structure[i] for i in idxsort]
             # constants_t = get_full_constant()
-            self.apply_operator('Elitism')
-            tekind = list(filter(lambda ind: ind.elitism, self.structure))[0]
-            constants_t = get_full_constant()
-            ftnss = constants_t['all_fitness']
-            ftnss['a'].append(tekind.fitness)
-            set_constants(all_fitness=ftnss)
+            # self.apply_operator('Elitism')
+            # tekind = list(filter(lambda ind: ind.elitism, self.structure))[0]
+            # constants_t = get_full_constant()
+            # ftnss = constants_t['all_fitness']
+            # ftnss['a'].append(tekind.fitness)
+            # set_constants(all_fitness=ftnss)
+            with open("examples\logeq.txt", 'a') as myfile:
+                myfile.write(f"{constants['best_individ'].formula()}\n")
             # ftnss = constants_t['all_fitness']
             # ftnss.append(constants_t['best_individ'].fitness)
             # set_constants(all_fitness=ftnss)
@@ -379,6 +381,10 @@ class PopulationOfDEquations(Population):
             self._evolutionary_step(args[0])
             for i, ind in enumerate(self.structure):
                 print(i, ind.formula(), ind.fitness)
+            
+            with open("examples\logeq.txt", 'a') as myfile:
+                b_individ = list(filter(lambda ind: ind.elitism, self.structure))[0]
+                myfile.write(f"{b_individ.formula()}\n")
 
             tekind = list(filter(lambda ind: ind.elitism, self.structure))[0]
             constants_t = get_full_constant()
@@ -397,28 +403,24 @@ class Subpopulation(Population):
         self.type_ = type_
 
     def _evolutionary_step(self):
-        self.structure[-1].evolutionary(self.structure)
-        test_individ = list(filter(lambda ind: ind.elitism, self.structure[-1].structure))[0]
-        print("find structure", test_individ.formula())
-        set_constants(test=test_individ)
-        set_constants(all_structures=self.structure[-1].structure)
+        # self.structure[-1].evolutionary(self.structure)
+        # test_individ = list(filter(lambda ind: ind.elitism, self.structure[-1].structure))[0]
+        # print("find structure", test_individ.formula())
+        # set_constants(test=test_individ)
+        # set_constants(all_structures=self.structure[-1].structure)
         for sub_population in self.structure[:-1]:
         #     print("cafpop", sub_population)
             self.structure[-1].apply_operator("DifferentialTokensOptimizerPopulation", self.structure)
             sub_population.evolutionary(self.structure)
-            # tekind = list(filter(lambda ind: ind.elitism, self.structure[-1].structure))[0]
-            # constants_t = get_full_constant()
-            # ftnss = constants_t['all_fitness']
-            # ftnss['a'].append(tekind.fitness)
-            # set_constants(all_fitness=ftnss)
         self.structure[-1].apply_operator("DifferentialTokensOptimizerPopulation", self.structure)
-        self.structure[-1].apply_operator("Elitism")
-        set_constants(best_individ=list(filter(lambda ind: ind.elitism, self.structure[-1].structure))[0])
+        # self.structure[-1].apply_operator("Elitism")
+        # set_constants(best_individ=list(filter(lambda ind: ind.elitism, self.structure[-1].structure))[0])
+        set_constants(best_individ=self.structure[-1].structure[0])
         # self.apply_operator("DifferentialTokensOptimizerPopulation")
         
 
     def evolutionary(self):  
         self.apply_operator('InitSubPopulation')
-        # for n in range(self.iterations):
-        #     print('{}/{}\n'.format(n, self.iterations))
-        self._evolutionary_step()
+        for n in range(self.iterations):
+            print('Global: {}/{}\n'.format(n, self.iterations))
+            self._evolutionary_step()
