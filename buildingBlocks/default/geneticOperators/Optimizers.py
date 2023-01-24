@@ -555,11 +555,22 @@ class ParamsOfEquationOptimizerIndivid(GeneticOperatorIndivid):
         return individ.fitness
 
     def _optimize_token_params(self, individ, token, populationOfEq):
-        x0 = np.array([0])
-        res = minimize(self._fitness_wrapper, x0=x0, args=(individ, populationOfEq))
+        # x0 = np.array([0])
+        # res = minimize(self._fitness_wrapper, x0=x0, args=(individ, populationOfEq))
+        if individ.fitness == None:
+            individ.apply_operator(name='VarFitnessIndivid')
         # res = minimize(self._fitness_wrapper,  x0=x0, )
+        test_individ = individ.copy()
+        for eq in populationOfEq:
+            test_individ.set_CAF(eq)
+            test_individ.fitness = None
+            test_individ.apply_operator(name='VarFitnessIndivid')
+            if test_individ.fitness < individ.fitness:
+                individ.set_CAF(eq)
+                individ.fitness = None
+                individ.apply_operator(name='VarFitnessIndivid')
 
-        individ.set_CAF(populationOfEq[round(res.x[0])])
+        # individ.set_CAF(populationOfEq[round(res.x[0])])
 
     def apply(self, individ, *args, **kwargs):
         subpopulations = args[0]

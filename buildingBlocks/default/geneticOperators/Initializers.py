@@ -83,12 +83,17 @@ class InitIndivid(GeneticOperatorIndivid):
             constants = get_full_constant()
             der_set = constants['pul_mtrx']
             constant_token = list(filter(lambda curtoken: curtoken.type == "Constant", self.params['tokens']))
+            constant_token[0].params[0] = 1
+            target_eq = args[1].structure[0].structure[0].copy()
+            target_eq.structure = [constant_token[0].copy()]
+            const_term = DifferentialTokenConstant(number_params=2, params_description={0: dict(name='const param'), 1: dict(name="Term")}, params=np.array([target_eq, constants['target']], dtype=object), name_="DifferentialToken")
             sub = []
             for trm in der_set:
-                target_eq = args[1].structure[0].structure[0].copy()
-                target_eq.structure = [constant_token[0].copy()]
+                # target_eq = args[1].structure[0].structure[0].copy()
+                # target_eq.structure = [constant_token[0].copy()]
                 current_tkn = DifferentialToken(number_params=2, params_description={0: dict(name='Close algebr equation'), 1: dict(name="Term")}, params=np.array([target_eq, trm], dtype=object), name_="DifferencialToken")
                 sub.append(current_tkn)
+            sub.append(const_term)
             individ.add_substructure(sub)
             return
 
