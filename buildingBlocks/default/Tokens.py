@@ -28,7 +28,7 @@ class Constant(TerminalToken):
                 0: dict(name='Amplitude', bounds=(-100, 100)),
             }
         super().__init__(number_params=number_params, params_description=params_description,
-                         params=params, val=val, name_=name_, mandatory=mandatory)
+                         params=params, val=val, name_=name_, mandatory=mandatory, optimize_id=2)
         self.type = 'Constant'
         # self.init_val = deepcopy(val)
         # self.init_val = name_

@@ -421,6 +421,7 @@ class Subpopulation(Population):
 
     def evolutionary(self):  
         self.apply_operator('InitSubPopulation')
+        self.structure[-1].structure = [self.structure[-1].structure[0]]
         for n in range(self.iterations):
             print('Global: {}/{}\n'.format(n, self.iterations))
             self._evolutionary_step()

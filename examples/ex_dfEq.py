@@ -137,7 +137,7 @@ constant_matr = Term(4, np.ones(960), 'constante')
 # ----- end
 
 shp = (1,960)
-set_constants(target=u, shape_grid=shp, pul_mtrx=[u, du, constant_matr], all_fitness=dict(CAF=[], de=[], a=[]))
+set_constants(target=constant_matr, shape_grid=shp, pul_mtrx=[u, du], all_fitness=dict(CAF=[], de=[], a=[]))
 
 individ = Equation(max_tokens=10)
 Ob.set_operators(np.array([grid]), individ, build_settings)
