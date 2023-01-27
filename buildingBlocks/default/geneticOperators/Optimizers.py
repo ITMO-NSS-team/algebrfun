@@ -72,7 +72,8 @@ class PeriodicTokensOptimizerIndivid(GeneticOperatorIndivid):
         # test_res = fp.choice_freq_for_summand_de(grid, b_individ, individ.owner_id, number_selecting=5, number_selected=5, token_type='seasonal')
         # неоптимизированные токены в валуе не считаются
         # for i, tk in enumerate(individ.structure): individ.structure[i].fixator['self'] = True
-        target = -individ.value(grid)
+        target = -b_individ.value(grid)
+        # target = -b_individ.value_one(grid, individ.owner_id)
         # print("indiv struct", individ.structure)
         # print("grid", grid)
         # print("individ value", target)
@@ -87,15 +88,16 @@ class PeriodicTokensOptimizerIndivid(GeneticOperatorIndivid):
         token.fixator['self'] = True
 
         # print("last token", token, target)
-        # freq = fp.choice_freq_for_summand(grid, target-target.mean(),
-        #                                   number_selecting=5, number_selected=5, token_type='seasonal')
-        freq = fp.choice_freq_for_summand_de(grid, b_individ, individ.owner_id, number_selecting=5, number_selected=5, token_type='seasonal')                                
+        freq = fp.choice_freq_for_summand(grid, target-target.mean(),
+                                          number_selecting=5, number_selected=5, token_type='seasonal')
+        # freq = fp.choice_freq_for_summand_de(grid, b_individ, individ.owner_id, number_selecting=5, number_selected=5, token_type='seasonal')                                
         # print("getting frequency in optimizer", freq)
         if freq is None: #TODO: сделать проверку присутствия нужного токена в неком пуле, чтобы избежать повторной оптимизаци
             individ.structure.remove(token) # del hopeless token and out
         else:
             eps = self.params['eps']
-            bounds = deepcopy(token.get_descriptor_foreach_param(descriptor_name='bounds'))
+            # bounds = deepcopy(token.get_descriptor_foreach_param(descriptor_name='bounds'))
+            bounds = token.get_descriptor_foreach_param(descriptor_name='bounds')
             index = token.get_key_use_params_description(descriptor_name='name',
                                                         descriptor_value='Frequency')
             new_bounds = []
@@ -125,6 +127,8 @@ class PeriodicTokensOptimizerIndivid(GeneticOperatorIndivid):
                 res = minimize(self._fitness_wrapper,  x0.reshape(-1),
                                args=(individ, b_individ, grid, token)) # либо переделать функцию _fitness_wrapper, чтобы x0 не был одномерным массивом
             token.params = res.x.reshape(grid.shape[0], len(res.x)//grid.shape[0])
+            for key in token.params_description:
+                token.params_description[key]['bounds'] = bounds[key]
         # individ.change_all_fixes(False)
         individ.structure = individ.structure
 
@@ -404,7 +408,10 @@ class TrendDiscreteTokensOptimizerIndivid(PeriodicTokensOptimizerIndivid):
     def _optimize_token_params(self, individ, token):
         grid = self.params['grid']
         # неоптимизированные токены в валуе не считаются
-        target = -individ.value(grid)
+        constants = get_full_constant()
+        b_individ = constants['best_individ'].copy()
+        b_individ.set_CAF(individ)
+        target = -b_individ.value(grid)
         # центрирование и нормализация (fitness - дисперсия, так что центрирование ничего не меняет)
         # target -= target.mean()
         # target /= np.abs(target).max()
@@ -432,11 +439,11 @@ class TrendDiscreteTokensOptimizerIndivid(PeriodicTokensOptimizerIndivid):
             # print("im here", x0.reshape(-1), bounds)
             if self.params['optimizer'] == 'DE':
                 res = differential_evolution(self._fitness_wrapper, new_bounds,
-                                             args=(individ, grid, token),
+                                             args=(individ, b_individ, grid, token),
                                              popsize=self.params['popsize'])
             else:
                 res = minimize(self._fitness_wrapper,  x0.reshape(-1),
-                               args=(tmp_individ, grid, token))
+                               args=(individ, b_individ, grid, token))
             token.params = res.x.reshape(grid.shape[0], len(res.x)//grid.shape[0])
             token.fixator['self'] = True
         individ.structure = individ.structure
@@ -589,29 +596,93 @@ class DifferentialTokensOptimizerPopulation(GeneticOperatorPopulation):
         super().__init__(params=params)
 
     @staticmethod
-    def _fitness_wrapper(params, *args):
-        individ, expression = args
+    def set_params_tokens(individ, params, grid):
+        idx = 0
 
-        tokens = individ.structure
-        for i, token in enumerate(tokens):
-            tokens[i].params = np.array([expression[int(params[i])], token.params[1]], dtype="object")
+        for k, dftoken in enumerate(individ.structure):
+            if dftoken.mandatory == 1:
+                continue
+            for i, token in enumerate(dftoken.params[0].structure):
+                l_params = len(token.params[0])
+                current_params = params[idx:(idx+l_params)]
+                idx = idx+l_params
+            
+                individ.structure[k].params[0].structure[i].params = current_params.reshape(grid.shape[0], l_params//grid.shape[0])
+
+        return individ.structure
         
-        temp_individ = individ.copy()
-        temp_individ.structure = tokens
 
-        temp_individ.fitness = None
-        temp_individ.apply_operator(name='VarFitnessIndivid')
-        return temp_individ.fitness
+    @staticmethod
+    def _fitness_wrapper(params, *args):
+        individ, tokens, grid = args
+        individ.structure = DifferentialTokensOptimizerPopulation.set_params_tokens(individ, params, grid)
+        # idx = 0
 
-    def _optimize_tokens_params(self, individ, expressions):
+        # for token in tokens:
+        #     l_params = len(token.params[0])
+        #     current_params = params[idx:(idx+l_params)]
+        #     idx = idx+l_params
+            
+        #     token.params = current_params.reshape(grid.shape[0], l_params//grid.shape[0])
+        
+        individ.fitness = None
+        individ.apply_operator(name='VarFitnessIndivid')
+        return individ.fitness
+        
 
-        x0 = np.zeros(len(individ.structure), dtype=int)
+    def _optimize_tokens_params(self, s_individ):
 
-        res = minimize(self._fitness_wrapper, x0, args=(individ, expressions.structure))
+        bnds = []
+        tkns = []
 
-        for i in range(len(individ.structure)):
-            individ.structure[i].params = np.array([expressions.structure[int(res.x[i])], individ.structure[i].params[1]], dtype="object")
+        # chromo = individ.get_structure()
+
+        individ = s_individ.copy()
+
+        for dftoken in individ.structure:
+            if dftoken.mandatory == 1:
+                continue
+            for tkn in dftoken.params[0].structure:
+                c_bounds = tkn.get_descriptor_foreach_param(descriptor_name='bounds')
+                for i_b, c_b in enumerate(c_bounds):
+                    if np.isinf(c_b[1]):
+                        c_bounds[i_b] = (c_b[0], 1.0)
+                if len(bnds) == 0:
+                    bnds = c_bounds
+                else:
+                    bnds.extend(c_bounds)
+                tkns.append(tkn)
+
+            
+        
+        # for dftoken in chromo:
+        #     if dftoken.mandatory == 1:
+        #         continue
+        #     tkn = dftoken.params[0].structure[0]
+        #     c_bounds = tkn.get_descriptor_foreach_param(descriptor_name='bounds')
+        #     for i_b, c_b in enumerate(c_bounds):
+        #         if np.isinf(c_b[1]):
+        #             c_bounds[i_b] = (c_b[0], 1.0)
+        #     if len(bnds) == 0:
+        #         bnds = c_bounds
+        #     else:
+        #         bnds.extend(c_bounds)
+        #     tkns.append(tkn)
+
+        res = differential_evolution(self._fitness_wrapper, bnds,
+                                             args=(individ, tkns, self.params['grid']),
+                                             popsize=self.params['popsize'])
+
+        individ.structure = DifferentialTokensOptimizerPopulation.set_params_tokens(individ, res.x, self.params['grid'])
+        individ.fitness = None
+        individ.apply_operator('VarFitnessIndivid')
+        if s_individ.fitness > individ.fitness:
+            s_individ.structure = individ.structure
+            for i, b in enumerate(s_individ.structure):
+                s_individ.structure[i].params[0].fitness = individ.fitness
+
 
     def apply(self, population, *args, **kwargs):
         for individ in population.structure:
             individ.apply_operator("ParamsOfEquationOptimizerIndivid", args[0])
+            self._optimize_tokens_params(individ)

@@ -278,7 +278,7 @@ class LRIndivid1TargetDE(GeneticOperatorIndivid):
         target_idxs = list(filter(lambda idx: tokens[idx].mandatory != 0,
                                   range(len(tokens))))
         assert len(target_idxs) == 1, 'Individ has no one or more than one target'
-        return target_idxs[0], tokens[target_idxs].params[1]._name
+        return target_idxs[0], tokens[target_idxs[0]].params[1]._name
 
     def _prepare_data(self, tokens):
         grid = self.params['grid']
@@ -291,17 +291,19 @@ class LRIndivid1TargetDE(GeneticOperatorIndivid):
         coefs = list(coefs)
         # coefs.insert(target_idx, 1.)
         for idx, token in enumerate(tokens):
-            new_amplitude = token.params[0].param(name='Amplitude') * coefs[idx]
-            if np.abs(new_amplitude[0]) < 2:
+            new_amplitude = token.params[0].structure[0].param(name='Amplitude') * coefs[idx]
+            if np.abs(new_amplitude[0]) < 1:
                 continue
-            token.params[0].set_param(new_amplitude, name='Amplitude')
+            token.params[0].structure[0].set_param(new_amplitude, name='Amplitude')
             new_structure.append(token)
+            # individ.set_structure(new_structure)
 
         # individ.strucutre = new_structure
 
     def _lr(self, individ):
-        fixed_optimized_tokens_in_structure = list(filter(lambda token: token.fixator['self'],
-                                                          individ.structure))
+        # fixed_optimized_tokens_in_structure = list(filter(lambda token: token.fixator['self'],
+        #                                                   individ.structure))
+        fixed_optimized_tokens_in_structure = individ.structure
         if len(fixed_optimized_tokens_in_structure) <= 1:
             return
         chromo = individ.get_structure()

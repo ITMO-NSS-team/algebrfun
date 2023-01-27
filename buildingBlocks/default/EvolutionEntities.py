@@ -160,21 +160,23 @@ class PopulationOfEquations(Population):
             # ftnss = constants_t['all_fitness']
             # ftnss['a'].append(tekind.fitness)
             # set_constants(all_fitness=ftnss)
+
             with open("examples\logeq.txt", 'a') as myfile:
-                myfile.write(f"{constants['best_individ'].formula()}\n")
-            # ftnss = constants_t['all_fitness']
-            # ftnss.append(constants_t['best_individ'].fitness)
-            # set_constants(all_fitness=ftnss)
+                myfile.write(f"{constants['best_individ'].formula()} {constants['best_individ'].fitness}\n")
+            ftnss = constants['all_fitness']
+            ftnss['a'].append(constants['best_individ'].fitness)
+            set_constants(all_fitness=ftnss)
+
             # print("structure of population", [cur_eq.fitness for cur_eq in inds])
             # print("no sort", [cur_eq.fitness for cur_eq in self.structure])
         # self.apply_operator('RegularisationPopulation')
         # self.apply_operator('PeriodicTokensOptimizerPopulation')
         # self.apply_operator('LassoPopulation')
         # self.apply_operator('FitnessPopulation')
-        self.apply_operator('UnifierParallelizedPopulation')
-        self.apply_operator('RestrictPopulation')
+        # self.apply_operator('UnifierParallelizedPopulation')
+        # self.apply_operator('RestrictPopulation')
 
-        self.apply_operator('Elitism')
+        # self.apply_operator('Elitism')
 
 def _methods_decorator(method):
     def wrapper(*args, **kwargs):
@@ -263,6 +265,11 @@ class DEquation(Individ):
             if tkn.params[1].term_id == CAF.owner_id:
                 tkn.params = np.array([CAF, tkn.params[1]])
                 return
+
+    def value_one(self, grid, owner_id):
+        for tkn in self.structure:
+            if tkn.params[1].term_id == owner_id:
+                return tkn.value(grid)
 
     def copy(self):
         new_copy = deepcopy(self)
@@ -384,7 +391,7 @@ class PopulationOfDEquations(Population):
             
             with open("examples\logeq.txt", 'a') as myfile:
                 b_individ = list(filter(lambda ind: ind.elitism, self.structure))[0]
-                myfile.write(f"{b_individ.formula()}\n")
+                myfile.write(f"{b_individ.formula()} {b_individ.fitness}\n")
 
             tekind = list(filter(lambda ind: ind.elitism, self.structure))[0]
             constants_t = get_full_constant()
@@ -411,17 +418,27 @@ class Subpopulation(Population):
         for sub_population in self.structure[:-1]:
         #     print("cafpop", sub_population)
             self.structure[-1].apply_operator("DifferentialTokensOptimizerPopulation", self.structure)
+            set_constants(best_individ=self.structure[-1].structure[0])
             sub_population.evolutionary(self.structure)
-        self.structure[-1].apply_operator("DifferentialTokensOptimizerPopulation", self.structure)
+        # self.structure[-1].apply_operator("DifferentialTokensOptimizerPopulation", self.structure)
         # self.structure[-1].apply_operator("Elitism")
         # set_constants(best_individ=list(filter(lambda ind: ind.elitism, self.structure[-1].structure))[0])
-        set_constants(best_individ=self.structure[-1].structure[0])
+        # set_constants(best_individ=self.structure[-1].structure[0])
         # self.apply_operator("DifferentialTokensOptimizerPopulation")
         
 
     def evolutionary(self):  
+        constants = get_full_constant()
         self.apply_operator('InitSubPopulation')
         self.structure[-1].structure = [self.structure[-1].structure[0]]
         for n in range(self.iterations):
             print('Global: {}/{}\n'.format(n, self.iterations))
             self._evolutionary_step()
+        self.structure[-1].apply_operator("DifferentialTokensOptimizerPopulation", self.structure)
+
+        set_constants(best_individ=self.structure[-1].structure[0])
+            # with open("examples\logeq.txt", 'a') as myfile:
+            #     myfile.write(f"{self.structure[-1].structure[0].formula()} {self.structure[-1].structure[0].fitness}\n")
+            # ftnss = constants['all_fitness']
+            # ftnss['a'].append(self.structure[-1].structure[0].fitness)
+            # set_constants(all_fitness=ftnss)

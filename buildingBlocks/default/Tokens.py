@@ -48,6 +48,7 @@ class Constant(TerminalToken):
         # return -params[0] * constants[self.name_]
         
         return self.params[0] * np.ones_like(constants[self.name_].data)
+        # return self.params[0]
 
     def name(self, with_params=False):
         return '{}{}'.format(round(self.params[0][0], 3), self.name_)
@@ -123,9 +124,9 @@ class Sin(TerminalToken):
                  params=None, name_='Sin', optimize_id=None):
         if params_description is None:
             params_description = {
-                0: dict(name='Amplitude', bounds=(0., 1.)),
+                0: dict(name='Amplitude', bounds=(0., 10.)),
                 1: dict(name='Frequency', bounds=(0., float('inf'))),
-                2: dict(name='Phase', bounds=(0., 1.))
+                2: dict(name='Phase', bounds=(0., 3.))
             }
         super().__init__(number_params=number_params, params_description=params_description,
                          params=params, name_=name_, optimize_id=optimize_id)

@@ -154,7 +154,8 @@ def set_operators(grid, individ, kwargs):
           params=dict(grid=grid,
                     optimize_id=1,
                     optimizer='DE',
-                    popsize=10))
+                    popsize=10,
+                    eps=1.0))
 
     operatorsMap.PeriodicExtraTokensOptimizerIndivid = PeriodicExtraTokensOptimizerIndivid(
         params=dict(grid=grid,
@@ -222,7 +223,10 @@ def set_operators(grid, individ, kwargs):
 
     operatorsMap.UnifierIndivid = UnifierIndivid()
 
-    operatorsMap.DifferentialTokensOptimizerPopulation = DifferentialTokensOptimizerPopulation()
+    operatorsMap.DifferentialTokensOptimizerPopulation = DifferentialTokensOptimizerPopulation(
+        params=dict(grid=grid,
+                    popsize=10)
+    )
 
 # Загружаем операторы в глобальную переменную чтобы ими могли пользоваться все индивиды
     Bg.set_operators(operatorsMap)

@@ -25,7 +25,9 @@ class FrequencyProcessor4TimeSeries:
                 current_grid = current_grid.T
             current_grid = current_grid[0]
             step = np.mean(current_grid[1:] - current_grid[:-1])
-            w_c = np.fft.fftfreq(len(grid[i]), step)
+            # w_c = np.fft.fftfreq(len(grid[i]), step)
+            w_c = np.fft.fftfreq(len(current_grid), step)
+            w_c = FrequencyProcessor4TimeSeries.get_actual_freq(grid[i], current_grid, w_c)
             w_c = w_c.reshape(shp)
             w.append(w_c)
             c_max = w_c.max()
@@ -49,6 +51,15 @@ class FrequencyProcessor4TimeSeries:
             w[wi][~mask] = wmin
         # print("resulting fft procedure", y)
         return w, y, wmax
+
+    @staticmethod
+    def get_actual_freq(gen_grid, current_coord_grid, freqs):
+        coord_freq = dict(np.array([current_coord_grid, freqs]).T)
+        end_freqs = []
+        for coord_value in gen_grid:
+            end_freqs.append(coord_freq.get(coord_value))
+        
+        return np.array(end_freqs)
 
     @staticmethod
     def findextrema_prev(w, spec):
@@ -220,8 +231,8 @@ class FrequencyProcessor4TimeSeries:
             else:
                 if token_type == 'trend':
                     continue
-            ending_freqs.append(choice_freq)
-            break
+                ending_freqs.append(choice_freq)
+                break
         if len(ending_freqs) == 0:
             return None
         return ending_freqs
