@@ -1,20 +1,19 @@
 import numpy as np
 from copy import deepcopy, copy
-from itertools import reduce
+from functools import reduce
 
-from base import Individ
-from base import Population
+from .base import Individ
+from .base import Population
 
 class Equation(Individ):
     """
     An eqaution that approximates the process of input data and is used as a basis for building synthetics.
     """
     def __init__(self, structure: list = None,
-                 fixator=None,
                  fitness: float = None,
                  used_value: str = 'plus', forms=None,
                  max_tokens: int = None):
-        super().__init__(structure=structure, fixator=fixator, fitness=fitness)
+        super().__init__(structure=structure, fitness=fitness)
         if forms is None:
             forms = []
         self.elitism = False
@@ -38,7 +37,6 @@ class Equation(Individ):
 
     def copy(self):
         new_copy = deepcopy(self)
-        new_copy.owner_id = self.owner_id
 
         try:
             new_copy.forms = deepcopy(new_copy.forms)

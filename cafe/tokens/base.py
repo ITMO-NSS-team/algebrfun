@@ -44,7 +44,7 @@ class Token:
 
     """
 
-    def __init__(self, number_params: int=0, params_decription: dict={}, params: np.ndarray=None,
+    def __init__(self, number_params: int=0, params_description: dict={}, params: np.ndarray=None,
                  val: np.ndarray=None, type_: str="Token", name_: str=None,
                  optimize_id: int=None) -> None:
 
@@ -52,7 +52,7 @@ class Token:
         self.type = type_
         self.optimize_id = optimize_id
         self._number_params = number_params
-        self._params_description = params_decription
+        self._params_description = params_description
         
         if params is None:
             self.params = np.array([np.zeros(self._number_params)])
@@ -66,7 +66,8 @@ class Token:
     
     
     def __eq__(self, other: object) -> bool:
-        assert type(self) == type(other), "Objects are different types"
+        assert isinstance(self, Token), "Objects are different types"
+        assert isinstance(other, Token), "Objects are different types"
         return self.name_ == other.name_ and np.all(self.params == other.params)
 
     def __getstate__(self):

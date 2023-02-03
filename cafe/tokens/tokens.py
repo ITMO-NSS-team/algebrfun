@@ -1,17 +1,18 @@
 import numpy as np
 
-from base import Token
+from .base import Token
 
 class Constant(Token):
     """
     Basic function for decript 
     """
-    def __init__(self, number_params: int = 1, params_decription: dict = ..., params: np.ndarray = None, val: np.ndarray = None, name_: str = None, optimize_id: int = 2) -> None:
-        if params_decription is None:
-            params_decription = {
+    def __init__(self, number_params: int = 1, params_description: dict = None, params: np.ndarray = None, val: np.ndarray = None, name: str = 'target', optimize_id: int = 2) -> None:
+        if params_description is None:
+            params_description = {
                 0: dict(name='Amplitude', bounds=(-100, 100)),
             }
-        super().__init__(number_params, params_decription, params, val, name_, optimize_id)
+        super().__init__(number_params=number_params, params_description=params_description, params=params, 
+                         val=val, name_=name, optimize_id=optimize_id)
 
         self.type = 'Constant'
 
@@ -29,14 +30,14 @@ class Constant(Token):
 
 class Power(Token):
     def __init__(self, number_params=2, params_description=None,
-                 params=None, name_='Power', optimize_id=2):
+                 params=None, name='Power', optimize_id=2):
         if params_description is None:
             params_description = {
                 0: dict(name='Amplitude', bounds=(-1., 1.)),
                 1: dict(name='Power', bounds=(0., 3.), check=True)
             }
         super().__init__(number_params=number_params, params_description=params_description,
-                         params=params, name_=name_, optimize_id=optimize_id)
+                         params=params, name_=name, optimize_id=optimize_id)
         self.type = "NonPeriodic"
         
     def each_evaluate(self, params, t):
@@ -77,7 +78,7 @@ class Power(Token):
 
 class Sin(Token):
     def __init__(self, number_params=3, params_description=None,
-                 params=None, name_='Sin', optimize_id=1):
+                 params=None, name='Sin', optimize_id=1):
         if params_description is None:
             params_description = {
                 0: dict(name='Amplitude', bounds=(0., 10.)),
@@ -85,7 +86,7 @@ class Sin(Token):
                 2: dict(name='Phase', bounds=(0., 3.))
             }
         super().__init__(number_params=number_params, params_description=params_description,
-                         params=params, name_=name_, optimize_id=optimize_id)
+                         params=params, name_=name, optimize_id=optimize_id)
         self.type = "Periodic"
 
     def each_evaluate(self, params, t):
@@ -125,7 +126,7 @@ class Sin(Token):
 
     
 class Imp(Token):
-    def __init__(self, number_params=7, params_description=None, params=None, name_='Imp', optimize_id=1):
+    def __init__(self, number_params=7, params_description=None, params=None, name='Imp', optimize_id=1):
         if params_description is None:
             params_description = {
                 0: dict(name='Amplitude', bounds=(0., 1.)),
@@ -137,7 +138,7 @@ class Imp(Token):
                 6: dict(name='Phase', bounds=(0., 1.))
             }
         super().__init__(number_params=number_params, params_description=params_description,
-                         params=params, name_=name_, optimize_id=optimize_id)
+                         params=params, name_=name, optimize_id=optimize_id)
         self.type = "Periodic"
 
     def each_evaluate(self, params, t):
@@ -207,8 +208,8 @@ class Term(Token):
     Class for cashe term of equation
     """
 
-    def __init__(self, type_: str = "Term", name_: str = None, expression_token: Token = None, data: np.ndarray = None, mandatory: bool = False) -> None:
-        super().__init__(type_=type_, name_=name_)
+    def __init__(self, type_: str = "Term", name: str = None, expression_token: Token = None, data: np.ndarray = None, mandatory: bool = False) -> None:
+        super().__init__(type_=type_, name_=name)
         if expression_token is None:
             expression_token = Constant(params=np.array([1]))
         self._expression_token = expression_token
@@ -216,8 +217,23 @@ class Term(Token):
         self._data = data
         self.mandatory = mandatory
 
+    def __eq__(self, other):
+        tkn = (self._expression_token == other._expression_token)
+        trm = (self.name_ == other.name_)
+
+        return (tkn and trm)
+
     def evaluate(self, grid: np.ndarray):
         return self._expression_token.value(grid) * self._data
+
+    @property
+    def expression_token(self):
+        return self._expression_token
+    
+    @expression_token.setter
+    def expression_token(self, new_token):
+        assert isinstance(new_token, Token), "New value for expression_token in Term must be type Token"
+        self._expression_token = new_token
 
     def name(self):
        str_result = '{} {}'

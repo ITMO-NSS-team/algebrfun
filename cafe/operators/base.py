@@ -1,4 +1,5 @@
 from copy import deepcopy
+from cafe.settings import SingletonClass
 
 
 class GeneticOperator:
@@ -82,19 +83,19 @@ def apply_decorator(method):
         # copy_individ = deepcopy(individ)
         ind_formula = deepcopy(individ.formula())
 
-        fix = check_or_create_fixator_item(individ, type(self).__name__)
-        if fix:
-            return
+        # fix = check_or_create_fixator_item(individ, type(self).__name__)
+        # if fix:
+        #     return
 
         ret = method(*args, **kwargs)
-        individ.fixator[type(self).__name__] = True
+        # individ.fixator[type(self).__name__] = True
 
-        try:
-            if individ.formula() != ind_formula:
-                individ.forms.append(type(self).__name__ + ': by {}\n'.format(current_process().name) + '---->'
-                                     + individ.formula())
-        except:
-            pass
+        # try:
+        #     if individ.formula() != ind_formula:
+        #         individ.forms.append(type(self).__name__ + ': by {}\n'.format(current_process().name) + '---->'
+        #                              + individ.formula())
+        # except:
+        #     pass
 
         return ret
     return wrapper
@@ -106,3 +107,13 @@ def check_or_create_fixator_item(individ, key: str) -> bool:
         individ.fixator[key] = False
         fix = False
     return fix
+
+
+class OperatorMap(metaclass=SingletonClass):
+
+    def __getitem__(self, key):
+        return self.__dict__[key]
+
+    def __setitem__(self, key, value):
+        assert isinstance(value, GeneticOperator), 'Attribute must be "GeneticOperator" object'
+        self.__dict__[key] = value

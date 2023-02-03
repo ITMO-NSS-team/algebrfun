@@ -1,3 +1,5 @@
+from cafe.operators.base import OperatorMap
+
 class ComplexStructure:
     """
     """
@@ -42,31 +44,31 @@ class ComplexStructure:
         self.structure.remove(substructure)   
     
 
-    # def apply_operator(self, name: str, *args, **kwargs):
-    #     """
-    #     Apply an operator with the given name.
+    def apply_operator(self, name: str, *args, **kwargs):
+        """
+        Apply an operator with the given name.
 
-    #     Parameters
-    #     ----------
-    #     name: str
-    #         Name of the operator in genetic_operators dict.
+        Parameters
+        ----------
+        name: str
+            Name of the operator in genetic_operators dict.
 
-    #     args
-    #     kwargs
+        args
+        kwargs
 
-    #     Returns
-    #     -------
-    #     None
-    #     """
-    #     operators = Bg.get_operators()
-    #     try:
-    #         operator = operators[name]
-    #     except KeyError:
-    #         raise KeyError("Operator with name '{}' is not implemented in"
-    #                        " object {}".format(name, operators))
-    #     except TypeError:
-    #         raise TypeError("Argument 'operators' cannot be '{}'".format(type(operators)))
-    #     return operator.apply_to(self, *args, **kwargs)
+        Returns
+        -------
+        None
+        """
+        operators = OperatorMap()
+        try:
+            operator = operators[name]
+        except KeyError:
+            raise KeyError("Operator with name '{}' is not implemented in"
+                           " object {}".format(name, operators))
+        except TypeError:
+            raise TypeError("Argument 'operators' cannot be '{}'".format(type(operators)))
+        return operator.apply_to(self, *args, **kwargs)
 
 
 class Individ(ComplexStructure):

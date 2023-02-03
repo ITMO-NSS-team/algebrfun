@@ -1,9 +1,9 @@
 import random
 import numpy as np
 
-from base import GeneticOperatorIndivid
-from base import GeneticOperatorPopulation
-from base import apply_decorator
+from .base import GeneticOperatorIndivid
+from .base import GeneticOperatorPopulation
+from .base import apply_decorator
 
 class MutationIndivid(GeneticOperatorIndivid):
     def __init__(self, params):
