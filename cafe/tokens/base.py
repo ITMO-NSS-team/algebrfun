@@ -1,5 +1,7 @@
 from copy import deepcopy
 import numpy as np
+from functools import reduce
+from itertools import product
 # from buildingBlocks.Globals.GlobalEntities import get_full_constant
 
 class Token:
@@ -68,7 +70,7 @@ class Token:
     def __eq__(self, other: object) -> bool:
         assert isinstance(self, Token), "Objects are different types"
         assert isinstance(other, Token), "Objects are different types"
-        return self.name_ == other.name_ and np.all(self.params == other.params)
+        return self.name_ == other.name_ and np.allclose(self.params[:, 1:], other.params[:, 1:])
 
     def __getstate__(self):
         for key in self.__dict__.keys():
@@ -102,16 +104,15 @@ class Token:
         """
         # if not self.fixator['val'] or self.val is None or self.val.shape[0] != grid.shape[-1]:
         self.val = self.evaluate(self.params, grid)
-        self.fixator['val'] = self.fixator['cache']
+        # self.fixator['val'] = self.fixator['cache']
 
             # эта централизация в целом то полезна (для ЛАССО например), но искажает продукт-токен
             # centralization
             # self.val -= np.mean(self.val)
-        assert self.val.shape[0] == grid.shape[-1], "Value must be the same shape as grid "
+        assert self.val.shape[0] == grid.shape[-1] or self.val.shape[0] == 1, "Value must be the same shape as grid "
         return self.val
 
-    @staticmethod
-    def evaluate(params: np.ndarray, grid: np.ndarray) -> np.ndarray:
+    def evaluate(self, params: np.ndarray, grid: np.ndarray) -> np.ndarray:
         """
         Calculating token value on the grid depending on parameters.
         Must be override/implement in each TerminalToken.
@@ -273,12 +274,17 @@ class Token:
         self.check_params()
 
             
-    def __find_initial_approximation_(self, in_data, data, population_size, gen=True): # пока что уберу, для начала надо разобраться
+    def _find_initial_approximation_(self, in_data, data, population_size, gen=True): # пока что уберу, для начала надо разобраться
+        sz = population_size
         if self._number_params == 1:
             bounds = list(self.params_description[0]['bounds'])
-            self.variable_params = np.arange(bounds[0], bounds[1], 1).reshape(1, -1)
+            tmpl = np.linspace(bounds[0], bounds[1], sz)
+            res = []
+            for _ in range(in_data.shape[0]):
+                res.append(tmpl)
+            self.variable_params = np.array(res)
+            self.variable_params= self.variable_params.reshape(self.variable_params.shape[0], sz, self._number_params)
             return
-        sz = population_size
         answer = []
         for key_param in range(1, self._number_params):
             bounds = list(self.params_description[key_param]['bounds'])
@@ -309,6 +315,15 @@ class Token:
         answer = np.array(answer)
         # self.variable_params = answer.reshape((in_data.shape[0], sz, self._number_params - 1))
         self.variable_params = answer.reshape((answer.shape[0], answer.shape[2], answer.shape[1]))
+
+    def _select_params(self, shape):
+        index = np.random.choice(self.variable_params.shape[-2])
+        set_params = self.variable_params[..., index, :]
+        ampl = np.ones(shape[0]).reshape(1, -1).T
+        if self._number_params == 1:
+            self.params = ampl
+        else:
+            self.params = np.hstack((ampl, set_params))
 
     
     def func_params(self, params, grid):

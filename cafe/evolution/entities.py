@@ -47,7 +47,6 @@ class Equation(Individ):
 
     def clean_copy(self):
         new_copy = type(self)()
-        new_copy.owner_id = self.owner_id
         return new_copy
 
     def formula(self, with_params=False):
@@ -92,25 +91,17 @@ class PopulationOfEquations(Population):
         self.type_ = "PopulationOfEquations"
 
     def _evolutionary_step(self, *args):
-        # self.apply_operator('RegularisationPopulation')
-        # self.apply_operator('PeriodicTokensOptimizerPopulation')
-        # self.apply_operator('LassoPopulation')
-        # self.apply_operator('FitnessPopulation')
-        # self.text_indiv_param()
-        self.apply_operator('UnifierParallelizedPopulation', args[0])
-        # self.text_indiv_param()
-
-        self.apply_operator('RestrictPopulation')
-        self.apply_operator('Elitism')
-        self.apply_operator('RouletteWheelSelection')
-        self.apply_operator('CrossoverPopulation')
-        self.apply_operator('MutationPopulation')
+        self.apply_operator('TokenParametersOptimizerPopulation')
+        for individ in self.structure:
+            individ.apply_operator('TokenFitnessIndivid')
+            individ.apply_operator('FilterIndivid')
+            individ.apply_operator('LRIndivid')
 
     def evolutionary(self, *args):
         self.apply_operator('InitPopulation')
         for n in range(1):
             print('{}/{}\n'.format(n, self.iterations))
-            self._evolutionary_step(args[0])
+            self._evolutionary_step()
 
 def _methods_decorator(method):
     def wrapper(*args, **kwargs):

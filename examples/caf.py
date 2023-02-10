@@ -16,7 +16,6 @@ from cafe.evolution.entities import PopulationOfEquations
 
 from cafe.operators.builder import create_operator_map
 
-
 # загрузка данных времени и производных из файлов
 
 grid = np.load("examples//pde//t.npy")
@@ -43,7 +42,8 @@ build_settings = {
     'lasso':{
         'regularisation_coef': 10**(-6)
     },
-    'shape': (1, 960) 
+    'shape': (1, 960),
+    'target': u
 }
 
 

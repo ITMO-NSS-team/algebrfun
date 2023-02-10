@@ -16,6 +16,11 @@ class Constant(Token):
 
         self.type = 'Constant'
 
+    def __eq__(self, other: object) -> bool:
+        assert isinstance(self, Token), "Objects are different types"
+        assert isinstance(other, Token), "Objects are different types"
+        return self.name_ == other.name_ and np.allclose(self.params, other.params)
+
     def evaluate(self, params, grid):
         # constants = get_full_constant()
         # !!! очень важный минус, который инвертирует таргет для его компенсации суммой других токенов
@@ -223,7 +228,7 @@ class Term(Token):
 
         return (tkn and trm)
 
-    def evaluate(self, grid: np.ndarray):
+    def evaluate(self, params, grid: np.ndarray):
         return self._expression_token.value(grid) * self._data
 
     @property
@@ -235,9 +240,9 @@ class Term(Token):
         assert isinstance(new_token, Token), "New value for expression_token in Term must be type Token"
         self._expression_token = new_token
 
-    def name(self):
+    def name(self, with_params):
        str_result = '{} {}'
-       deq  = self._expression_token.formula()
+       deq  = self._expression_token.name()
        return str_result.format(deq, self.name_) 
 
 

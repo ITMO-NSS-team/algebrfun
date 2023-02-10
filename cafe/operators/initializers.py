@@ -12,10 +12,10 @@ class InitIndivid(GeneticOperatorIndivid):
 
     @apply_decorator
     def apply(self, individ, *args, **kwargs) -> None:
-        terms = self.params['terms']
+        terms = list(filter(lambda term: term.mandatory == 0, self.params['terms']))
         tokens = self.params['tokens']
 
-        sub = terms.copy()
+        sub = self.params['terms'].copy()
 
         number_of_opt_terms = len(terms) * len(tokens) // 2
         # count_of_added = 0
@@ -24,12 +24,13 @@ class InitIndivid(GeneticOperatorIndivid):
             current_term = np.random.choice(terms).copy()
             current_token = np.random.choice(tokens).copy()
 
+            current_token._select_params(self.params['shape'])
+
             current_term.expression_token = current_token
             if current_term not in individ.structure:
                 sub.append(current_term)
                 # count_of_added += 1
         individ.add_substructure(sub)
-
 
 
 class InitPopulation(GeneticOperatorPopulation):
