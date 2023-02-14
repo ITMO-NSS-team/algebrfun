@@ -96,6 +96,8 @@ class PopulationOfEquations(Population):
             individ.apply_operator('TokenFitnessIndivid')
             individ.apply_operator('FilterIndivid')
             individ.apply_operator('LRIndivid')
+        self.apply_operator("Fitnesspopulation")
+        
 
     def evolutionary(self, *args):
         self.apply_operator('InitPopulation')

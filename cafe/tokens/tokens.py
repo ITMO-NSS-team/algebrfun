@@ -19,7 +19,14 @@ class Constant(Token):
     def __eq__(self, other: object) -> bool:
         assert isinstance(self, Token), "Objects are different types"
         assert isinstance(other, Token), "Objects are different types"
-        return self.name_ == other.name_ and np.allclose(self.params, other.params)
+
+        ex_1 = self.name_ == other.name_
+        if not ex_1:
+            return False
+        ex_0 = self._params == other._params
+
+        return ex_0.all()
+        # return self.name_ == other.name_ and np.allclose(self.params, other.params)
 
     def evaluate(self, params, grid):
         # constants = get_full_constant()
@@ -223,8 +230,8 @@ class Term(Token):
         self.mandatory = mandatory
 
     def __eq__(self, other):
-        tkn = (self._expression_token == other._expression_token)
         trm = (self.name_ == other.name_)
+        tkn = (self._expression_token == other._expression_token)
 
         return (tkn and trm)
 

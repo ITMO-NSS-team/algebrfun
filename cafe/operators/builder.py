@@ -9,8 +9,10 @@ from .optimizers import TokenParametersOptimizerIndivid
 
 from .fitness import VarFitnessIndivid
 from .fitness import TokenFitnessIndivid
+from .fitness import FitnessPopulation
 
 from .filters import FilterIndivid
+from .filters import FilterPopulation
 
 from .regularizations import LRIndivid
 
@@ -51,4 +53,10 @@ def create_operator_map(grid, individ, kwargs):
 
     operatorsMap.LRIndivid = LRIndivid(
         params=dict(grid=grid)
+    )
+
+    operatorsMap.FitnessPopulation = FitnessPopulation()
+
+    operatorsMap.FilterPopulation = FilterPopulation(
+        params=dict(population_size=population_size)
     )

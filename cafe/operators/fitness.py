@@ -62,6 +62,6 @@ class FitnessPopulation(GeneticOperatorPopulation):
 
     def apply(self, population, *args, **kwargs):
         for individ in population.structure:
-            individ.apply_operator('VarFitnessIndivid', args[0])
+            individ.apply_operator('VarFitnessIndivid')
         return population
 
