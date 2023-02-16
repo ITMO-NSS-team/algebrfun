@@ -21,11 +21,11 @@ class Constant(Token):
         assert isinstance(other, Token), "Objects are different types"
 
         ex_1 = self.name_ == other.name_
-        if not ex_1:
-            return False
-        ex_0 = self._params == other._params
+        # if not ex_1:
+        #     return False
+        # ex_0 = self._params == other._params
 
-        return ex_0.all()
+        return ex_1
         # return self.name_ == other.name_ and np.allclose(self.params, other.params)
 
     def evaluate(self, params, grid):

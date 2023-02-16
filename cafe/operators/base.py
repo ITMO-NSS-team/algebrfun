@@ -68,7 +68,7 @@ class GeneticOperatorPopulation(GeneticOperator):
 def _methods_decorator(method):
     def wrapper(*args, **kwargs):
         self = args[0]
-        self.change_all_fixes(False)
+        # self.change_all_fixes(False)
         return method(*args, **kwargs)
     return wrapper
 

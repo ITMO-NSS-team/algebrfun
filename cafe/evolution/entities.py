@@ -1,6 +1,7 @@
 import numpy as np
 from copy import deepcopy, copy
 from functools import reduce
+from progress.bar import Bar
 
 from .base import Individ
 from .base import Population
@@ -89,6 +90,7 @@ class PopulationOfEquations(Population):
 
         self.iterations = iterations
         self.type_ = "PopulationOfEquations"
+        self.anal = []
 
     def _evolutionary_step(self, *args):
         self.apply_operator('TokenParametersOptimizerPopulation')
@@ -96,14 +98,21 @@ class PopulationOfEquations(Population):
             individ.apply_operator('TokenFitnessIndivid')
             individ.apply_operator('FilterIndivid')
             individ.apply_operator('LRIndivid')
-        self.apply_operator("Fitnesspopulation")
-        
+        self.apply_operator("FitnessPopulation")
+        self.apply_operator("FilterPopulation")
+        self.apply_operator("Elitism")
+        self.apply_operator("RouletteWheelSelection")
+        self.apply_operator("CrossoverPopulation")
+        self.apply_operator("MutationPopulation")
 
     def evolutionary(self, *args):
         self.apply_operator('InitPopulation')
-        for n in range(1):
-            print('{}/{}\n'.format(n, self.iterations))
+        bar = Bar('Evolution', max=self.iterations)
+        for n in range(self.iterations):
+            # print('{}/{}\n'.format(n, self.iterations))
+            bar.next()
             self._evolutionary_step()
+        bar.finish()
 
 def _methods_decorator(method):
     def wrapper(*args, **kwargs):
