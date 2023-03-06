@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 from scipy.optimize import differential_evolution
 from scipy.optimize import minimize
@@ -38,10 +39,19 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
         eps = self.params['eps']
 
         for token_id in range(len(tokens)):
-            target = -tokens[token_id].value(grid)
-            target -= target.min()
+            # target = -individ.value(grid)
+            # target = -tokens[token_id].data
+            # target -= target.min()
 
-            freq = fp.choice_freq_for_summand(grid, target-target.mean(), shp, number_selecting=5, number_selected=5, token_type='seasonal')
+            target = self.params['target']
+            # print(individ.formula())
+
+            # plt.plot(grid[0], target)
+            # plt.show()
+
+            freq, steps = fp.choice_freq_for_summand(grid, target, shp, number_selecting=5, number_selected=5, token_type='seasonal')
+            # print(freq[0][0] * (1 - steps[0]))
+            # print(f"freqs: {freq}")
 
             if freq is None:
                 individ.structure.remove(tokens[token_id])
@@ -114,6 +124,7 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
         periodic_tokens = self._choice_periodic_tokens(individ)
         if len(periodic_tokens) != 0:
             self.preprocess_periodic_tokens(individ, periodic_tokens)
+            # print([tkn.expression_token.params_description for tkn in periodic_tokens])
         self._optimize_tokens_params(individ)
 
 class TokenParametersOptimizerPopulation(GeneticOperatorPopulation):

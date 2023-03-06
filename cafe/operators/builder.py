@@ -49,7 +49,7 @@ def create_operator_map(grid, individ, kwargs):
     operatorsMap.TokenParametersOptimizerPopulation = TokenParametersOptimizerPopulation()
 
     operatorsMap.TokenParametersOptimizerIndivid = TokenParametersOptimizerIndivid(
-        params=dict(grid=grid, shape=shape)
+        params=dict(grid=grid, shape=shape, target=kwargs['target']._data)
     )
 
     operatorsMap.VarFitnessIndivid = VarFitnessIndivid(

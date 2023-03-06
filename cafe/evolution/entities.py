@@ -110,8 +110,8 @@ class PopulationOfEquations(Population):
         bar = Bar('Evolution', max=self.iterations)
         for n in range(self.iterations):
             # print('{}/{}\n'.format(n, self.iterations))
-            bar.next()
             self._evolutionary_step()
+            bar.next()
         bar.finish()
 
 def _methods_decorator(method):

@@ -24,6 +24,7 @@ class FrequencyProcessor4TimeSeries:
         w = []
         mask = []
         wmax = []
+        freq_steps = [] 
         for i in range(len(grid)):
             current_grid = grid[i].reshape(shp)
             if len(np.unique(current_grid[0])) == 1:
@@ -33,6 +34,7 @@ class FrequencyProcessor4TimeSeries:
             # w_c = np.fft.fftfreq(len(grid[i]), step)
             w_c = np.fft.fftfreq(len(current_grid), step)
             w_c = FrequencyProcessor4TimeSeries.get_actual_freq(grid[i], current_grid, w_c)
+            freq_steps.append(np.mean(w_c[1:] - w_c[:-1]))
             w_c = w_c.reshape(shp)
             w.append(w_c)
             c_max = w_c.max()
@@ -55,7 +57,7 @@ class FrequencyProcessor4TimeSeries:
         for wi, we in enumerate(w):
             w[wi][~mask] = wmin
         # print("resulting fft procedure", y)
-        return w, y, wmax
+        return w, y, wmax, freq_steps
 
     @staticmethod
     def get_actual_freq(gen_grid, current_coord_grid, freqs):
@@ -79,7 +81,7 @@ class FrequencyProcessor4TimeSeries:
     @staticmethod
     def findextrema(w, spec, n):
         spec_line = np.array(spec).reshape(-1)
-        extremums_idxs = argrelextrema(spec_line, np.greater, mode='wrap')[0]
+        extremums_idxs = argrelextrema(spec_line, np.greater, mode='wrap')[:n]
         # print("why zero", extremums_idxs)
         kw = []
         for w_iter in w:
@@ -146,7 +148,7 @@ class FrequencyProcessor4TimeSeries:
     @staticmethod
     def find_freq_for_summand(grid, x, shp, wmin=0, wmax=None, c=10, number_selecting=1, number_selected=1):
         # print("check freqsss")
-        w, s, wmax = FrequencyProcessor4TimeSeries.fft(grid, x, shp, wmin, wmax, c)
+        w, s, wmax, freq_steps = FrequencyProcessor4TimeSeries.fft(grid, x, shp, wmin, wmax, c)
         # print("after fft", w, "apec", s)
         # kw, ks = FrequencyProcessor4TimeSeries.findextrema(w, s, number_selecting)
         kw, ks = FrequencyProcessor4TimeSeries.findextrema(w, s, number_selecting)
@@ -161,7 +163,7 @@ class FrequencyProcessor4TimeSeries:
         # print("after choose", out_freqs)
         if len(out_freqs) == 0:
             return (None, None)
-        return out_freqs, wmax
+        return out_freqs, wmax, freq_steps
 
 
     @staticmethod
@@ -170,11 +172,12 @@ class FrequencyProcessor4TimeSeries:
         # Wmax = np.fft.fftfreq(len(grid), np.mean(grid[1:]-grid[:-1])).max()
         # if wmax == None:
         #     wmax = Wmax
-        choice_freqs,  Wmax = FrequencyProcessor4TimeSeries.find_freq_for_summand(grid, x, shp, wmin,
+        choice_freqs,  Wmax, freq_steps = FrequencyProcessor4TimeSeries.find_freq_for_summand(grid, x, shp, wmin,
                                                                            wmax, c=c,
                                                                            number_selecting=number_selecting,
                                                                            number_selected=number_selected)
 
+        # print(choice_freqs)
         # print("freqsss", choice_freqs, Wmax)
         if choice_freqs is None:
             return None
@@ -198,4 +201,4 @@ class FrequencyProcessor4TimeSeries:
                 break
         if len(ending_freqs) == 0:
             return None
-        return ending_freqs
+        return ending_freqs, freq_steps

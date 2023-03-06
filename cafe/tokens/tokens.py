@@ -94,8 +94,8 @@ class Sin(Token):
         if params_description is None:
             params_description = {
                 0: dict(name='Amplitude', bounds=(0., 10.)),
-                1: dict(name='Frequency', bounds=(0., float('inf'))),
-                2: dict(name='Phase', bounds=(0., 3.))
+                1: dict(name='Frequency', bounds=(0.95, 1.05)),
+                2: dict(name='Phase', bounds=(0., 1.))
             }
         super().__init__(number_params=number_params, params_description=params_description,
                          params=params, name_=name, optimize_id=optimize_id)
@@ -110,7 +110,7 @@ class Sin(Token):
         # return params[0] * np.sin(1 * np.pi * (2 * params[1] * t + abs(math.modf(params[2])[0])))
         # return np.sin(2 * np.pi * (params[1] * t + params[2]))
         # return 2 * np.pi * (params[1] * t + params[2])
-        return (params[1] * t + params[2] * np.pi)
+        return (params[1] * (t + 2 * params[2] * np.pi))
 
     def evaluate(self, params, t):
         result = np.nan
@@ -135,6 +135,10 @@ class Sin(Token):
 
         # a, w, fi = self.params.T # !!!!!
         return '{}Sin({})'.format(round(a, 2), params_str[:-2])
+    
+    def set_descriptor(self, key: int, descriptor_name: str, descriptor_value):
+        descriptor_value = (descriptor_value[0] * 2 * np.pi, descriptor_value[1] * 2 * np.pi)
+        return super().set_descriptor(key, descriptor_name, descriptor_value)
 
     
 class Imp(Token):
@@ -251,6 +255,10 @@ class Term(Token):
        str_result = '{} {}'
        deq  = self._expression_token.name()
        return str_result.format(deq, self.name_) 
+    
+    @property
+    def data(self):
+        return self._data
 
 
     

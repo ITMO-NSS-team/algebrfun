@@ -17,6 +17,7 @@ class Elitism(GeneticOperatorPopulation):
         for idx in elite_idxs:
             population.structure[idx].elitism = True
             population.anal.append(population.structure[idx].fitness)
+            # print(population.structure[idx].formula())
 
 class RouletteWheelSelection(GeneticOperatorPopulation):
     """

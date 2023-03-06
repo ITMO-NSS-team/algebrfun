@@ -25,6 +25,12 @@ u = Term(data=np.load("examples//pde//u.npy"), name='u')
 du = Term(data=np.load("examples//pde//du.npy").reshape(-1), name='du/dt')
 const_matr = Term(data=np.ones(960), name='constante', mandatory=True)
 
+# plt.plot(grid, u.data)
+# plt.show()
+
+# plt.plot(grid, du.data)
+# plt.show()
+
 token1 = Constant()
 token2 = Sin()
 token3 = Power()
@@ -52,7 +58,7 @@ build_settings = {
 individ = Equation(max_tokens=10)
 create_operator_map(np.array([grid]), individ, build_settings)
 
-population = PopulationOfEquations(iterations=40)
+population = PopulationOfEquations(iterations=6)
 
 population.evolutionary()
 cur_ind = None
