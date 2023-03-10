@@ -110,7 +110,7 @@ class Sin(Token):
         # return params[0] * np.sin(1 * np.pi * (2 * params[1] * t + abs(math.modf(params[2])[0])))
         # return np.sin(2 * np.pi * (params[1] * t + params[2]))
         # return 2 * np.pi * (params[1] * t + params[2])
-        return (params[1] * (t + 2 * params[2] * np.pi))
+        return (2 * np.pi * params[1] * (t + params[2] / params[1]))
 
     def evaluate(self, params, t):
         result = np.nan
@@ -135,10 +135,6 @@ class Sin(Token):
 
         # a, w, fi = self.params.T # !!!!!
         return '{}Sin({})'.format(round(a, 2), params_str[:-2])
-    
-    def set_descriptor(self, key: int, descriptor_name: str, descriptor_value):
-        descriptor_value = (descriptor_value[0] * 2 * np.pi, descriptor_value[1] * 2 * np.pi)
-        return super().set_descriptor(key, descriptor_name, descriptor_value)
 
     
 class Imp(Token):

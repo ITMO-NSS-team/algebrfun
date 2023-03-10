@@ -15,7 +15,8 @@ class MutationIndivid(GeneticOperatorIndivid):
     def apply(self, individ, *args, **kwargs) -> None:
         mut_intensive = self.params['mut_intensive']
 
-        group_by_term = dict((k, list(i)) for k, i in groupby(individ.structure, key=lambda elem: elem.name_))
+        # group_by_term = dict((k, list(i)) for k, i in groupby(individ.structure, key=lambda elem: elem.name_))
+        group_by_term = dict((k, list(filter(lambda elem: elem.name_ == k, individ.structure))) for k in np.unique(list(map(lambda elem: elem.name_, individ.structure))))
 
         for name_term in group_by_term.keys():
             full_term = group_by_term.get(name_term)

@@ -23,14 +23,14 @@ class FilterIndivid(GeneticOperatorIndivid):
 
     @apply_decorator
     def apply(self, individ, *args, **kwargs):
-        expressions = groupby(individ.structure, key=lambda term: term.name_)
+        # expressions = groupby(individ.structure, key=lambda term: term.name_)
+        names = np.unique(list(map(lambda elem: elem.name_, individ.structure)))
         new_chromo = []
 
-        for k, one_term in expressions:
-            key = k
-            tokens = list(one_term)
+        for key in names:
+            tokens = list(filter(lambda elem: elem.name_ == key, individ.structure))
             list_of_tokens = del_duplicate_elements(tokens)
-            new_chromo.extend(list_of_tokens[:individ.max_tokens]) # обрезаем по кол-ву токено в алг выражении
+            new_chromo.extend(list_of_tokens[:individ.max_tokens]) # обрезаем по кол-ву элементов в алг выражении
             
         individ.structure = new_chromo
 

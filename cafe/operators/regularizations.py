@@ -40,7 +40,7 @@ class LRIndivid(GeneticOperatorIndivid):
     def apply(self, individ, *args, **kwargs):
         target, features = self._prepare_data(individ=individ)
 
-        model = LinearRegression(fit_intercept=True)
+        model = LinearRegression(fit_intercept=False)
         model.fit(features.T, target)
 
         self._set_amplitudes(individ, model.coef_)

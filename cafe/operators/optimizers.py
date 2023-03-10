@@ -32,8 +32,14 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
 
         choiced_tokens = list(filter(lambda token: token.expression_token.optimize_id == optimize_id, individ.structure))
         return choiced_tokens
+    
+    def _choice_trend_tokens(self, individ):
+        optimize_id = 2
 
-    def preprocess_periodic_tokens(self, individ, tokens):
+        choiced_tokens = list(filter(lambda token: token.expression_token.optimize_id == optimize_id, individ.structure))
+        return choiced_tokens
+
+    def preprocess_tokens(self, individ, tokens, token_type):
         grid = self.params['grid']
         shp = self.params['shape']
         eps = self.params['eps']
@@ -43,15 +49,16 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
             # target = -tokens[token_id].data
             # target -= target.min()
 
-            target = self.params['target']
+            # target = self.params['target']
+            target = tokens[token_id].data
             # print(individ.formula())
 
             # plt.plot(grid[0], target)
             # plt.show()
 
-            freq, steps = fp.choice_freq_for_summand(grid, target, shp, number_selecting=5, number_selected=5, token_type='seasonal')
+            freq, steps = fp.choice_freq_for_summand(grid, target, shp, number_selecting=5, number_selected=5, token_type=token_type)
             # print(freq[0][0] * (1 - steps[0]))
-            # print(f"freqs: {freq}")
+            # print(f"freqs: {steps}")
 
             if freq is None:
                 individ.structure.remove(tokens[token_id])
@@ -62,7 +69,7 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
                                                     descriptor_value='Frequency')
                 for i in range(params.shape[0]):
                     params[i][index] = freq[0][i]
-                tokens[token_id].expression_token.set_descriptor(index, 'bounds', ((freq[0][0] * (1 - eps), freq[0][0] * (1 + eps))))
+                tokens[token_id].expression_token.set_descriptor(index, 'bounds', ((freq[0][0] * (1 - np.abs(steps[0])), freq[0][0] * (1 + np.abs(steps[0])))))
         # return tokens
 
     @staticmethod
@@ -123,8 +130,13 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
     def apply(self, individ, *args, **kwargs):
         periodic_tokens = self._choice_periodic_tokens(individ)
         if len(periodic_tokens) != 0:
-            self.preprocess_periodic_tokens(individ, periodic_tokens)
+            self.preprocess_tokens(individ, periodic_tokens, 'seasonal')
             # print([tkn.expression_token.params_description for tkn in periodic_tokens])
+
+        trend_tokens = self._choice_trend_tokens(individ)
+        # if len(trend_tokens) != 0:
+        #     self.preprocess_tokens(individ, trend_tokens, 'trend')
+            
         self._optimize_tokens_params(individ)
 
 class TokenParametersOptimizerPopulation(GeneticOperatorPopulation):

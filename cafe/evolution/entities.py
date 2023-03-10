@@ -29,6 +29,9 @@ class Equation(Individ):
         self.max_tokens = max_tokens
         self.type_ = "Equation"
 
+    def __eq__(self, eq) -> bool:
+        return self.formula() == eq.formula()
+
     
     def __getstate__(self):
         return self.__dict__
@@ -95,8 +98,8 @@ class PopulationOfEquations(Population):
     def _evolutionary_step(self, *args):
         self.apply_operator('TokenParametersOptimizerPopulation')
         for individ in self.structure:
-            individ.apply_operator('TokenFitnessIndivid')
             individ.apply_operator('FilterIndivid')
+            individ.apply_operator('TokenFitnessIndivid')
             individ.apply_operator('LRIndivid')
         self.apply_operator("FitnessPopulation")
         self.apply_operator("FilterPopulation")
@@ -108,10 +111,14 @@ class PopulationOfEquations(Population):
     def evolutionary(self, *args):
         self.apply_operator('InitPopulation')
         bar = Bar('Evolution', max=self.iterations)
+        bar.start()
         for n in range(self.iterations):
             # print('{}/{}\n'.format(n, self.iterations))
             self._evolutionary_step()
             bar.next()
+        self.apply_operator('TokenParametersOptimizerPopulation')
+        self.apply_operator("FilterPopulation")
+        self.apply_operator("FitnessPopulation")
         bar.finish()
 
 def _methods_decorator(method):
