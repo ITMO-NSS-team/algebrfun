@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
  
 from .base import GeneticOperatorIndivid
+from .base import GeneticOperatorPopulation
 from .base import apply_decorator
 
 class LRIndivid(GeneticOperatorIndivid):
@@ -44,4 +45,26 @@ class LRIndivid(GeneticOperatorIndivid):
         model.fit(features.T, target)
 
         self._set_amplitudes(individ, model.coef_)
+
+
+class DecimationPopulation(GeneticOperatorPopulation):
+    def __init__(self, params: dict = None):
+        super().__init__(params)
+
+    def apply(self, population, *args, **kwargs):
+        individs = population.structure
+        for individ in individs:
+            individ.apply_operator("FilterIndivid")
+            tokens = list(filter(lambda elem: not elem.mandatory, individ.structure))
+            tokens = sorted(tokens, key=lambda elem: elem.fitness, reverse=True)
+            for token in tokens:
+                temp_individ = individ.copy()
+                temp_individ.structure.remove(token)
+                temp_individ.apply_operator("LRIndivid")
+                temp_individ.apply_operator("VarFitnessIndivid")
+
+                if temp_individ.fitness < individ.fitness:
+                    individ.structure.remove(token)
+                    individ.apply_operator("LRIndivid")
+                    individ.apply_operator("VarFitnessIndivid")
 

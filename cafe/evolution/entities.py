@@ -112,13 +112,18 @@ class PopulationOfEquations(Population):
         self.apply_operator('InitPopulation')
         bar = Bar('Evolution', max=self.iterations)
         bar.start()
+        # поиск возможных вариантов где таргет закрепленный токен
         for n in range(self.iterations):
             # print('{}/{}\n'.format(n, self.iterations))
             self._evolutionary_step()
             bar.next()
         self.apply_operator('TokenParametersOptimizerPopulation')
+        for individ in self.structure:
+            individ.apply_operator("FilterIndivid")
         self.apply_operator("FilterPopulation")
-        self.apply_operator("FitnessPopulation")
+        self.apply_operator("DecimationPopulation")
+        self.apply_operator("Elitism")
+        # self.apply_operator("FitnessPopulation")
         bar.finish()
 
 def _methods_decorator(method):

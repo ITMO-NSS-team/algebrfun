@@ -1,3 +1,7 @@
+"""
+Файл со сторонним функционалом  
+"""
+
 import numpy as np
 from scipy.signal import argrelextrema
 from functools import reduce

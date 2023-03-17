@@ -31,7 +31,15 @@ class FilterIndivid(GeneticOperatorIndivid):
             tokens = list(filter(lambda elem: elem.name_ == key, individ.structure))
             list_of_tokens = del_duplicate_elements(tokens)
             new_chromo.extend(list_of_tokens[:individ.max_tokens]) # обрезаем по кол-ву элементов в алг выражении
-            
+        
+        for token in new_chromo:
+            flag = False
+            caf = token.expression_token
+            for i in range(1, caf._number_params):
+                if np.any(caf.params[..., i] != 0):
+                    flag = True
+            if not flag and caf._number_params > 1:
+                new_chromo.remove(token)                
         individ.structure = new_chromo
 
 class FilterPopulation(GeneticOperatorPopulation):

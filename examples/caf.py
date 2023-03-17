@@ -42,7 +42,7 @@ build_settings = {
     'crossover': {
         'simple': dict(intensive=1, increase_prob=0.3)
     },
-    'tokens': [token1, token2],
+    'tokens': [token1, token2, token3],
     'population': {
         'size': 10
     },

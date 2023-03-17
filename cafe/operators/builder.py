@@ -15,6 +15,7 @@ from .filters import FilterIndivid
 from .filters import FilterPopulation
 
 from .regularizations import LRIndivid
+from .regularizations import DecimationPopulation
 
 from .selectors import Elitism
 from .selectors import RouletteWheelSelection
@@ -95,4 +96,8 @@ def create_operator_map(grid, individ, kwargs):
         params=dict(mut_intensive=mutation['simple']['intensive'],
                     increase_prob=mutation['simple']['increase_prob'],
                     tokens=tokens)
+    )
+
+    operatorsMap.DecimationPopulation = DecimationPopulation(
+        params=dict(grid=grid)
     )

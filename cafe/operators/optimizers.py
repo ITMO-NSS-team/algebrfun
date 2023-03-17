@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from scipy.optimize import differential_evolution
-from scipy.optimize import minimize
+from scipy.optimize import minimize, minimize_scalar
 
 from .base import GeneticOperatorIndivid
 from .base import GeneticOperatorPopulation
@@ -73,6 +73,51 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
         # return tokens
 
     @staticmethod
+    def _fitness_wrapper_prep(param, *args):
+        individ, count_ax, token, var_range = args
+
+        for i in range(count_ax):
+            params = var_range[i][int(param[i])]
+            for j, pm in enumerate(params):
+                if token.name_ == "target":
+                    k = j
+                else:
+                    k = j + 1
+                token.params[i][k] = pm
+        
+        individ.fitness = None
+        individ.apply_operator('VarFitnessIndivid')
+
+        return individ.fitness
+    
+    def preprocess_tokens_(self, individ, tokens):
+        grid = self.params['grid']
+        eps = self.params['eps']
+
+        for token_id, token in enumerate(tokens):
+            x0 = np.array([0 for i in range(grid.shape[0])])
+            caf_token = token.expression_token
+            if caf_token.name_ == "target":
+                continue
+            try:
+                var_range = caf_token.variable_params
+            except:
+                continue
+
+            res = minimize(self._fitness_wrapper_prep, x0, args=(individ, grid.shape[0], caf_token, var_range))
+
+            for i in range(grid.shape[0]):
+                params = var_range[i][int(res.x[i])]
+                for k, param in enumerate(params):
+                    if caf_token.name_ == "target":
+                        index = k
+                    else:
+                        index = k + 1
+                    tokens[token_id].expression_token.set_descriptor(index, 'bounds', ((param - eps, param + eps)))
+
+            # tokens[token_id].expression_token.params = var_range[int(res.x)]
+
+    @staticmethod
     def _fitness_wrapper(params, *args):
         individ, grid, shp = args
         i = 0
@@ -132,10 +177,10 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
         if len(periodic_tokens) != 0:
             self.preprocess_tokens(individ, periodic_tokens, 'seasonal')
             # print([tkn.expression_token.params_description for tkn in periodic_tokens])
-
+        
         trend_tokens = self._choice_trend_tokens(individ)
-        # if len(trend_tokens) != 0:
-        #     self.preprocess_tokens(individ, trend_tokens, 'trend')
+        if len(trend_tokens) != 0:
+            self.preprocess_tokens_(individ, trend_tokens)
             
         self._optimize_tokens_params(individ)
 
