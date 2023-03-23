@@ -219,8 +219,9 @@ class Token:
     def params(self, params: np.ndarray):
         # self._params = np.array(params, dtype=float)
         self._params = params
-        if len(params.shape) == 1:
-            self._params = np.array([params])
+        # if len(params.shape) == 1:
+        #     self._params = np.array([params])
+        self._params = np.array([params])
         # потенциальные неожиданные баги от обрезания параметров
         self.check_params()
         # self.fixator['val'] = False
@@ -292,15 +293,24 @@ class Token:
             if bounds[1] == float('inf'):
                 bounds[1] = sz
             params_lin = np.linspace(bounds[0], bounds[1], sz)
-            params_wvar = np.tensordot(params_lin, in_data, axes=0)   
-            params_wvar = (params_wvar - np.min(params_wvar))/(np.max(params_wvar) - np.min(params_wvar))
-            params_wvar = np.exp(params_wvar)
+            params_wvar = self.preprocess_fft(in_data, params_lin)
+            # params_wvar = np.tensordot(params_lin, in_data, axes=0)   
+            # params_wvar = (params_wvar - np.min(params_wvar))/(np.max(params_wvar) - np.min(params_wvar))
+            # params_wvar = np.exp(params_wvar)
             params_wvar = np.array([params_wvar[:, i, :] for i in range(in_data.shape[0])])
             all_combin = np.array([reduce(lambda x,y: x * y, el) for el in list(product(*params_wvar))])
 
             amplitudes = []
             for k, exp_indata_iter in enumerate(all_combin):
-                amplitudes.append(np.tensordot(exp_indata_iter, data.data, data.data.ndim))
+                # amplitudes.append(np.tensordot(exp_indata_iter, data.data, data.data.ndim))
+                ampl = np.tensordot(exp_indata_iter, data.data, data.data.ndim)
+                if not k:
+                    amplitudes.append(ampl)
+                    continue
+                fix = exp_indata_iter
+                for j in range(k):
+                    all_combin[k] -= (np.sum(fix * all_combin[j]) / np.sum(all_combin[j] * all_combin[j]) * all_combin[j])
+                amplitudes.append(np.tensordot(all_combin[k], data.data, data.data.ndim))
             shp = tuple([sz for _ in range(in_data.shape[0])])
             my_idxs = [ix for ix in np.ndindex(shp)]
             sort_ampls = np.array(sorted(list(zip(my_idxs, amplitudes)), key=lambda x: x[1], reverse=True))[:, 0]
@@ -318,9 +328,10 @@ class Token:
         self.variable_params = answer.reshape((answer.shape[0], answer.shape[2], answer.shape[1]))
 
     def _select_params(self, shape):
-        index = np.random.choice(self.variable_params.shape[-2])
+        shp = self.variable_params.shape
+        index = np.random.choice(shp[-2])
         set_params = self.variable_params[..., index, :]
-        ampl = np.ones(shape[0]).reshape(1, -1).T
+        ampl = np.ones(shp[0]).reshape(1, -1).T
         if self._number_params == 1:
             self.params = ampl
         else:

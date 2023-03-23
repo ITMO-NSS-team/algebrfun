@@ -9,6 +9,21 @@ from .base import GeneticOperatorPopulation
 from .base import apply_decorator
 from cafe.settings import FrequencyProcessor4TimeSeries as fp
 
+def convert(params, number_of_params, ndim):
+    k = 0
+    res = []
+    if number_of_params == 1:
+        return params
+    for d in range(number_of_params):
+        if not d:
+            res.append([params[k] for _ in range(ndim)])
+            k += 1
+        else:
+            res.append([params[k+i] for i in range(ndim)])
+            k += ndim
+    
+    return list(np.array(res).T)
+
 class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
     """
     """
@@ -116,7 +131,7 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
                     tokens[token_id].expression_token.set_descriptor(index, 'bounds', ((param - eps, param + eps)))
 
             # tokens[token_id].expression_token.params = var_range[int(res.x)]
-
+                 
     @staticmethod
     def _fitness_wrapper(params, *args):
         individ, grid, shp = args
@@ -126,9 +141,15 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
             if term.mandatory:
                 continue
             token = term.expression_token
-            number_of_params = token._number_params * shp[0]
+            number_of_params = 1 + (token._number_params - 1) * grid.shape[0]
             k = i + number_of_params
-            token.params = params[i:k].reshape(shp[0], token._number_params)
+            ch_params = params[i:k]
+            try:
+                # token.params = params[i:k].reshape(grid.shape[0], token._number_params)
+                token.params = convert(ch_params, token._number_params, grid.shape[0])
+            except Exception as e:
+                print(f"wrapper: {e}\n {params[i:k]}")
+                raise ValueError("Sizes is bad")
             i = k
         
         individ.fitness = None
@@ -148,10 +169,14 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
                     if term.expression_token.params_description[param]['name'] == 'Amplitude':
                         bounds.append(term.expression_token.params_description[param]['bounds'])
                         continue
-                    for i in range(shp[0]):
+                    for i in range(grid.shape[0]):
                         bounds.append(term.expression_token.params_description[param]['bounds']) 
-            
-            res = differential_evolution(self._fitness_wrapper, bounds, args=(individ, grid, shp), popsize=self.params['popsize'])
+            try:
+                print("bounds:", len(bounds))
+                res = differential_evolution(self._fitness_wrapper, bounds, args=(individ, grid, shp), popsize=self.params['popsize'])
+            except Exception as e:
+                print(f"optimizer: {e}\n{bounds}")
+                exit()
         else:
             x0 = []
             for term in choice_terms:
@@ -166,9 +191,9 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
             if term.mandatory:
                 continue
             token = term.expression_token
-            number_of_params = token._number_params * shp[0]
+            number_of_params = token._number_params * grid.shape[0]
             k = i + number_of_params
-            token.params = result_params[i:k].reshape(shp[0], token._number_params)
+            token.params = result_params[i:k].reshape(grid.shape[0], token._number_params)
             i = k
 
     @apply_decorator

@@ -1,6 +1,7 @@
 import os
 import sys
 from itertools import groupby
+from itertools import product
 import matplotlib.pyplot as plt
 
 root_dir = '/'.join(os.getcwd().split('/')[:-1])
@@ -20,10 +21,22 @@ from cafe.operators.builder import create_operator_map
 
 # загрузка данных времени и производных из файлов
 
-grid = np.load("examples//pde//t.npy")
-u = Term(data=np.load("examples//pde//u.npy"), name='u')
-du = Term(data=np.load("examples//pde//du.npy").reshape(-1), name='du/dt')
-const_matr = Term(data=np.ones(960), name='constante', mandatory=True)
+# grid = np.load("examples//pde//t.npy")
+# u = Term(data=np.load("examples//pde//u.npy"), name='u')
+# du = Term(data=np.load("examples//pde//du.npy").reshape(-1), name='du/dt')
+# const_matr = Term(data=np.ones(960), name='constante', mandatory=True)
+
+# данные для температуры
+grid_t = np.load("examples//temperature//convection_t.npy")[:200]
+grid_x = np.load("examples//temperature//convection_x.npy")
+tx = np.array(list(product(grid_t, grid_x)))
+grid = np.array([tx[:, 0], tx[:, 1]])
+
+dx = Term(data=np.load("examples//temperature//dudx.npy").reshape(-1), name='du/dx')
+dt = Term(data=np.load("examples//temperature//dudt.npy").reshape(-1), name='du/dt', mandatory=True)
+dx2 = Term(data=np.load("examples//temperature//d2udx2.npy").reshape(-1), name='d2u/dx2')
+
+terms = [dt, dx, dx2]
 
 # plt.plot(grid, u.data)
 # plt.show()
@@ -46,17 +59,17 @@ build_settings = {
     'population': {
         'size': 10
     },
-    'terms': [u, du, const_matr],
+    'terms': terms,
     'lasso':{
         'regularisation_coef': 10**(-6)
     },
-    'shape': (1, 960),
-    'target': u
+    'shape': (200, 30),
+    'target': dt
 }
 
 
 individ = Equation(max_tokens=10)
-create_operator_map(np.array([grid]), individ, build_settings)
+create_operator_map(grid, individ, build_settings)
 
 population = PopulationOfEquations(iterations=6)
 

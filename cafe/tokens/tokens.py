@@ -87,6 +87,17 @@ class Power(Token):
 
         # str_result += ')'
         return str_result.format(round(ampl, 2))
+    
+    def preprocess_fft(self, grid, pos_param):
+        param_data = []
+        for param in pos_param:
+            values = []
+            for k, grid_i in enumerate(grid):
+                value = grid_i ** param
+                values.append(value)
+            param_data.append(values)
+
+        return np.array(param_data)
 
 class Sin(Token):
     def __init__(self, number_params=3, params_description=None,
@@ -110,6 +121,8 @@ class Sin(Token):
         # return params[0] * np.sin(1 * np.pi * (2 * params[1] * t + abs(math.modf(params[2])[0])))
         # return np.sin(2 * np.pi * (params[1] * t + params[2]))
         # return 2 * np.pi * (params[1] * t + params[2])
+        if params[1] == 0:
+            params[1] = 0.0001
         return (2 * np.pi * params[1] * (t + params[2] / params[1]))
 
     def evaluate(self, params, t):
@@ -135,6 +148,17 @@ class Sin(Token):
 
         # a, w, fi = self.params.T # !!!!!
         return '{}Sin({})'.format(round(a, 2), params_str[:-2])
+    
+    def preprocess_fft(self, grid, pos_param):
+        param_data = []
+        for param in pos_param:
+            values = []
+            for k, grid_i in enumerate(grid):
+                value = np.exp(grid_i * param)
+                values.append(value)
+            param_data.append(values)
+
+        return np.array(param_data)
 
     
 class Imp(Token):
