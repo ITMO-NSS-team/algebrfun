@@ -22,7 +22,7 @@ def convert(params, number_of_params, ndim):
             res.append([params[k+i] for i in range(ndim)])
             k += ndim
     
-    return list(np.array(res).T)
+    return np.array(res).T
 
 class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
     """

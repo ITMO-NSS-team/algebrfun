@@ -219,9 +219,9 @@ class Token:
     def params(self, params: np.ndarray):
         # self._params = np.array(params, dtype=float)
         self._params = params
-        # if len(params.shape) == 1:
-        #     self._params = np.array([params])
-        self._params = np.array([params])
+        if len(params.shape) == 1:
+            self._params = np.array([params])
+        # self._params = np.array([params])
         # потенциальные неожиданные баги от обрезания параметров
         self.check_params()
         # self.fixator['val'] = False
