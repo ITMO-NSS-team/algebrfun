@@ -71,7 +71,7 @@ build_settings = {
 individ = Equation(max_tokens=10)
 create_operator_map(grid, individ, build_settings)
 
-population = PopulationOfEquations(iterations=6)
+population = PopulationOfEquations(iterations=5)
 
 population.evolutionary()
 cur_ind = None
@@ -94,7 +94,7 @@ for key in expressions.keys():
     value = []
     for elem in expressions[key]:
         print(elem.expression_token.name())
-        it_val = elem.expression_token.value(np.array([grid]))
+        it_val = elem.expression_token.value(np.array(grid))
         # print(it_val)
         if len(grid) != len(it_val):
             it_val = it_val * np.ones_like(grid)

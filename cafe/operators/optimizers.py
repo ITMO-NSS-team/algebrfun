@@ -90,18 +90,31 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
     @staticmethod
     def _fitness_wrapper_prep(param, *args):
         individ, count_ax, token, var_range = args
+        token_params = []
 
         for i in range(count_ax):
+            # axs_params = []
             params = var_range[i][int(param[i])]
             for j, pm in enumerate(params):
                 if token.name_ == "target":
                     k = j
                 else:
                     k = j + 1
-                token.params[i][k] = pm
+                try:
+                    token.params[i][k] = pm
+                except:
+                    temp_params = list(token.params)
+                    temp_params.append(np.copy(temp_params[i - 1]))
+                    token.params.params = np.array(temp_params)
+                    # token.params.append(np.copy(token.params[i - 1]))
+                    token.params[i][k] = pm
+        # token.params = np.array(token_params)
         
         individ.fitness = None
-        individ.apply_operator('VarFitnessIndivid')
+        try:
+            individ.apply_operator('VarFitnessIndivid')
+        except:
+            print(token.params)
 
         return individ.fitness
     
@@ -129,6 +142,14 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
                     else:
                         index = k + 1
                     tokens[token_id].expression_token.set_descriptor(index, 'bounds', ((param - eps, param + eps)))
+                    try:
+                        tokens[token_id].expression_token.params[i][k] = param
+                    except:
+                        temp_params = list(tokens[token_id].expression_token.params)
+                        temp_params.append(np.copy(temp_params[i - 1]))
+                        tokens[token_id].expression_token.params = np.array(temp_params)
+                        # tokens[token_id].params.append(np.copy(token.params[i - 1]))
+                        tokens[token_id].expression_token.params[i][k] = param
 
             # tokens[token_id].expression_token.params = var_range[int(res.x)]
                  
@@ -160,19 +181,25 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
     def _optimize_tokens_params(self, individ):
         grid = self.params['grid']
         shp = self.params['shape']
+        eps = self.params['eps']
 
         choice_terms = list(filter(lambda term: not term.mandatory, individ.structure))
         if self.params['optimizer'] == "DE":
             bounds = []
             for term in choice_terms:
+                excpression_name = term.expression_token.name_
                 for param in term.expression_token.params_description:
                     if term.expression_token.params_description[param]['name'] == 'Amplitude':
                         bounds.append(term.expression_token.params_description[param]['bounds'])
                         continue
                     for i in range(grid.shape[0]):
-                        bounds.append(term.expression_token.params_description[param]['bounds']) 
+                        try:
+                            bounds.append((term.expression_token.params[i][param] - eps, term.expression_token.params[i][param] + eps))
+                        except:
+                            bounds.append(term.expression_token.params_description[param]['bounds'])
+                        # bounds.append(term.expression_token.params_description[param]['bounds']) 
             try:
-                print("bounds:", len(bounds))
+                # print("bounds:", len(bounds))
                 res = differential_evolution(self._fitness_wrapper, bounds, args=(individ, grid, shp), popsize=self.params['popsize'])
             except Exception as e:
                 print(f"optimizer: {e}\n{bounds}")
@@ -191,21 +218,22 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
             if term.mandatory:
                 continue
             token = term.expression_token
-            number_of_params = token._number_params * grid.shape[0]
+            number_of_params = 1 + (token._number_params - 1) * grid.shape[0]
             k = i + number_of_params
-            token.params = result_params[i:k].reshape(grid.shape[0], token._number_params)
+            # token.params = result_params[i:k].reshape(grid.shape[0], token._number_params)
+            token.params = convert(result_params[i:k], token._number_params, grid.shape[0])
             i = k
 
     @apply_decorator
     def apply(self, individ, *args, **kwargs):
-        periodic_tokens = self._choice_periodic_tokens(individ)
-        if len(periodic_tokens) != 0:
-            self.preprocess_tokens(individ, periodic_tokens, 'seasonal')
+        # periodic_tokens = self._choice_periodic_tokens(individ)
+        # if len(periodic_tokens) != 0:
+        #     self.preprocess_tokens(individ, periodic_tokens, 'seasonal')
             # print([tkn.expression_token.params_description for tkn in periodic_tokens])
         
-        trend_tokens = self._choice_trend_tokens(individ)
-        if len(trend_tokens) != 0:
-            self.preprocess_tokens_(individ, trend_tokens)
+        # trend_tokens = self._choice_trend_tokens(individ)
+        # if len(trend_tokens) != 0:
+        #     self.preprocess_tokens_(individ, trend_tokens)
             
         self._optimize_tokens_params(individ)
 

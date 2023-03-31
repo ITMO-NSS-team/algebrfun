@@ -26,6 +26,7 @@ class MutationIndivid(GeneticOperatorIndivid):
             expression_structure = [term.expression_token for term in full_term]
             tokens = list(filter(lambda token: token not in expression_structure, self.params['tokens']))
             for i, token in enumerate(tokens):
+                token._select_params()
                 tmp_temp.expression_token = token
                 tokens[i] = tmp_temp.copy()
 

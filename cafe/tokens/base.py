@@ -229,7 +229,7 @@ class Token:
     def check_params(self):
         isinstance(self._params, np.ndarray)
         assert self._params.shape[-1] == self._number_params, "The number of parameters does not match the length of params array"\
-                                                  + "\nUse methods 'params.setter' or 'set_param' to change params"
+                                                  + f"\nUse methods 'params.setter' or 'set_param' to change params: {self.name}, {self._params.shape[-1]}, {self._number_params}"
         for key, value in self._params_description.items():
             try:
                 if self._params_description[key]['check']:
@@ -327,7 +327,7 @@ class Token:
         # self.variable_params = answer.reshape((in_data.shape[0], sz, self._number_params - 1))
         self.variable_params = answer.reshape((answer.shape[0], answer.shape[2], answer.shape[1]))
 
-    def _select_params(self, shape):
+    def _select_params(self):
         shp = self.variable_params.shape
         index = np.random.choice(shp[-2])
         set_params = self.variable_params[..., index, :]

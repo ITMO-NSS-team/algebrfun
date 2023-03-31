@@ -46,7 +46,7 @@ class Power(Token):
         if params_description is None:
             params_description = {
                 0: dict(name='Amplitude', bounds=(-1., 1.)),
-                1: dict(name='Power', bounds=(0., 3.), check=True)
+                1: dict(name='Power', bounds=(-1., 1.), check=True)
             }
         super().__init__(number_params=number_params, params_description=params_description,
                          params=params, name_=name, optimize_id=optimize_id)
@@ -106,7 +106,7 @@ class Sin(Token):
             params_description = {
                 0: dict(name='Amplitude', bounds=(0., 10.)),
                 1: dict(name='Frequency', bounds=(0.95, 1.05)),
-                2: dict(name='Phase', bounds=(0., 1.))
+                2: dict(name='Phase', bounds=(0.05, 1.))
             }
         super().__init__(number_params=number_params, params_description=params_description,
                          params=params, name_=name, optimize_id=optimize_id)

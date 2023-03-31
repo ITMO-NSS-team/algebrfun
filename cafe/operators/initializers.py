@@ -24,7 +24,8 @@ class InitIndivid(GeneticOperatorIndivid):
             current_term = np.random.choice(terms).copy()
             current_token = np.random.choice(tokens).copy()
 
-            current_token._select_params(self.params['shape'])
+            # current_token._select_params(self.params['shape'])
+            current_token._select_params()
 
             current_term.expression_token = current_token
             if current_term not in individ.structure:
