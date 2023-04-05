@@ -3,6 +3,7 @@ import sys
 from itertools import groupby
 from itertools import product
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 root_dir = '/'.join(os.getcwd().split('/')[:-1])
 sys.path.append(root_dir)
@@ -26,16 +27,26 @@ from cafe.operators.builder import create_operator_map
 # du = Term(data=np.load("examples//pde//du.npy").reshape(-1), name='du/dt')
 # const_matr = Term(data=np.ones(960), name='constante', mandatory=True)
 
-# данные для температуры
-grid_t = np.load("examples//temperature//convection_t.npy")[:200]
-grid_x = np.load("examples//temperature//convection_x.npy")
+# данные для температуры (200, 30)
+# grid_t = np.load("examples//temperature//convection_t.npy")[:200]
+# grid_x = np.load("examples//temperature//convection_x.npy")
+# tx = np.array(list(product(grid_t, grid_x)))
+# grid = np.array([tx[:, 0], tx[:, 1]])
+
+# dx = Term(data=np.load("examples//temperature//dudx.npy").reshape(-1), name='du/dx')
+# dt = Term(data=np.load("examples//temperature//dudt.npy").reshape(-1), name='du/dt', mandatory=True)
+# dx2 = Term(data=np.load("examples//temperature//d2udx2.npy").reshape(-1), name='d2u/dx2')
+# terms = [dt, dx, dx2]
+
+# (101, 50)
+grid_t = np.load("examples//temperature//test//t.npy")
+grid_x = np.load("examples//temperature//test//x.npy")
 tx = np.array(list(product(grid_t, grid_x)))
 grid = np.array([tx[:, 0], tx[:, 1]])
 
-dx = Term(data=np.load("examples//temperature//dudx.npy").reshape(-1), name='du/dx')
-dt = Term(data=np.load("examples//temperature//dudt.npy").reshape(-1), name='du/dt', mandatory=True)
-dx2 = Term(data=np.load("examples//temperature//d2udx2.npy").reshape(-1), name='d2u/dx2')
-
+dx = Term(data=np.load("examples//temperature//test//dudx.npy").reshape(-1), name='du/dx')
+dt = Term(data=np.load("examples//temperature//test//dudt.npy").reshape(-1), name='du/dt', mandatory=True)
+dx2 = Term(data=np.load("examples//temperature//test//d2udx2.npy").reshape(-1), name='d2u/dx2')
 terms = [dt, dx, dx2]
 
 # plt.plot(grid, u.data)
@@ -63,7 +74,7 @@ build_settings = {
     'lasso':{
         'regularisation_coef': 10**(-6)
     },
-    'shape': (200, 30),
+    'shape': (101, 50),
     'target': dt
 }
 
@@ -71,7 +82,7 @@ build_settings = {
 individ = Equation(max_tokens=10)
 create_operator_map(grid, individ, build_settings)
 
-population = PopulationOfEquations(iterations=5)
+population = PopulationOfEquations(iterations=50)
 
 population.evolutionary()
 cur_ind = None
@@ -95,14 +106,22 @@ for key in expressions.keys():
     for elem in expressions[key]:
         print(elem.expression_token.name())
         it_val = elem.expression_token.value(np.array(grid))
+        print(it_val.shape)
         # print(it_val)
-        if len(grid) != len(it_val):
-            it_val = it_val * np.ones_like(grid)
+        if grid.shape[-1] != len(it_val):
+            it_val = it_val * np.ones(shape=(grid.shape[-1]))
+            it_val = np.array(it_val, dtype=float)
         if len(value) == 0:
             value = it_val
             continue
         value += it_val
+    print(f"109: {value.shape}")
     plt.title(key)
-    plt.plot(grid, value, label="Received data")
-    plt.show()
+    # try:
+    sns.heatmap(value.reshape(build_settings['shape']))
+    # except Exception as e:
+        # print(str(e))
+        # plt.plot(grid, value, label="Received data")
+    # plt.show()
+    plt.savefig(f"{key}.png")
 print(cur_ind.fitness)

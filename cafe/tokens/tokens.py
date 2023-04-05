@@ -78,7 +78,7 @@ class Power(Token):
         str_result = '{}('
         for iter_params in self.params:
             a, n = iter_params
-            str_result += 't**{} + '.format(round(n, 2))
+            str_result += 't**{} + '.format(round(n, 9))
 
         try:
             str_result = str_result[:-3] + ')'
@@ -86,7 +86,7 @@ class Power(Token):
             print("strange size")
 
         # str_result += ')'
-        return str_result.format(round(ampl, 2))
+        return str_result.format(round(ampl, 9))
     
     def preprocess_fft(self, grid, pos_param):
         param_data = []

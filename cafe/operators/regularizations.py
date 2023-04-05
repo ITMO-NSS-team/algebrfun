@@ -60,6 +60,8 @@ class DecimationPopulation(GeneticOperatorPopulation):
             for token in tokens:
                 temp_individ = individ.copy()
                 temp_individ.structure.remove(token)
+                if len(temp_individ.structure) <= 2:
+                    continue
                 temp_individ.apply_operator("LRIndivid")
                 temp_individ.apply_operator("VarFitnessIndivid")
 

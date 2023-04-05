@@ -155,13 +155,26 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
                  
     @staticmethod
     def _fitness_wrapper(params, *args):
-        individ, grid, shp = args
+        individ, grid, shp, cur_term = args
         i = 0
 
-        for term in individ.structure:
-            if term.mandatory:
-                continue
-            token = term.expression_token
+        if not cur_term:
+            for term in individ.structure:
+                if term.mandatory:
+                    continue
+                token = term.expression_token
+                number_of_params = 1 + (token._number_params - 1) * grid.shape[0]
+                k = i + number_of_params
+                ch_params = params[i:k]
+                try:
+                    # token.params = params[i:k].reshape(grid.shape[0], token._number_params)
+                    token.params = convert(ch_params, token._number_params, grid.shape[0])
+                except Exception as e:
+                    print(f"wrapper: {e}\n {params[i:k]}")
+                    raise ValueError("Sizes is bad")
+                i = k
+        else:
+            token = cur_term.expression_token
             number_of_params = 1 + (token._number_params - 1) * grid.shape[0]
             k = i + number_of_params
             ch_params = params[i:k]
@@ -178,12 +191,16 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
 
         return individ.fitness
 
-    def _optimize_tokens_params(self, individ):
+    def _optimize_tokens_params(self, individ, token=None):
         grid = self.params['grid']
         shp = self.params['shape']
         eps = self.params['eps']
 
-        choice_terms = list(filter(lambda term: not term.mandatory, individ.structure))
+        if not token:
+            choice_terms = list(filter(lambda term: not term.mandatory, individ.structure))
+        else:
+            choice_terms = [token]
+
         if self.params['optimizer'] == "DE":
             bounds = []
             for term in choice_terms:
@@ -200,7 +217,7 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
                         # bounds.append(term.expression_token.params_description[param]['bounds']) 
             try:
                 # print("bounds:", len(bounds))
-                res = differential_evolution(self._fitness_wrapper, bounds, args=(individ, grid, shp), popsize=self.params['popsize'])
+                res = differential_evolution(self._fitness_wrapper, bounds, args=(individ, grid, shp, token), popsize=self.params['popsize'])
             except Exception as e:
                 print(f"optimizer: {e}\n{bounds}")
                 exit()
@@ -214,6 +231,15 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
         
         i = 0
         result_params = res.x
+
+        if token:
+            expres = term.expression_token
+            number_of_params = 1 + (expres._number_params - 1) * grid.shape[0]
+            k = i + number_of_params
+            # token.params = result_params[i:k].reshape(grid.shape[0], token._number_params)
+            expres.params = convert(result_params[i:k], expres._number_params, grid.shape[0])
+            i = k
+            return
         for term in individ.structure:
             if term.mandatory:
                 continue
@@ -235,7 +261,12 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
         # if len(trend_tokens) != 0:
         #     self.preprocess_tokens_(individ, trend_tokens)
             
-        self._optimize_tokens_params(individ)
+        # self._optimize_tokens_params(individ)
+
+        for term in individ.structure:
+            if term.mandatory:
+                continue
+            self._optimize_tokens_params(individ, term)
 
 class TokenParametersOptimizerPopulation(GeneticOperatorPopulation):
     """
