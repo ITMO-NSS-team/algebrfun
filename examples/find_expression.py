@@ -28,7 +28,7 @@ from cafe.operators.builder import create_operator_map
 x1 = np.load("examples//expressions//test1//x1.npy")
 x2 = np.load("examples//expressions//test1//x2.npy")
 temp = np.array(list(product(x1, x2)))
-grid = np.array([temp[:, 0], temp[:, 1], temp[:, 0] * temp[:, 1]])
+grid = np.array([temp[:, 0], temp[:, 1]])
 
 expr = Term(data=np.ones((grid[0].shape[-1])), name="expres")
 target = Term(data=-1 * np.load("examples//expressions//test1//target.npy").reshape(-1), name='target', mandatory=True)
@@ -67,7 +67,7 @@ build_settings = {
 individ = Equation(max_tokens=10)
 create_operator_map(grid, individ, build_settings)
 
-population = PopulationOfEquations(iterations=20)
+population = PopulationOfEquations(iterations=30)
 
 population.evolutionary()
 cur_ind = None
@@ -105,10 +105,11 @@ for key in expressions.keys():
     # try:
     f, axs = plt.subplots(1, 2)
     sns.heatmap(value.reshape(build_settings['shape']), ax=axs[0])
-    sns.heatmap(target.data.reshape(build_settings['shape']), ax=axs[1])
+    sns.heatmap(-1 * target.data.reshape(build_settings['shape']), ax=axs[1])
     # except Exception as e:
         # print(str(e))
         # plt.plot(grid, value, label="Received data")
     # plt.show()
+    plt.legend()
     plt.savefig(f"{key}.png")
 print(cur_ind.fitness)

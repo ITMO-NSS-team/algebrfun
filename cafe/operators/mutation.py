@@ -5,6 +5,42 @@ import numpy as np
 from .base import GeneticOperatorIndivid
 from .base import GeneticOperatorPopulation
 from .base import apply_decorator
+from cafe.tokens.tokens import ComplexToken
+
+class MutationProcedureIndivid(GeneticOperatorIndivid):
+    def __init__(self, params) -> None:
+        super().__init__(params=params)
+        self._check_params('tokens')
+
+    @apply_decorator
+    def apply(self, individ_orig, *args, **kwargs):
+        individ_orig.apply_operator("VarFitnessIndivid")
+        individ = individ_orig.copy()
+        b_ind = individ_orig.copy()
+        tokens = list(filter(lambda tkn: tkn.name_ != 'target', self.params['tokens']))
+        
+        for term in individ.structure:
+            if term.mandatory or term.expression_token.name_ == 'target':
+                continue
+            for token in tokens:
+                token_ = token.copy()
+                token_._select_params()
+                token_orig = term.expression_token.copy()
+                new_token = ComplexToken()
+                new_token.tokens = [term.expression_token, token_]
+                term.expression_token = new_token
+
+                individ.apply_operator("VarFitnessIndivid")
+
+                if individ.fitness < b_ind.fitness:
+                    b_ind = individ.copy()
+                
+                term.expression_token = token_orig
+        
+        individ_orig.structure = b_ind.structure
+
+        return individ
+
 
 class MutationIndivid(GeneticOperatorIndivid):
     def __init__(self, params):
@@ -72,13 +108,14 @@ class MutationPopulation(GeneticOperatorPopulation):
             # assert mutation_size <= len(selected_population), "Mutations size must be less than population size"
             selected_individs = np.random.choice(selected_population, replace=False, size=mutation_size)
 
-        for individ in selected_individs:
+        for iter_ind, individ in enumerate(selected_individs):
             if individ.elitism:
                 individ.elitism = False
                 new_individ = individ.copy()
                 new_individ.selected = False
                 population.structure.append(new_individ)
+            # selected_individs[iter_ind].apply_operator('MutationIndivid')
+            # selected_individs[iter_ind].apply_operator('MutationProcedureIndivid')
             individ.apply_operator('MutationIndivid')
-                # individ.apply_operator('ImpComplexMutationIndivid')
-            # individ.apply_operator('ProductTokenMutationIndivid')
+            individ.apply_operator('MutationProcedureIndivid')
         return population

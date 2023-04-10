@@ -24,6 +24,7 @@ from .crossover import CrossoverIndivid
 from .crossover import CrossoverPopulation
 
 from .mutation import MutationIndivid
+from .mutation import MutationProcedureIndivid
 from .mutation import MutationPopulation
 
 
@@ -96,6 +97,10 @@ def create_operator_map(grid, individ, kwargs):
         params=dict(mut_intensive=mutation['simple']['intensive'],
                     increase_prob=mutation['simple']['increase_prob'],
                     tokens=tokens)
+    )
+
+    operatorsMap.MutationProcedureIndivid = MutationProcedureIndivid(
+        params=dict(tokens=tokens)
     )
 
     operatorsMap.DecimationPopulation = DecimationPopulation(

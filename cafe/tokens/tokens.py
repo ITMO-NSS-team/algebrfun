@@ -240,7 +240,7 @@ class Imp(Token):
         return '{}Imp({})'.format(round(a, 2), param_str[:-2])
     
 class ComplexToken(Token):
-    def __init__(self, number_params: int = 1, params_description: dict = None, params: np.ndarray = None, name_="complex", optimize_id: int = 2) -> None:
+    def __init__(self, number_params: int = 1, params_description: dict = None, params: np.ndarray = [1], name_="complex", optimize_id: int = 2) -> None:
         if params_description is None:
             params_description = {
                 0: dict(name='Amplitude', bounds=(0., 1.))
@@ -249,11 +249,25 @@ class ComplexToken(Token):
         self.type = "Colab"
         self.tokens = []
 
+    def __eq__(self, other) -> bool:
+        if self.name_ != other.name_:
+            return False
+        if len(self.tokens) != len(other.tokens):
+            return False
+        count = 0
+        for token in self.tokens:
+            if token in other.tokens:
+                count += 1
+        
+        if count == len(self.tokens):
+            return True
+        return False
+
     def evaluate(self, params: np.ndarray, grid: np.ndarray) -> np.ndarray:
-        res = None
+        res = []
         for token in self.tokens:
             cur_value = token.value(grid)
-            if res:
+            if len(res) != 0:
                 res *= cur_value
             else:
                 res = cur_value
@@ -264,9 +278,9 @@ class ComplexToken(Token):
         res = ""
         for token in self.tokens:
             if len(res) == 0:
-                res.append(f"{token.name()}")
+                res += f"{token.name()}"
             else:    
-                res.append(f"*{token.name()}")
+                res += f"*{token.name()}"
         
         return res
     
@@ -305,6 +319,23 @@ class Term(Token):
     def expression_token(self, new_token):
         assert isinstance(new_token, Token), "New value for expression_token in Term must be type Token"
         self._expression_token = new_token
+
+    def __check_vis(self, tkns):
+        for tkn in tkns:
+            if tkn.name_ == "ComplexToken":
+                return False
+        return True
+
+    def get_complex(self):
+        tokens = self.expression_token.tokens
+        while not self.__check_vis(tokens):
+            for idx, token in enumerate(tokens):
+                if token.name_ == "ComplexToken":
+                    tokens.pop(idx)
+                    tokens.extend(token.tokens)
+        
+        return tokens
+
 
     def name(self, with_params):
        str_result = '{} {}'

@@ -266,7 +266,14 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
         for term in individ.structure:
             if term.mandatory:
                 continue
-            self._optimize_tokens_params(individ, term)
+            if term.expression_token.name_ == 'ComplexToken':
+                tkns = term.get_complex()
+                for i, tkn in enumerate(tkns):
+                    i_term = term.copy()
+                    i_term.expression_token = tkns[i]
+                    self._optimize_tokens_params(individ, i_term)
+            else:
+                self._optimize_tokens_params(individ, term)
 
 class TokenParametersOptimizerPopulation(GeneticOperatorPopulation):
     """
