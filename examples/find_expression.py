@@ -20,34 +20,19 @@ from cafe.evolution.entities import PopulationOfEquations
 
 from cafe.operators.builder import create_operator_map
 
-# загрузка данных времени и производных из файлов
-
-# grid = np.load("examples//pde//t.npy")
-# u = Term(data=np.load("examples//pde//u.npy"), name='u')
-# du = Term(data=np.load("examples//pde//du.npy").reshape(-1), name='du/dt')
-# const_matr = Term(data=np.ones(960), name='constante', mandatory=True)
-
-# данные для температуры (200, 30)
-# grid_t = np.load("examples//temperature//convection_t.npy")[:200]
-# grid_x = np.load("examples//temperature//convection_x.npy")
-# tx = np.array(list(product(grid_t, grid_x)))
-# grid = np.array([tx[:, 0], tx[:, 1]])
-
-# dx = Term(data=np.load("examples//temperature//dudx.npy").reshape(-1), name='du/dx')
-# dt = Term(data=np.load("examples//temperature//dudt.npy").reshape(-1), name='du/dt', mandatory=True)
-# dx2 = Term(data=np.load("examples//temperature//d2udx2.npy").reshape(-1), name='d2u/dx2')
+# dx = Term(data=np.load("examples//temperature//test//dudx.npy").reshape(-1), name='du/dx')
+# dt = Term(data=np.load("examples//temperature//test//dudt.npy").reshape(-1), name='du/dt', mandatory=True)
+# dx2 = Term(data=np.load("examples//temperature//test//d2udx2.npy").reshape(-1), name='d2u/dx2')
 # terms = [dt, dx, dx2]
 
-# (101, 50)
-grid_t = np.load("examples//temperature//test//t.npy")
-grid_x = np.load("examples//temperature//test//x.npy")
-tx = np.array(list(product(grid_t, grid_x)))
-grid = np.array([tx[:, 0], tx[:, 1], tx[:, 0]])
+x1 = np.load("examples//expressions//test1//x1.npy")
+x2 = np.load("examples//expressions//test1//x2.npy")
+temp = np.array(list(product(x1, x2)))
+grid = np.array([temp[:, 0], temp[:, 1], temp[:, 0] * temp[:, 1]])
 
-dx = Term(data=np.load("examples//temperature//test//dudx.npy").reshape(-1), name='du/dx')
-dt = Term(data=np.load("examples//temperature//test//dudt.npy").reshape(-1), name='du/dt', mandatory=True)
-dx2 = Term(data=np.load("examples//temperature//test//d2udx2.npy").reshape(-1), name='d2u/dx2')
-terms = [dt, dx, dx2]
+expr = Term(data=np.ones((grid[0].shape[-1])), name="expres")
+target = Term(data=-1 * np.load("examples//expressions//test1//target.npy").reshape(-1), name='target', mandatory=True)
+terms = [expr, target]
 
 # plt.plot(grid, u.data)
 # plt.show()
@@ -74,15 +59,15 @@ build_settings = {
     'lasso':{
         'regularisation_coef': 10**(-6)
     },
-    'shape': (101, 50),
-    'target': dt
+    'shape': (100, 100),
+    'target': target
 }
 
 
 individ = Equation(max_tokens=10)
 create_operator_map(grid, individ, build_settings)
 
-population = PopulationOfEquations(iterations=50)
+population = PopulationOfEquations(iterations=20)
 
 population.evolutionary()
 cur_ind = None
@@ -115,10 +100,12 @@ for key in expressions.keys():
             value = it_val
             continue
         value += it_val
-    print(f"109: {value.shape}")
+    print(np.linalg.norm(value - target.data))
     plt.title(key)
     # try:
-    sns.heatmap(value.reshape(build_settings['shape']))
+    f, axs = plt.subplots(1, 2)
+    sns.heatmap(value.reshape(build_settings['shape']), ax=axs[0])
+    sns.heatmap(target.data.reshape(build_settings['shape']), ax=axs[1])
     # except Exception as e:
         # print(str(e))
         # plt.plot(grid, value, label="Received data")

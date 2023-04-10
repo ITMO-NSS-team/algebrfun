@@ -238,6 +238,41 @@ class Imp(Token):
             param_str += '{}t + {}pi + '.format(round(w, 2), round(fi, 2))
 
         return '{}Imp({})'.format(round(a, 2), param_str[:-2])
+    
+class ComplexToken(Token):
+    def __init__(self, number_params: int = 1, params_description: dict = None, params: np.ndarray = None, name_="complex", optimize_id: int = 2) -> None:
+        if params_description is None:
+            params_description = {
+                0: dict(name='Amplitude', bounds=(0., 1.))
+            }
+        super().__init__(number_params, params_description, params, name_, optimize_id)
+        self.type = "Colab"
+        self.tokens = []
+
+    def evaluate(self, params: np.ndarray, grid: np.ndarray) -> np.ndarray:
+        res = None
+        for token in self.tokens:
+            cur_value = token.value(grid)
+            if res:
+                res *= cur_value
+            else:
+                res = cur_value
+        
+        return res
+
+    def name(self, with_params=False):
+        res = ""
+        for token in self.tokens:
+            if len(res) == 0:
+                res.append(f"{token.name()}")
+            else:    
+                res.append(f"*{token.name()}")
+        
+        return res
+    
+    def preprocess_fft(self, grid, pos_param):
+        pass
+
 
 class Term(Token):
     """
