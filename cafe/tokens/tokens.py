@@ -9,7 +9,7 @@ class Constant(Token):
     def __init__(self, number_params: int = 1, params_description: dict = None, params: np.ndarray = None, val: np.ndarray = None, name: str = 'target', optimize_id: int = 2) -> None:
         if params_description is None:
             params_description = {
-                0: dict(name='Amplitude', bounds=(-100, 100)),
+                0: dict(name='Amplitude', bounds=(0., 1.)),
             }
         super().__init__(number_params=number_params, params_description=params_description, params=params, 
                          val=val, name_=name, optimize_id=optimize_id)
@@ -247,7 +247,7 @@ class ComplexToken(Token):
             }
         super().__init__(number_params, params_description, params, name_, optimize_id)
         self.type = "Colab"
-        self.tokens = []
+        self._tokens = []
 
     def __eq__(self, other) -> bool:
         if self.name_ != other.name_:
@@ -267,12 +267,26 @@ class ComplexToken(Token):
         res = []
         for token in self.tokens:
             cur_value = token.value(grid)
+            # cur_value = cur_value / token.params[0][0]
             if len(res) != 0:
                 res *= cur_value
             else:
                 res = cur_value
         
-        return res
+        return np.array(res)
+    
+    @property
+    def tokens(self):
+        return self._tokens
+    
+    @tokens.setter
+    def tokens(self, new_tokens):
+        for token in new_tokens:
+            if token.name_ == "ComplexToken":
+                new_tokens.remove(token)
+                new_tokens.extend(token.tokens)
+        
+        self._tokens = new_tokens
 
     def name(self, with_params=False):
         res = ""
@@ -282,7 +296,7 @@ class ComplexToken(Token):
             else:    
                 res += f"*{token.name()}"
         
-        return res
+        return f"{self.params[0]}*{res}"
     
     def preprocess_fft(self, grid, pos_param):
         pass
@@ -331,7 +345,7 @@ class Term(Token):
         while not self.__check_vis(tokens):
             for idx, token in enumerate(tokens):
                 if token.name_ == "ComplexToken":
-                    tokens.pop(idx)
+                    tokens.remove(token)
                     tokens.extend(token.tokens)
         
         return tokens

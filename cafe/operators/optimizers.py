@@ -34,7 +34,7 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
         add_params = {
             'optimizer': 'DE',
             'popsize': 7,
-            'eps': 0.005
+            'eps': 0.1
         }
         for key, value in add_params.items():
             if key not in params.keys():
@@ -201,10 +201,14 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
         else:
             choice_terms = [token]
 
+        # self.preprocess_tokens_(individ, choice_terms)
+
         if self.params['optimizer'] == "DE":
             bounds = []
             for term in choice_terms:
                 excpression_name = term.expression_token.name_
+                if term.expression_token._number_params > 1:
+                    term.expression_token.select_best_params(individ)
                 for param in term.expression_token.params_description:
                     if term.expression_token.params_description[param]['name'] == 'Amplitude':
                         bounds.append(term.expression_token.params_description[param]['bounds'])
@@ -284,4 +288,6 @@ class TokenParametersOptimizerPopulation(GeneticOperatorPopulation):
 
     def apply(self, population, *args, **kwargs) -> None:
         for individ in population.structure:
+            if individ.elitism:
+                continue
             individ.apply_operator('TokenParametersOptimizerIndivid')

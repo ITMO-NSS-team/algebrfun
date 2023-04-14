@@ -42,7 +42,7 @@ from cafe.operators.builder import create_operator_map
 grid_t = np.load("examples//temperature//test//t.npy")
 grid_x = np.load("examples//temperature//test//x.npy")
 tx = np.array(list(product(grid_t, grid_x)))
-grid = np.array([tx[:, 0], tx[:, 1], tx[:, 0]])
+grid = np.array([tx[:, 0], tx[:, 1]])
 
 dx = Term(data=np.load("examples//temperature//test//dudx.npy").reshape(-1), name='du/dx')
 dt = Term(data=np.load("examples//temperature//test//dudt.npy").reshape(-1), name='du/dt', mandatory=True)
@@ -61,7 +61,7 @@ token3 = Power()
 
 build_settings = {
     'mutation': {
-        'simple': dict(intensive=1, increase_prob=1),
+        'simple': dict(intensive=2, increase_prob=1),
     },
     'crossover': {
         'simple': dict(intensive=1, increase_prob=0.3)
@@ -74,8 +74,12 @@ build_settings = {
     'lasso':{
         'regularisation_coef': 10**(-6)
     },
+    'optimizer':{
+        "eps": 0.05
+    },
     'shape': (101, 50),
-    'target': dt
+    'target': dt,
+    'log_file': "examples\\logeq_caf.txt"
 }
 
 
@@ -123,5 +127,6 @@ for key in expressions.keys():
         # print(str(e))
         # plt.plot(grid, value, label="Received data")
     # plt.show()
-    plt.savefig(f"{key}.png")
+    name_file = "_".join(key.split("/"))
+    plt.savefig(f"{name_file}.png")
 print(cur_ind.fitness)

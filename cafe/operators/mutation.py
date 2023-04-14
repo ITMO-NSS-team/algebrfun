@@ -18,28 +18,50 @@ class MutationProcedureIndivid(GeneticOperatorIndivid):
         individ = individ_orig.copy()
         b_ind = individ_orig.copy()
         tokens = list(filter(lambda tkn: tkn.name_ != 'target', self.params['tokens']))
+        flag = False
         
-        for term in individ.structure:
-            if term.mandatory or term.expression_token.name_ == 'target':
-                continue
-            for token in tokens:
-                token_ = token.copy()
-                token_._select_params()
-                token_orig = term.expression_token.copy()
-                new_token = ComplexToken()
-                new_token.tokens = [term.expression_token, token_]
-                term.expression_token = new_token
 
-                individ.apply_operator("VarFitnessIndivid")
+        if np.random.uniform() <= 1:
+            for term in individ.structure:
+                if term.mandatory or term.expression_token.name_ == 'target':
+                    continue
+                for token in tokens:
+                    token_ = token.copy()
+                    token_._select_params()
+                    token_orig = term.expression_token.copy()
+                    new_token = ComplexToken()
+                    new_token.tokens = [term.expression_token, token_]
+                    term.expression_token = new_token
 
-                if individ.fitness < b_ind.fitness:
-                    b_ind = individ.copy()
-                
-                term.expression_token = token_orig
-        
-        individ_orig.structure = b_ind.structure
+                    token_.select_best_params(individ)
 
-        return individ
+                    individ.apply_operator("VarFitnessIndivid")
+
+                    if individ.fitness < b_ind.fitness:
+                        flag = True
+                        b_ind = individ.copy()
+                    
+                    term.expression_token = token_orig
+            individ_orig.structure = b_ind.structure
+        else:
+            ch_from = list(filter(lambda temp: temp.expression_token.name_ != 'target' and not temp.mandatory, individ_orig.structure))
+            token_i = np.random.choice(ch_from, size=1).copy()[0]
+            token_ = np.random.choice(tokens, size=1).copy()[0]
+
+            # token_i.expression_token.select_best_params(individ_orig)
+            # token_.select_best_params(individ_orig)
+
+            new_token = ComplexToken()
+            new_token.tokens = [token_i.expression_token, token_]
+            for tkn in new_token.tokens:
+                tkn.select_best_params(individ_orig)
+            token_i.expression_token = new_token
+
+            individ_orig.structure.append(token_i)
+
+        # individ_orig.structure = b_ind.structure
+
+        # return individ
 
 
 class MutationIndivid(GeneticOperatorIndivid):
@@ -74,7 +96,8 @@ class MutationIndivid(GeneticOperatorIndivid):
             if mut_intensive > len(expression_structure):
                 add_tokens.extend(tokens)
             else:
-                new_tokens = np.random.choice(tokens, mut_intensive, replace=False)
+                # new_tokens = np.random.choice(tokens, mut_intensive, replace=False)
+                new_tokens = np.random.choice(tokens, mut_intensive)
                 for new_token in new_tokens:
                     add_tokens.append(new_token.copy())
             
@@ -113,6 +136,7 @@ class MutationPopulation(GeneticOperatorPopulation):
                 individ.elitism = False
                 new_individ = individ.copy()
                 new_individ.selected = False
+                new_individ.elitism = True
                 population.structure.append(new_individ)
             # selected_individs[iter_ind].apply_operator('MutationIndivid')
             # selected_individs[iter_ind].apply_operator('MutationProcedureIndivid')

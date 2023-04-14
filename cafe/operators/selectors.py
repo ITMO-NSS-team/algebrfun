@@ -17,7 +17,7 @@ class Elitism(GeneticOperatorPopulation):
         for idx in elite_idxs:
             population.structure[idx].elitism = True
             population.anal.append(population.structure[idx].fitness)
-            log_file = open("examples\\logeq.txt", 'a')
+            log_file = open(self.params['name_file'], 'a')
             log_file.write(f"{population.structure[idx].formula()} {population.structure[idx].fitness}\n")
             log_file.close()
             # print(population.structure[idx].formula())

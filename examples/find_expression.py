@@ -13,6 +13,7 @@ import numpy as np
 from cafe.tokens.tokens import Constant
 from cafe.tokens.tokens import Sin
 from cafe.tokens.tokens import Power
+from cafe.tokens.tokens import ComplexToken
 from cafe.tokens.tokens import Term
 
 from cafe.evolution.entities import Equation
@@ -25,13 +26,13 @@ from cafe.operators.builder import create_operator_map
 # dx2 = Term(data=np.load("examples//temperature//test//d2udx2.npy").reshape(-1), name='d2u/dx2')
 # terms = [dt, dx, dx2]
 
-x1 = np.load("examples//expressions//test1//x1.npy")
-x2 = np.load("examples//expressions//test1//x2.npy")
+x1 = np.load("examples//expressions//test2//x1.npy")
+x2 = np.load("examples//expressions//test2//x2.npy")
 temp = np.array(list(product(x1, x2)))
 grid = np.array([temp[:, 0], temp[:, 1]])
 
 expr = Term(data=np.ones((grid[0].shape[-1])), name="expres")
-target = Term(data=-1 * np.load("examples//expressions//test1//target.npy").reshape(-1), name='target', mandatory=True)
+target = Term(data=-1 * np.load("examples//expressions//test2//target.npy").reshape(-1), name='target', mandatory=True)
 terms = [expr, target]
 
 # plt.plot(grid, u.data)
@@ -46,12 +47,12 @@ token3 = Power()
 
 build_settings = {
     'mutation': {
-        'simple': dict(intensive=1, increase_prob=1),
+        'simple': dict(intensive=2, increase_prob=1),
     },
     'crossover': {
         'simple': dict(intensive=1, increase_prob=0.3)
     },
-    'tokens': [token1, token2, token3],
+    'tokens': [token1, token3],
     'population': {
         'size': 10
     },
@@ -59,15 +60,46 @@ build_settings = {
     'lasso':{
         'regularisation_coef': 10**(-6)
     },
+    'optimizer':{
+        "eps": 0.1
+    },
     'shape': (100, 100),
-    'target': target
+    'target': target,
+    'log_file': "examples\\logeq.txt"
 }
 
 
 individ = Equation(max_tokens=10)
+# tkn1 = token3.copy()
+# tkn1.params = np.array([[2.5, 0.0], [0.0, 1.0]])
+# tkn2 = token3.copy()
+# tkn2.params = np.array([[-1.5, 1.0], [0.0, 0.0]])
+# tkn3 = ComplexToken()
+# tkn3.tokens = [Power(params=np.array([[0.4, 1.0], [0.0, 0.0]])), Power(params=np.array([[1.0, 0.0], [0.0, 1.0]]))]
+# tkn4 = token3.copy()
+# tkn4.params = np.array([[-0.4, 1.0], [0.0, 1.0]])
+# tkn5 = token1.copy()
+# tkn5.params = np.array([[-0.4], [0.0]])
+# tkns = [tkn1, tkn2, tkn3, tkn4, tkn5]
+
+# for tkn in tkns:
+#     t = expr.copy()
+#     t.expression_token = tkn
+#     individ.structure.append(t)
+
+# individ.structure.append(target)
+
+# create_operator_map(grid, individ, build_settings)
+
+# print(individ.formula())
+# individ.apply_operator("VarFitnessIndivid")
+# print(individ.fitness)
+
+# exit(0)
+
 create_operator_map(grid, individ, build_settings)
 
-population = PopulationOfEquations(iterations=30)
+population = PopulationOfEquations(iterations=50)
 
 population.evolutionary()
 cur_ind = None

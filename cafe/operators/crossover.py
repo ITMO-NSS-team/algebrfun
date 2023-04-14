@@ -32,8 +32,14 @@ class CrossoverIndivid(GeneticOperatorIndivid):
                 continue
 
             cross_intensive = np.min([cross_intensive, len(tokens1), len(tokens2)])
-            add_tokens1, add_tokens2 = tuple(map(lambda tokens: np.random.choice(tokens, size=cross_intensive,
+            try:
+                add_tokens1, add_tokens2 = tuple(map(lambda tokens: np.random.choice(tokens, size=cross_intensive,
                                                                              replace=False), (expression1, expression2)))
+            except Exception as e:
+                print(str(e))
+                print(expression1)
+                print(expression2)
+                
 
             if np.random.uniform() < increase_prob:
                 for token in add_tokens1:

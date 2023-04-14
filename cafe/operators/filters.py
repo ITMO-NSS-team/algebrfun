@@ -39,7 +39,23 @@ class FilterIndivid(GeneticOperatorIndivid):
                 if np.any(caf.params[..., i] != 0):
                     flag = True
             if not flag and caf._number_params > 1:
-                new_chromo.remove(token)                
+                new_chromo.remove(token)
+        
+        # temp_individ = individ.copy()
+        # temp_individ.structure = []
+        # temp_individ.structure.extend(new_chromo)
+
+        # for token in new_chromo:
+        #     if token.mandatory:
+        #         continue
+        #     temp_individ.structure.remove(token)
+        #     temp_individ.apply_operator("VarFitnessIndivid")
+        #     if temp_individ.fitness <= individ.fitness:
+        #         continue
+        #     temp_individ.structure = new_chromo
+        
+        # new_chromo = temp_individ.structure
+
         individ.structure = new_chromo
 
 class FilterPopulation(GeneticOperatorPopulation):

@@ -336,6 +336,26 @@ class Token:
             self.params = ampl
         else:
             self.params = np.hstack((ampl, set_params))
+    
+    def select_best_params(self, individ):
+        shp = self.variable_params.shape
+        flag = False
+        last_params = self.params.copy()
+        l_fitness = individ.fitness
+        for i in range(shp[-2]):
+            set_params = self.variable_params[..., i, :]
+            ampl = np.ones(shp[0]).reshape(1, -1).T
+            if self._number_params == 1:
+                self.params = ampl
+            else:
+                self.params = np.hstack((ampl, set_params))
+
+            individ.apply_operator("VarFitnessIndivid")
+            if l_fitness < individ.fitness:
+                self.params = last_params
+            else:
+                last_params = self.params.copy()
+
 
     
     def func_params(self, params, grid):

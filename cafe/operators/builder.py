@@ -16,6 +16,7 @@ from .filters import FilterPopulation
 
 from .regularizations import LRIndivid
 from .regularizations import DecimationPopulation
+from .regularizations import ClearComplexTokens
 
 from .selectors import Elitism
 from .selectors import RouletteWheelSelection
@@ -37,6 +38,11 @@ def create_operator_map(grid, individ, kwargs):
     terms = kwargs['terms']
     shape = kwargs['shape']
 
+    settings_opt = kwargs.get('optimizer')
+    eps = 0.005
+    if settings_opt:
+        eps = settings_opt.get('eps')
+
     for token in tokens:
         token._find_initial_approximation_(grid, kwargs['target']._data, population_size, gen=False)
 
@@ -51,7 +57,7 @@ def create_operator_map(grid, individ, kwargs):
     operatorsMap.TokenParametersOptimizerPopulation = TokenParametersOptimizerPopulation()
 
     operatorsMap.TokenParametersOptimizerIndivid = TokenParametersOptimizerIndivid(
-        params=dict(grid=grid, shape=shape, target=kwargs['target']._data)
+        params=dict(grid=grid, shape=shape, target=kwargs['target']._data, eps=eps)
     )
 
     operatorsMap.VarFitnessIndivid = VarFitnessIndivid(
@@ -73,7 +79,7 @@ def create_operator_map(grid, individ, kwargs):
     )
 
     operatorsMap.Elitism = Elitism(
-        params=dict(elitism=1)
+        params=dict(elitism=1, name_file=kwargs['log_file'])
     )
 
     operatorsMap.RouletteWheelSelection = RouletteWheelSelection(
@@ -104,5 +110,9 @@ def create_operator_map(grid, individ, kwargs):
     )
 
     operatorsMap.DecimationPopulation = DecimationPopulation(
+        params=dict(grid=grid)
+    )
+
+    operatorsMap.ClearComplexTokens = ClearComplexTokens(
         params=dict(grid=grid)
     )

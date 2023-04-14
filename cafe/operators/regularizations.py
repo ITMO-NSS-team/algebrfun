@@ -16,11 +16,21 @@ class LRIndivid(GeneticOperatorIndivid):
         grid = self.params['grid']
 
         for term in individ.structure:
-            value_on_grid = term.value(grid)
-            if term.mandatory == 0:
-                features.append(value_on_grid)
+            if term.expression_token.name_ == "ComplexToken":
+                for token in term.get_complex():
+                    cur_term = term.copy()
+                    cur_term.expression_token = token
+                    value_on_grid = cur_term.value(grid)
+                    if term.mandatory == 0:
+                        features.append(value_on_grid)
+                    else:
+                        target.append(value_on_grid)
             else:
-                target.append(value_on_grid)
+                value_on_grid = term.value(grid)
+                if term.mandatory == 0:
+                    features.append(value_on_grid)
+                else:
+                    target.append(value_on_grid)
         
         return -np.sum(target, axis=0), np.array(features)
 
@@ -31,21 +41,76 @@ class LRIndivid(GeneticOperatorIndivid):
         for term in individ.structure:
             if term.mandatory != 0:
                 continue
-            new_aplitude = term.expression_token.param(name='Amplitude') * coefs[idx]
-            idx += 1
-            if np.abs(new_aplitude[0]) < 1:
-                continue
-            term.expression_token.set_param(new_aplitude, name='Amplitude')
+            if term.expression_token.name_ == "ComplexToken":
+                for token in term.get_complex():
+                    new_aplitude = token.param(name='Amplitude') * coefs[idx]
+                    idx += 1
+                    if np.abs(new_aplitude[0]) < 1:
+                        continue
+                    token.set_param(new_aplitude, name='Amplitude')
+            else:
+                new_aplitude = term.expression_token.param(name='Amplitude') * coefs[idx]
+                idx += 1
+                if np.abs(new_aplitude[0]) < 1:
+                    continue
+                term.expression_token.set_param(new_aplitude, name='Amplitude')
 
     @apply_decorator
     def apply(self, individ, *args, **kwargs):
         target, features = self._prepare_data(individ=individ)
 
         model = LinearRegression(fit_intercept=False)
-        model.fit(features.T, target)
+        # if len(features) == 0 or len(target) == 0:
+        #     return 
+        try:
+            model.fit(features.T, target)
+        except:
+            return
 
         self._set_amplitudes(individ, model.coef_)
 
+class ClearComplexTokens(GeneticOperatorPopulation):
+    def __init__(self, params: dict = None):
+        super().__init__(params)
+
+    def apply(self, population, *args, **kwargs):
+        individs = population.structure
+        for individ in individs:
+            if individ.elitism:
+                continue
+            tokens = list(filter(lambda elem: not elem.mandatory and elem.expression_token.name_ == "ComplexToken", individ.structure))
+            tokens = sorted(tokens, key=lambda elem: elem.fitness, reverse=True)
+
+            for token in tokens:
+                temp_individ = individ.copy()
+                temp_token = token.expression_token.copy()
+                del_token = None
+                fts = temp_individ.fitness.copy()
+
+                for tkn in temp_token.tokens:
+                    token.expression_token.tokens.remove(tkn)
+                    if len(token.expression_token.tokens) == 0:
+                        individ.structure.remove(token)
+                    individ.apply_operator("LRIndivid")
+                    individ.apply_operator("VarFitnessIndivid")
+
+                    if individ.fitness < fts:
+                        del_token = tkn
+                        fts = individ.fitness.copy()
+
+                    if len(token.expression_token.tokens) == 0:
+                        individ.structure.append(token)
+                    token.expression_token.tokens.append(tkn)
+                    # if individ.fitness > temp_individ.fitness:
+                    #     individ.structure.append(token)
+                    #     token.expression_token.tokens = temp_token.tokens
+                
+                if del_token:
+                    token.expression_token.tokens.remove(del_token)
+                    if len(token.expression_token.tokens) == 0:
+                        individ.structure.remove(token)
+                
+                individ.apply_operator("VarFitnessIndivid")
 
 class DecimationPopulation(GeneticOperatorPopulation):
     def __init__(self, params: dict = None):
