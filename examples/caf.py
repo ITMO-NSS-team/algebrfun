@@ -22,10 +22,12 @@ from cafe.operators.builder import create_operator_map
 
 # загрузка данных времени и производных из файлов
 
-# grid = np.load("examples//pde//t.npy")
-# u = Term(data=np.load("examples//pde//u.npy"), name='u')
-# du = Term(data=np.load("examples//pde//du.npy").reshape(-1), name='du/dt')
-# const_matr = Term(data=np.ones(960), name='constante', mandatory=True)
+grid = np.load("examples//pde//t.npy")
+u = Term(data=np.load("examples//pde//u.npy"), name='u')
+du = Term(data=np.load("examples//pde//du.npy").reshape(-1), name='du/dt')
+const_matr = Term(data=np.ones(960), name='constante', mandatory=True)
+grid = np.array([grid])
+terms = [u, du, const_matr]
 
 # данные для температуры (200, 30)
 # grid_t = np.load("examples//temperature//convection_t.npy")[:200]
@@ -39,15 +41,15 @@ from cafe.operators.builder import create_operator_map
 # terms = [dt, dx, dx2]
 
 # (101, 50)
-grid_t = np.load("examples//temperature//test//t.npy")
-grid_x = np.load("examples//temperature//test//x.npy")
-tx = np.array(list(product(grid_t, grid_x)))
-grid = np.array([tx[:, 0], tx[:, 1]])
+# grid_t = np.load("examples//temperature//test//t.npy")
+# grid_x = np.load("examples//temperature//test//x.npy")
+# tx = np.array(list(product(grid_t, grid_x)))
+# grid = np.array([tx[:, 0], tx[:, 1]])
 
-dx = Term(data=np.load("examples//temperature//test//dudx.npy").reshape(-1), name='du/dx')
-dt = Term(data=np.load("examples//temperature//test//dudt.npy").reshape(-1), name='du/dt', mandatory=True)
-dx2 = Term(data=np.load("examples//temperature//test//d2udx2.npy").reshape(-1), name='d2u/dx2')
-terms = [dt, dx, dx2]
+# dx = Term(data=np.load("examples//temperature//test//dudx.npy").reshape(-1), name='du/dx')
+# dt = Term(data=np.load("examples//temperature//test//dudt.npy").reshape(-1), name='du/dt', mandatory=True)
+# dx2 = Term(data=np.load("examples//temperature//test//d2udx2.npy").reshape(-1), name='d2u/dx2')
+# terms = [dt, dx, dx2]
 
 # plt.plot(grid, u.data)
 # plt.show()
@@ -78,7 +80,7 @@ build_settings = {
         "eps": 0.05
     },
     'shape': (101, 50),
-    'target': dt,
+    'target': const_matr,
     'log_file': "examples\\logeq_caf.txt"
 }
 
@@ -86,7 +88,7 @@ build_settings = {
 individ = Equation(max_tokens=10)
 create_operator_map(grid, individ, build_settings)
 
-population = PopulationOfEquations(iterations=50)
+population = PopulationOfEquations(iterations=40)
 
 population.evolutionary()
 cur_ind = None
@@ -102,7 +104,8 @@ expressions = dict((k, list(i)) for k, i in groupby(cur_ind.structure, key=lambd
 print(expressions)
 
 plt.plot(population.anal)
-plt.show()
+plt.savefig(f"examples//pde//anal.png")
+# plt.show()
 
 for key in expressions.keys():
     print(key)
@@ -120,13 +123,15 @@ for key in expressions.keys():
             continue
         value += it_val
     print(f"109: {value.shape}")
-    plt.title(key)
+    name_file = "_".join(key.split("/"))
+    np.save(f"examples//pde//{name_file}_res.npy", value.reshape(-1))
+    # plt.title(key)
     # try:
-    sns.heatmap(value.reshape(build_settings['shape']))
+    # sns.heatmap(value.reshape(build_settings['shape']))
     # except Exception as e:
         # print(str(e))
         # plt.plot(grid, value, label="Received data")
     # plt.show()
-    name_file = "_".join(key.split("/"))
-    plt.savefig(f"{name_file}.png")
+    # name_file = "_".join(key.split("/"))
+    # plt.savefig(f"{name_file}.png")
 print(cur_ind.fitness)

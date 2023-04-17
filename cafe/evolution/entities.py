@@ -105,9 +105,6 @@ class PopulationOfEquations(Population):
                 self.structure.remove(individ)
                 continue
             individ.apply_operator('TokenFitnessIndivid')
-            # if len(individ.structure) <= 1:
-            #     self.remove(individ)
-            #     continue
             individ.apply_operator('LRIndivid')
         self.apply_operator("FitnessPopulation")
         self.apply_operator("Elitism")
