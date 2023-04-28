@@ -17,6 +17,13 @@ class InitIndivid(GeneticOperatorIndivid):
 
         sub = self.params['terms'].copy()
 
+        for trm in sub:
+            if trm.mandatory:
+                continue
+            current_token = np.random.choice(tokens).copy()
+            current_token._select_params()
+            trm.expression_token = current_token
+
         number_of_opt_terms = len(terms) * len(tokens) // 2
         # count_of_added = 0
 

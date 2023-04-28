@@ -69,7 +69,7 @@ def create_operator_map(grid, individ, kwargs):
     operatorsMap.FilterIndivid = FilterIndivid()
 
     operatorsMap.LRIndivid = LRIndivid(
-        params=dict(grid=grid)
+        params=dict(grid=grid, regularisation_coef=1e-11)
     )
 
     operatorsMap.FitnessPopulation = FitnessPopulation()

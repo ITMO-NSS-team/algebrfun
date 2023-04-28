@@ -1,4 +1,5 @@
 from cafe.operators.base import OperatorMap
+import numpy as np
 
 class ComplexStructure:
     """
@@ -86,6 +87,17 @@ class Individ(ComplexStructure):
     @fitness.setter
     def fitness(self, fitness):
         self._fitness = fitness
+
+    def get_sm_amplitudes(self):
+        ampl = []
+        for term in self.structure:
+            c_ampl = term.expression_token.param(name='Amplitude')
+            if not (isinstance(c_ampl, float) and isinstance(c_ampl, int)):
+                c_ampl = c_ampl[0]
+            ampl.append(c_ampl)
+
+        # return np.sum(ampl)
+        return np.array(ampl)
 
 
 class Population(ComplexStructure):

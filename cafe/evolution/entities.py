@@ -100,16 +100,17 @@ class PopulationOfEquations(Population):
         for individ in self.structure:
             if individ.elitism:
                 continue
+            individ.apply_operator('TokenFitnessIndivid')
             individ.apply_operator('FilterIndivid')
             if len(individ.structure) <= 1:
                 self.structure.remove(individ)
                 continue
-            individ.apply_operator('TokenFitnessIndivid')
+            # individ.apply_operator('TokenFitnessIndivid')
             individ.apply_operator('LRIndivid')
         self.apply_operator("FitnessPopulation")
-        self.apply_operator("Elitism")
         self.apply_operator("FilterPopulation")
-        self.apply_operator("ClearComplexTokens")
+        self.apply_operator("Elitism")
+        # self.apply_operator("ClearComplexTokens")
         self.apply_operator("RouletteWheelSelection")
         self.apply_operator("CrossoverPopulation")
         self.apply_operator("MutationPopulation")

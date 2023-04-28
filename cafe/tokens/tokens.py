@@ -106,7 +106,7 @@ class Sin(Token):
             params_description = {
                 0: dict(name='Amplitude', bounds=(0., 10.)),
                 1: dict(name='Frequency', bounds=(0.95, 1.05)),
-                2: dict(name='Phase', bounds=(0.05, 1.))
+                2: dict(name='Phase', bounds=(0.05, 0.5))
             }
         super().__init__(number_params=number_params, params_description=params_description,
                          params=params, name_=name, optimize_id=optimize_id)

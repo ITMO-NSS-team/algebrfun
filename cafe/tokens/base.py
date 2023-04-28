@@ -2,6 +2,7 @@ from copy import deepcopy
 import numpy as np
 from functools import reduce
 from itertools import product
+from scipy.optimize import minimize
 # from buildingBlocks.Globals.GlobalEntities import get_full_constant
 
 class Token:
@@ -356,6 +357,25 @@ class Token:
             else:
                 last_params = self.params.copy()
 
+    @staticmethod
+    def _fitness_wrapper(params, *args):
+        individ, token = args
+
+        token.params = params
+
+        individ.apply_operator("VarFitnessIndivid")
+        return individ.fitness
+
+    def find_params_(self, individ):
+        # term.expression_token = self
+        # individ.structure.append(term)
+
+        self._select_params()
+        x0 = self.params
+
+        res = minimize(self._fitness_wrapper, x0, args=(individ, self))
+
+        self.params = res.x
 
     
     def func_params(self, params, grid):

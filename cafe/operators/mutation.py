@@ -84,7 +84,8 @@ class MutationIndivid(GeneticOperatorIndivid):
             expression_structure = [term.expression_token for term in full_term]
             tokens = list(filter(lambda token: token not in expression_structure, self.params['tokens']))
             for i, token in enumerate(tokens):
-                token._select_params()
+                # token._select_params()
+                # token.find_params_(tmp_temp.copy(), individ.copy())
                 tmp_temp.expression_token = token
                 tokens[i] = tmp_temp.copy()
 
@@ -105,7 +106,10 @@ class MutationIndivid(GeneticOperatorIndivid):
 
             if individ.max_tokens > len(expression_structure) and np.random.uniform() <= self.params['increase_prob']:
                 individ.add_substructure(add_tokens)
+                for tkn in add_tokens:
+                    tkn.expression_token.find_params_(individ)
             else:
+                idxs = []
                 probabilities = np.array(list(map(lambda idx: full_term[idx].fitness, range(len(full_term)))))
                 probabilities /= probabilities.sum()
                 for idx in np.random.choice(np.arange(len(full_term)),
@@ -114,8 +118,15 @@ class MutationIndivid(GeneticOperatorIndivid):
                                         p=probabilities):
                     add_token = add_tokens.pop()
                     full_term[idx].expression_token = add_token.expression_token
+                    idxs.append(idx)
+
                 if add_tokens:
-                    individ.add_structure(add_tokens)   
+                    individ.add_structure(add_tokens)
+                    for tkn in add_tokens:
+                        tkn.expression_token.find_params_(individ)
+                
+                for idx in idxs:
+                    full_term[idx].expression_token.find_params_(individ)
 
 class MutationPopulation(GeneticOperatorPopulation):
     def __init__(self, params):

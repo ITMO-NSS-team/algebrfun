@@ -38,6 +38,8 @@ class FilterIndivid(GeneticOperatorIndivid):
             for i in range(1, caf._number_params):
                 if np.any(caf.params[..., i] != 0):
                     flag = True
+            if np.any(caf.params[0, 0] == 0): # хз оставлять или нет, он может ухудшить картинку
+                flag = False
             if not flag and caf._number_params > 1:
                 new_chromo.remove(token)
         

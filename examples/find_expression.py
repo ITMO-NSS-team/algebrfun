@@ -21,18 +21,13 @@ from cafe.evolution.entities import PopulationOfEquations
 
 from cafe.operators.builder import create_operator_map
 
-# dx = Term(data=np.load("examples//temperature//test//dudx.npy").reshape(-1), name='du/dx')
-# dt = Term(data=np.load("examples//temperature//test//dudt.npy").reshape(-1), name='du/dt', mandatory=True)
-# dx2 = Term(data=np.load("examples//temperature//test//d2udx2.npy").reshape(-1), name='d2u/dx2')
-# terms = [dt, dx, dx2]
-
-x1 = np.load("examples//expressions//test2//x1.npy")
-x2 = np.load("examples//expressions//test2//x2.npy")
+x1 = np.load("examples//expressions//test1//x1.npy")
+x2 = np.load("examples//expressions//test1//x2.npy")
 temp = np.array(list(product(x1, x2)))
 grid = np.array([temp[:, 0], temp[:, 1]])
 
 expr = Term(data=np.ones((grid[0].shape[-1])), name="expres")
-target = Term(data=-1 * np.load("examples//expressions//test2//target.npy").reshape(-1), name='target', mandatory=True)
+target = Term(data=-1 * np.load("examples//expressions//test1//target.npy").reshape(-1), name='target', mandatory=True)
 terms = [expr, target]
 
 # plt.plot(grid, u.data)
@@ -99,7 +94,7 @@ individ = Equation(max_tokens=10)
 
 create_operator_map(grid, individ, build_settings)
 
-population = PopulationOfEquations(iterations=50)
+population = PopulationOfEquations(iterations=30)
 
 population.evolutionary()
 cur_ind = None
@@ -115,7 +110,8 @@ expressions = dict((k, list(i)) for k, i in groupby(cur_ind.structure, key=lambd
 print(expressions)
 
 plt.plot(population.anal)
-plt.show()
+plt.savefig(f"examples//expressions//test1//anal.png")
+# plt.show()
 
 for key in expressions.keys():
     print(key)
@@ -133,15 +129,19 @@ for key in expressions.keys():
             continue
         value += it_val
     print(np.linalg.norm(value - target.data))
-    plt.title(key)
+    name_file = "_".join(key.split("/"))
+    np.save(f"examples//expressions//test1//{name_file}_res.npy", value.reshape(-1))
+    # plt.title(key)
     # try:
-    f, axs = plt.subplots(1, 2)
-    sns.heatmap(value.reshape(build_settings['shape']), ax=axs[0])
-    sns.heatmap(-1 * target.data.reshape(build_settings['shape']), ax=axs[1])
+    # f, axs = plt.subplots(1, 2)
+    # sns.heatmap(value.reshape(build_settings['shape']), ax=axs[0])
+    # sns.heatmap(-1 * target.data.reshape(build_settings['shape']), ax=axs[1])
     # except Exception as e:
         # print(str(e))
         # plt.plot(grid, value, label="Received data")
     # plt.show()
-    plt.legend()
-    plt.savefig(f"{key}.png")
+    # plt.legend()
+    # plt.savefig(f"{key}.png")
 print(cur_ind.fitness)
+out_file = open("examples//expressions//test1//res.txt", 'w')
+out_file.write(f"{cur_ind.formula()}, {cur_ind.fitness}")
