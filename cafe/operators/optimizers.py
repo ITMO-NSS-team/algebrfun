@@ -213,6 +213,10 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
                     if term.expression_token.params_description[param]['name'] == 'Amplitude':
                         bounds.append(term.expression_token.params_description[param]['bounds'])
                         continue
+                    elif term.expression_token.params_description[param]['name'] == 'Phase':
+                        for i in range(grid.shape[0]):
+                            bounds.append(term.expression_token.params_description[param]['bounds'])
+                        continue
                     for i in range(grid.shape[0]):
                         try:
                             bounds.append((term.expression_token.params[i][param] - eps, term.expression_token.params[i][param] + eps))
@@ -267,6 +271,10 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
             
         # self._optimize_tokens_params(individ)
 
+        if len(args) > 0:
+            self._optimize_tokens_params(individ)
+            return
+
         for term in individ.structure:
             if term.mandatory:
                 continue
@@ -287,7 +295,12 @@ class TokenParametersOptimizerPopulation(GeneticOperatorPopulation):
         super().__init__(params=params)
 
     def apply(self, population, *args, **kwargs) -> None:
+        new_individ = None
         for individ in population.structure:
             if individ.elitism:
+                new_individ = individ.copy()
+                new_individ.apply_operator('TokenParametersOptimizerIndivid', True)
                 continue
             individ.apply_operator('TokenParametersOptimizerIndivid')
+        if new_individ:
+            population.structure.append(new_individ)

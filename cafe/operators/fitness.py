@@ -16,8 +16,11 @@ class VarFitnessIndivid(GeneticOperatorIndivid):
 
     # @apply_decorator
     def apply(self, individ, *args, **kwargs) -> None:
-        lmd = 0.4
+        lmd = 0.01
         individ.fitness = np.linalg.norm(individ.value(self.params['grid'])) + lmd * np.linalg.norm(individ.get_sm_amplitudes(), ord=1)
+        individ.deb = [np.linalg.norm(individ.value(self.params['grid'])), lmd * np.linalg.norm(individ.get_sm_amplitudes(), ord=1)]
+        # print(np.linalg.norm(individ.value(self.params['grid'])), lmd * np.linalg.norm(individ.get_sm_amplitudes(), ord=1))
+        # individ.fitness = np.linalg.norm(individ.value(self.params['grid']))
 
 
 class TokenFitnessIndivid(GeneticOperatorIndivid):

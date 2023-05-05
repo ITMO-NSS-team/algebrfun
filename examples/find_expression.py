@@ -21,13 +21,13 @@ from cafe.evolution.entities import PopulationOfEquations
 
 from cafe.operators.builder import create_operator_map
 
-x1 = np.load("examples//expressions//test1//x1.npy")
-x2 = np.load("examples//expressions//test1//x2.npy")
+x1 = np.load("examples//expressions//test3//x1.npy")
+x2 = np.load("examples//expressions//test3//x2.npy")
 temp = np.array(list(product(x1, x2)))
 grid = np.array([temp[:, 0], temp[:, 1]])
 
 expr = Term(data=np.ones((grid[0].shape[-1])), name="expres")
-target = Term(data=-1 * np.load("examples//expressions//test1//target.npy").reshape(-1), name='target', mandatory=True)
+target = Term(data=-1 * np.load("examples//expressions//test3//target.npy").reshape(-1), name='target', mandatory=True)
 terms = [expr, target]
 
 # plt.plot(grid, u.data)
@@ -42,7 +42,7 @@ token3 = Power()
 
 build_settings = {
     'mutation': {
-        'simple': dict(intensive=2, increase_prob=1),
+        'simple': dict(intensive=1, increase_prob=1),
     },
     'crossover': {
         'simple': dict(intensive=1, increase_prob=0.3)
@@ -94,7 +94,7 @@ individ = Equation(max_tokens=10)
 
 create_operator_map(grid, individ, build_settings)
 
-population = PopulationOfEquations(iterations=30)
+population = PopulationOfEquations(iterations=80)
 
 population.evolutionary()
 cur_ind = None
@@ -110,7 +110,7 @@ expressions = dict((k, list(i)) for k, i in groupby(cur_ind.structure, key=lambd
 print(expressions)
 
 plt.plot(population.anal)
-plt.savefig(f"examples//expressions//test1//anal.png")
+plt.savefig(f"examples//expressions//test3//anal.png")
 # plt.show()
 
 for key in expressions.keys():
@@ -130,7 +130,7 @@ for key in expressions.keys():
         value += it_val
     print(np.linalg.norm(value - target.data))
     name_file = "_".join(key.split("/"))
-    np.save(f"examples//expressions//test1//{name_file}_res.npy", value.reshape(-1))
+    np.save(f"examples//expressions//test3//{name_file}_res.npy", value.reshape(-1))
     # plt.title(key)
     # try:
     # f, axs = plt.subplots(1, 2)
@@ -143,5 +143,5 @@ for key in expressions.keys():
     # plt.legend()
     # plt.savefig(f"{key}.png")
 print(cur_ind.fitness)
-out_file = open("examples//expressions//test1//res.txt", 'w')
+out_file = open("examples//expressions//test3//res.txt", 'w')
 out_file.write(f"{cur_ind.formula()}, {cur_ind.fitness}")

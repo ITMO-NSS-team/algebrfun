@@ -142,7 +142,7 @@ if __name__ == "__main__":
     # terms = [dt, dx, dx2]
 
     try:
-        population = PopulationOfEquations(iterations=30)
+        population = PopulationOfEquations(iterations=10)
         main(grid, terms, const_matr, (960,))
     except KeyboardInterrupt:
         plt.plot(population.anal)

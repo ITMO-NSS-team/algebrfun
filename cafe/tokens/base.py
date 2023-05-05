@@ -359,9 +359,9 @@ class Token:
 
     @staticmethod
     def _fitness_wrapper(params, *args):
-        individ, token = args
+        individ, token, shp = args
 
-        token.params = params
+        token.params = params.reshape(shp)
 
         individ.apply_operator("VarFitnessIndivid")
         return individ.fitness
@@ -371,9 +371,10 @@ class Token:
         # individ.structure.append(term)
 
         self._select_params()
+        shp = self.params.shape
         x0 = self.params
 
-        res = minimize(self._fitness_wrapper, x0, args=(individ, self))
+        res = minimize(self._fitness_wrapper, x0, args=(individ, self, shp))
 
         self.params = res.x
 

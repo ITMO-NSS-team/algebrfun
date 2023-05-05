@@ -21,6 +21,7 @@ class Equation(Individ):
         self.selected = False
 
         self.intercept = 0.
+        self.deb = []
 
         # self.kind = kind
         self.used_value = used_value

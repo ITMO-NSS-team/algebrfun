@@ -106,7 +106,7 @@ class Sin(Token):
             params_description = {
                 0: dict(name='Amplitude', bounds=(0., 10.)),
                 1: dict(name='Frequency', bounds=(0.95, 1.05)),
-                2: dict(name='Phase', bounds=(0.05, 0.5))
+                2: dict(name='Phase', bounds=(0.01, 1))
             }
         super().__init__(number_params=number_params, params_description=params_description,
                          params=params, name_=name, optimize_id=optimize_id)
@@ -124,6 +124,7 @@ class Sin(Token):
         if params[1] == 0:
             params[1] = 0.0001
         return (2 * np.pi * params[1] * (t + params[2] / params[1]))
+        # return 2 * np.pi * params[1] * t
 
     def evaluate(self, params, t):
         result = np.nan
@@ -147,7 +148,8 @@ class Sin(Token):
             params_str += '{}t + {}pi + '.format(round(w, 2), round(fi, 2))
 
         # a, w, fi = self.params.T # !!!!!
-        return '{}Sin({})'.format(round(a, 2), params_str[:-2])
+        # return '{}Sin({})'.format(round(a, 2), params_str[:-2])
+        return '{}Sin({})'.format(a, params_str[:-2])
     
     def preprocess_fft(self, grid, pos_param):
         param_data = []
