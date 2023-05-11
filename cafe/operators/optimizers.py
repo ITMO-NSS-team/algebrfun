@@ -219,10 +219,14 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
                         continue
                     for i in range(grid.shape[0]):
                         try:
-                            bounds.append((term.expression_token.params[i][param] - eps, term.expression_token.params[i][param] + eps))
+                            s_bounds = term.expression_token.check_border(param, [term.expression_token.params[i][param] - eps, term.expression_token.params[i][param] + eps])
                         except:
-                            bounds.append(term.expression_token.params_description[param]['bounds'])
-                        # bounds.append(term.expression_token.params_description[param]['bounds']) 
+                            s_bounds = term.expression_token.params_description[param]['bounds']
+                        # try:
+                        #     bounds.append((term.expression_token.params[i][param] - eps, term.expression_token.params[i][param] + eps))
+                        # except:
+                        #     bounds.append(term.expression_token.params_description[param]['bounds'])
+                        bounds.append(s_bounds) 
             try:
                 # print("bounds:", len(bounds))
                 res = differential_evolution(self._fitness_wrapper, bounds, args=(individ, grid, shp, token), popsize=self.params['popsize'])

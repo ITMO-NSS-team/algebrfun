@@ -356,6 +356,17 @@ class Token:
                 self.params = last_params
             else:
                 last_params = self.params.copy()
+    
+    def check_border(self, ind, b_params):
+        borders_of_param = self.params_description[ind]['bounds']
+        if borders_of_param[0] > b_params[0]:
+            b_params[0] = borders_of_param[0]
+        
+        if not isinstance(borders_of_param[1], np.inf) and b_params[1] > borders_of_param[1]:
+            b_params[1] = borders_of_param[1]
+        
+        return b_params
+
 
     @staticmethod
     def _fitness_wrapper(params, *args):
@@ -374,9 +385,9 @@ class Token:
         shp = self.params.shape
         x0 = self.params
 
-        res = minimize(self._fitness_wrapper, x0, args=(individ, self, shp))
+        res = minimize(self._fitness_wrapper, x0.reshape(-1), args=(individ, self, shp))
 
-        self.params = res.x
+        self.params = res.x.reshape(shp)
 
     
     def func_params(self, params, grid):

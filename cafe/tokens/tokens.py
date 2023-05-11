@@ -100,13 +100,17 @@ class Power(Token):
         return np.array(param_data)
 
 class Sin(Token):
-    def __init__(self, number_params=3, params_description=None,
+    def __init__(self, number_params=2, params_description=None,
                  params=None, name='Sin', optimize_id=1):
         if params_description is None:
+            # params_description = {
+            #     0: dict(name='Amplitude', bounds=(0., 10.)),
+            #     1: dict(name='Frequency', bounds=(0.0, 10)),
+            #     2: dict(name='Phase', bounds=(0.0, 10))
+            # }
             params_description = {
                 0: dict(name='Amplitude', bounds=(0., 10.)),
-                1: dict(name='Frequency', bounds=(0.95, 1.05)),
-                2: dict(name='Phase', bounds=(0.01, 1))
+                1: dict(name='Frequency', bounds=(0.0, 10))
             }
         super().__init__(number_params=number_params, params_description=params_description,
                          params=params, name_=name, optimize_id=optimize_id)
@@ -120,10 +124,11 @@ class Sin(Token):
         #     return np.zeros(t.shape)
         # return params[0] * np.sin(1 * np.pi * (2 * params[1] * t + abs(math.modf(params[2])[0])))
         # return np.sin(2 * np.pi * (params[1] * t + params[2]))
-        # return 2 * np.pi * (params[1] * t + params[2])
-        if params[1] == 0:
-            params[1] = 0.0001
-        return (2 * np.pi * params[1] * (t + params[2] / params[1]))
+        # return 2 * np.pi * params[1] * t + params[2]
+        return 2 * np.pi * params[1] * t
+        # if params[1] == 0:
+        #     params[1] = 0.0001
+        # return (2 * np.pi * params[1] * (t + (params[2] / params[1]) * np.ones(t.shape)))
         # return 2 * np.pi * params[1] * t
 
     def evaluate(self, params, t):
@@ -144,8 +149,11 @@ class Sin(Token):
         a = self.params[0][0]
         params_str = ''
         for iter_param in self.params:
-            ai, w, fi = iter_param
-            params_str += '{}t + {}pi + '.format(round(w, 2), round(fi, 2))
+            # ai, w, fi = iter_param
+            # params_str += '{}t + {}pi + '.format(round(w, 2), round(fi, 2))
+
+            ai, w= iter_param
+            params_str += '{}t +'.format(round(w, 2))
 
         # a, w, fi = self.params.T # !!!!!
         # return '{}Sin({})'.format(round(a, 2), params_str[:-2])
@@ -156,8 +164,71 @@ class Sin(Token):
         for param in pos_param:
             values = []
             for k, grid_i in enumerate(grid):
-                value = np.exp(grid_i * param)
-                values.append(value)
+                value = np.exp(1j * grid_i * param)
+                values.append(np.imag(value))
+            param_data.append(values)
+
+        return np.array(param_data)
+    
+
+class Cos(Token):
+    def __init__(self, number_params=2, params_description=None,
+                 params=None, name='Cos', optimize_id=1):
+        if params_description is None:
+            params_description = {
+                0: dict(name='Amplitude', bounds=(0., 10.)),
+                1: dict(name='Frequency', bounds=(0.0, 10))
+            }
+        super().__init__(number_params=number_params, params_description=params_description,
+                         params=params, name_=name, optimize_id=optimize_id)
+        self.type = "Periodic"
+
+    def each_evaluate(self, params, t):
+        # todo maybe problems
+        params = np.abs(params)
+        params = self.func_params(params, t)
+        # if (params[0:2] == 0).any():
+        #     return np.zeros(t.shape)
+        # return params[0] * np.sin(1 * np.pi * (2 * params[1] * t + abs(math.modf(params[2])[0])))
+        # return np.sin(2 * np.pi * (params[1] * t + params[2]))
+        return 2 * np.pi * params[1] * t
+        # if params[1] == 0:
+        #     params[1] = 0.0001
+        # return (2 * np.pi * params[1] * (t + (params[2] / params[1]) * np.ones(t.shape)))
+        # return 2 * np.pi * params[1] * t
+
+    def evaluate(self, params, t):
+        result = np.nan
+        if len(params.shape) == 1:
+            params = list([params])
+        for i in range(t.shape[0]):
+            cur_temp = self.each_evaluate(params[i], t[i])
+            if np.all(np.isnan(result)):
+                result = cur_temp
+            else:    
+                result += cur_temp
+        return params[0][0] * np.cos(result)
+
+
+    def name(self, with_params=False):
+        # return self.name_ + str(self.params)
+        a = self.params[0][0]
+        params_str = ''
+        for iter_param in self.params:
+            ai, w= iter_param
+            params_str += '{}t + '.format(round(w, 2))
+
+        # a, w, fi = self.params.T # !!!!!
+        # return '{}Sin({})'.format(round(a, 2), params_str[:-2])
+        return '{}Cos({})'.format(a, params_str[:-2])
+    
+    def preprocess_fft(self, grid, pos_param):
+        param_data = []
+        for param in pos_param:
+            values = []
+            for k, grid_i in enumerate(grid):
+                value = np.exp(1j * grid_i * param)
+                values.append(np.real(value))
             param_data.append(values)
 
         return np.array(param_data)
@@ -325,7 +396,7 @@ class Term(Token):
         return (tkn and trm)
 
     def evaluate(self, params, grid: np.ndarray):
-        return self._expression_token.value(grid) * self._data
+        return self._expression_token.value(grid) * self.data
 
     @property
     def expression_token(self):
