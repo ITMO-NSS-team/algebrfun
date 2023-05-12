@@ -46,7 +46,7 @@ class Power(Token):
         if params_description is None:
             params_description = {
                 0: dict(name='Amplitude', bounds=(-1., 1.)),
-                1: dict(name='Power', bounds=(-1., 1.), check=True)
+                1: dict(name='Power', bounds=(-10., 10.), check=True)
             }
         super().__init__(number_params=number_params, params_description=params_description,
                          params=params, name_=name, optimize_id=optimize_id)
