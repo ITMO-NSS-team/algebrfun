@@ -249,7 +249,9 @@ class Token:
             except ZeroDivisionError:
                 continue
 
-
+    def lin_param(self, bounds, n):
+        return np.linspace(bounds[0], bounds[1], n)
+    
     def param(self, name=None, idx=None):
         try:
             idx = idx if name is None else self.get_key_use_params_description('name', name)
@@ -293,7 +295,7 @@ class Token:
             bounds = list(self.params_description[key_param]['bounds'])
             if bounds[1] == float('inf'):
                 bounds[1] = sz
-            params_lin = np.linspace(bounds[0], bounds[1], sz)
+            params_lin = self.lin_param((bounds[0], bounds[1]), sz)
             params_wvar = self.preprocess_fft(in_data, params_lin)
             # params_wvar = np.tensordot(params_lin, in_data, axes=0)   
             # params_wvar = (params_wvar - np.min(params_wvar))/(np.max(params_wvar) - np.min(params_wvar))
@@ -327,6 +329,8 @@ class Token:
         answer = np.array(answer)
         # self.variable_params = answer.reshape((in_data.shape[0], sz, self._number_params - 1))
         self.variable_params = answer.reshape((answer.shape[0], answer.shape[2], answer.shape[1]))
+
+        return amplitudes
 
     def _select_params(self):
         shp = self.variable_params.shape

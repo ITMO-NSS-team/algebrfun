@@ -53,7 +53,7 @@ def main(grid, terms, target_data, shape_grid):
         },
         'shape': shape_grid,
         'target': target_data,
-        'log_file': "examples\\logeq_caf.txt"
+        'log_file': "examples\\pde_2\\logeq.txt"
     }
 
 
@@ -76,7 +76,7 @@ def main(grid, terms, target_data, shape_grid):
     print(expressions)
 
     plt.plot(population.anal)
-    plt.savefig(f"examples//pde//anal.png")
+    plt.savefig(f"examples//pde_2//anal.png")
     # plt.show()
 
     for key in expressions.keys():
@@ -96,7 +96,7 @@ def main(grid, terms, target_data, shape_grid):
             value += it_val
         print(f"109: {value.shape}")
         name_file = "_".join(key.split("/"))
-        np.save(f"examples//pde//{name_file}_res.npy", value.reshape(-1))
+        np.save(f"examples//pde_2//{name_file}_res.npy", value.reshape(-1))
         # plt.title(key)
         # try:
         # sns.heatmap(value.reshape(build_settings['shape']))
@@ -107,19 +107,27 @@ def main(grid, terms, target_data, shape_grid):
         # name_file = "_".join(key.split("/"))
         # plt.savefig(f"{name_file}.png")
     print(cur_ind.fitness)
-    out_file = open("examples//pde//result.txt", 'w')
+    out_file = open("examples//pde_2//result.txt", 'w')
     out_file.write(f"{cur_ind.formula()}, {cur_ind.fitness}")
 
 
 if __name__ == "__main__":
     # загрузка данных времени и производных из файлов
 
-    grid = np.load("examples//pde//t.npy")
-    u = Term(data=np.load("examples//pde//u.npy"), name='u')
-    du = Term(data=np.load("examples//pde//du.npy").reshape(-1), name='du/dt')
-    const_matr = Term(data=-1*np.ones(960), name='constante', mandatory=True)
+    # grid = np.load("examples//pde//t.npy")
+    # u = Term(data=np.load("examples//pde//u.npy"), name='u')
+    # du = Term(data=np.load("examples//pde//du.npy").reshape(-1), name='du/dt')
+    # const_matr = Term(data=-1*np.ones(960), name='constante', mandatory=True)
+    # grid = np.array([grid])
+    # terms = [u, du, const_matr]
+
+    # pde2 (1000,)
+    grid = np.load("examples//pde_2//t.npy")[10:]
+    u = Term(data=np.load("examples//pde_2//u.npy")[10:], name='u')
+    du = Term(data=np.load("examples//pde_2//du.npy")[10:], name="du")
+    constr_matr = Term(data=u.data*du.data, name='u*du', mandatory=True)
     grid = np.array([grid])
-    terms = [u, du, const_matr]
+    terms = [u, du, constr_matr]
 
     # данные для температуры (200, 30)
     # grid_t = np.load("examples//temperature//convection_t.npy")[:200]
@@ -145,10 +153,10 @@ if __name__ == "__main__":
 
     try:
         population = PopulationOfEquations(iterations=10)
-        main(grid, terms, const_matr, (960,))
+        main(grid, terms, constr_matr, (1000,))
     except KeyboardInterrupt:
         plt.plot(population.anal)
-        plt.savefig(f"examples//pde//anal.png")
+        plt.savefig(f"examples//pde_2//anal.png")
 
         cur_ind = None
 
@@ -176,8 +184,8 @@ if __name__ == "__main__":
                 value += it_val
             print(f"109: {value.shape}")
             name_file = "_".join(key.split("/"))
-            np.save(f"examples//pde//{name_file}_res.npy", value.reshape(-1))
+            np.save(f"examples//pde_2//{name_file}_res.npy", value.reshape(-1))
 
         print(cur_ind.fitness)
-        out_file = open("examples//pde//result.txt", 'w')
+        out_file = open("examples//pde_2//result.txt", 'w')
         out_file.write(f"{cur_ind.formula()}, {cur_ind.fitness}")

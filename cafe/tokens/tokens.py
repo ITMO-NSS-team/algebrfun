@@ -46,7 +46,7 @@ class Power(Token):
         if params_description is None:
             params_description = {
                 0: dict(name='Amplitude', bounds=(-1., 1.)),
-                1: dict(name='Power', bounds=(-10., 10.), check=True)
+                1: dict(name='Power', bounds=(0., 10.), check=True)
             }
         super().__init__(number_params=number_params, params_description=params_description,
                          params=params, name_=name, optimize_id=optimize_id)
@@ -88,16 +88,33 @@ class Power(Token):
         # str_result += ')'
         return str_result.format(round(ampl, 9))
     
+    def lin_param(self, bounds, n):
+        return np.arange(bounds[1])
+    
     def preprocess_fft(self, grid, pos_param):
         param_data = []
-        for param in pos_param:
+        for i, param in enumerate(pos_param ):
             values = []
             for k, grid_i in enumerate(grid):
-                value = grid_i ** param
+                if param == 0:
+                    value = np.ones_like(grid_i)
+                elif param == 1:
+                    value = grid_i
+                else:
+                    value = ((2*param + 1)/(param + 1)) * grid_i * param_data[i-1][k] - (param/(param + 1)) * param_data[i-2][k]
                 values.append(value)
             param_data.append(values)
+        # for param in pos_param:
+        #     values = []
+        #     for k, grid_i in enumerate(grid):
+        #         value = grid_i ** param
+        #         values.append(value)
+        #     param_data.append(values)
+
+        print("prms", np.arange(max(pos_param)))
 
         return np.array(param_data)
+        # return np.array(param_data), np.arange(max(pos_param))
 
 class Sin(Token):
     def __init__(self, number_params=2, params_description=None,
@@ -110,7 +127,7 @@ class Sin(Token):
             # }
             params_description = {
                 0: dict(name='Amplitude', bounds=(0., 10.)),
-                1: dict(name='Frequency', bounds=(0.0, 10))
+                1: dict(name='Frequency', bounds=(0.1, 10))
             }
         super().__init__(number_params=number_params, params_description=params_description,
                          params=params, name_=name, optimize_id=optimize_id)
@@ -177,7 +194,7 @@ class Cos(Token):
         if params_description is None:
             params_description = {
                 0: dict(name='Amplitude', bounds=(0., 10.)),
-                1: dict(name='Frequency', bounds=(0.0, 10))
+                1: dict(name='Frequency', bounds=(0.01, 10))
             }
         super().__init__(number_params=number_params, params_description=params_description,
                          params=params, name_=name, optimize_id=optimize_id)
