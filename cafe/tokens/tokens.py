@@ -111,7 +111,9 @@ class Power(Token):
         #         values.append(value)
         #     param_data.append(values)
 
-        print("prms", np.arange(max(pos_param)))
+        print("prms", pos_param)
+
+        self.polinom = np.array(param_data)
 
         return np.array(param_data)
         # return np.array(param_data), np.arange(max(pos_param))
@@ -364,6 +366,10 @@ class ComplexToken(Token):
                 res = cur_value
         
         return np.array(res)
+    
+    def select_best_params(self, individ):
+        for tkn in self.tokens:
+            tkn.select_best_params(individ)
     
     @property
     def tokens(self):

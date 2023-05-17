@@ -296,6 +296,7 @@ class Token:
             if bounds[1] == float('inf'):
                 bounds[1] = sz
             params_lin = self.lin_param((bounds[0], bounds[1]), sz)
+            sz = len(params_lin)
             params_wvar = self.preprocess_fft(in_data, params_lin)
             # params_wvar = np.tensordot(params_lin, in_data, axes=0)   
             # params_wvar = (params_wvar - np.min(params_wvar))/(np.max(params_wvar) - np.min(params_wvar))

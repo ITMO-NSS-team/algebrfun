@@ -34,6 +34,7 @@ class MutationProcedureIndivid(GeneticOperatorIndivid):
                     term.expression_token = new_token
 
                     token_.select_best_params(individ)
+                    term.expression_token.select_best_params(individ)
 
                     individ.apply_operator("VarFitnessIndivid")
 
