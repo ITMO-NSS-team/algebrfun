@@ -173,6 +173,21 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
                     print(f"wrapper: {e}\n {params[i:k]}")
                     raise ValueError("Sizes is bad")
                 i = k
+        elif isinstance(cur_term, list):
+            for term in cur_term:
+                if term.mandatory:
+                    continue
+                token = term.expression_token
+                number_of_params = 1 + (token._number_params - 1) * grid.shape[0]
+                k = i + number_of_params
+                ch_params = params[i:k]
+                try:
+                    # token.params = params[i:k].reshape(grid.shape[0], token._number_params)
+                    token.params = convert(ch_params, token._number_params, grid.shape[0])
+                except Exception as e:
+                    print(f"wrapper: {e}\n {params[i:k]}")
+                    raise ValueError("Sizes is bad")
+                i = k
         else:
             token = cur_term.expression_token
             number_of_params = 1 + (token._number_params - 1) * grid.shape[0]
@@ -199,7 +214,10 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
         if not token:
             choice_terms = list(filter(lambda term: not term.mandatory, individ.structure))
         else:
-            choice_terms = [token]
+            if isinstance(token, list):
+                choice_terms = token
+            else:    
+                choice_terms = [token]
 
         # self.preprocess_tokens_(individ, choice_terms)
 
@@ -245,13 +263,23 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
         result_params = res.x
 
         if token:
-            expres = term.expression_token
-            number_of_params = 1 + (expres._number_params - 1) * grid.shape[0]
-            k = i + number_of_params
-            # token.params = result_params[i:k].reshape(grid.shape[0], token._number_params)
-            expres.params = convert(result_params[i:k], expres._number_params, grid.shape[0])
-            i = k
-            return
+            for term in choice_terms:
+                if term.mandatory:
+                    continue
+                token = term.expression_token
+                number_of_params = 1 + (token._number_params - 1) * grid.shape[0]
+                k = i + number_of_params
+                # token.params = result_params[i:k].reshape(grid.shape[0], token._number_params)
+                token.params = convert(result_params[i:k], token._number_params, grid.shape[0])
+                i = k
+                return
+            # expres = term.expression_token
+            # number_of_params = 1 + (expres._number_params - 1) * grid.shape[0]
+            # k = i + number_of_params
+            # # token.params = result_params[i:k].reshape(grid.shape[0], token._number_params)
+            # expres.params = convert(result_params[i:k], expres._number_params, grid.shape[0])
+            # i = k
+            # return
         for term in individ.structure:
             if term.mandatory:
                 continue
@@ -284,10 +312,15 @@ class TokenParametersOptimizerIndivid(GeneticOperatorIndivid):
                 continue
             if term.expression_token.name_ == 'ComplexToken':
                 tkns = term.get_complex()
+                if len(tkns) == 0:
+                    continue
+                optimizing_tokens = []
                 for i, tkn in enumerate(tkns):
                     i_term = term.copy()
                     i_term.expression_token = tkns[i]
-                    self._optimize_tokens_params(individ, i_term)
+                    optimizing_tokens.append(i_term)
+                    # self._optimize_tokens_params(individ, i_term)
+                self._optimize_tokens_params(individ, optimizing_tokens)
             else:
                 self._optimize_tokens_params(individ, term)
 

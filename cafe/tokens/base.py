@@ -364,11 +364,14 @@ class Token:
     
     def check_border(self, ind, b_params):
         borders_of_param = self.params_description[ind]['bounds']
-        if borders_of_param[0] > b_params[0]:
+        if borders_of_param[0] > b_params[0] or (borders_of_param[1] != np.inf and b_params[0] > borders_of_param[1]):
             b_params[0] = borders_of_param[0]
         
-        if not isinstance(borders_of_param[1], np.inf) and b_params[1] > borders_of_param[1]:
+        if not borders_of_param[1] == np.inf and b_params[1] > borders_of_param[1]:
             b_params[1] = borders_of_param[1]
+
+        if b_params[1] < b_params[0]:
+            b_params = [b_params[1], b_params[0]]
         
         return b_params
 
