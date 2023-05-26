@@ -56,6 +56,7 @@ class Token:
         self.optimize_id = optimize_id
         self._number_params = number_params
         self._params_description = params_description
+        self.mark = "+"
         # self.variable_params = [[0]]
         
         if params is None:
